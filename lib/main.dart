@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'app.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geocoding/geocoding.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -15,20 +21,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Library',
+      title: '映画&アニメ聖地SNS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Library'),
+      home: const AppWithBottomNavigation(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key});
 
-  final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -39,33 +44,23 @@ class _MyHomePageState extends State<MyHomePage> {
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
   bool _isLoading = true;
-  String? _placeApiKey;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadApiKey();
+    _getCurrentLocation();
   }
 
-  Future<void> _loadApiKey() async {
-    final String configString = await rootBundle.loadString('assets/config/config.json');
-    final Map<String, dynamic> config = json.decode(configString);
-    setState(() {
-      _placeApiKey = config['place_api_key'];
-    });
-    _getCurrentLocationAndNearbyLibraries();
-  }
-
-  Future<void> _getCurrentLocationAndNearbyLibraries() async {
+  Future<void> _getCurrentLocation() async {
     try {
       Position position = await _determinePosition();
       setState(() {
         _center = LatLng(position.latitude, position.longitude);
-      });
-      await _getNearbyLibraries();
-      setState(() {
         _isLoading = false;
       });
+      _fetchSpots();
     } catch (e) {
       print('エラーが発生しました: $e');
       setState(() {
@@ -95,102 +90,155 @@ class _MyHomePageState extends State<MyHomePage> {
     return await Geolocator.getCurrentPosition();
   }
 
-  Future<void> _getNearbyLibraries() async {
-    if (_placeApiKey == null) {
-      print('Place APIキーが読み込まれていません');
-      return;
-    }
-
-    final url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-        'location=${_center.latitude},${_center.longitude}'
-        '&radius=5000'
-        '&type=library'
-        '&language=ja'
-        '&key=$_placeApiKey';
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final results = data['results'] as List<dynamic>;
-
-      setState(() {
-        _markers = results.map((place) {
-          final location = place['geometry']['location'];
-          return Marker(
-            markerId: MarkerId(place['place_id']),
-            position: LatLng(location['lat'], location['lng']),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            infoWindow: InfoWindow(
-              title: place['name'],
-            ),
-          );
-        }).toSet();
-      });
-    } else {
-      print('図書館データの取得に失敗しました');
-    }
-  }
-
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
     });
-    // 'addListener' メソッドは存在しないため、以下の行を削除します
-    // controller.addListener(_onCameraMove);
   }
 
-  void _onCameraMove() {
-    if (mapController != null) {
-      mapController!.getVisibleRegion().then((visibleRegion) {
-        LatLng center = LatLng(
-          (visibleRegion.northeast.latitude + visibleRegion.southwest.latitude) / 2,
-          (visibleRegion.northeast.longitude + visibleRegion.southwest.longitude) / 2,
+  Future<void> _showAddLocationModal() async {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '聖地をリクエスト',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'スポット名'),
+                ),
+                TextField(
+                  controller: _addressController,
+                  decoration: const InputDecoration(labelText: '住所'),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    String name = _nameController.text.trim();
+                    String address = _addressController.text.trim();
+
+                    if (name.isNotEmpty && address.isNotEmpty) {
+                      try {
+                        List<Location> locations = await locationFromAddress(address);
+                        if (locations.isNotEmpty) {
+                          double latitude = locations.first.latitude;
+                          double longitude = locations.first.longitude;
+
+                          // リクエストを Firestore に保存
+                          await FirebaseFirestore.instance.collection('spot_requests').add({
+                            'name': name,
+                            'latitude': latitude,
+                            'longitude': longitude,
+                            'address': address,
+                            'requested_at': FieldValue.serverTimestamp(),
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('リクエストが送信されました。承認待ちです。')),
+                          );
+
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('住所が見つかりませんでした。')),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('エラーが発生しました: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('リクエスト送信'),
+                ),
+              ],
+            ),
+          ),
         );
-        _updateNearbyLibraries(center);
-      });
-    }
+      },
+    );
   }
 
-  Future<void> _updateNearbyLibraries(LatLng center) async {
+  Future<void> _fetchSpots() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('spots').get();
     setState(() {
-      _center = center;
+      _markers = snapshot.docs.map((doc) {
+        return Marker(
+          markerId: MarkerId(doc['name']),
+          position: LatLng(doc['latitude'], doc['longitude']),
+          infoWindow: InfoWindow(title: doc['name']),
+        );
+      }).toSet();
+      _isLoading = false;
     });
-    await _getNearbyLibraries();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: _center,
-                zoom: 13.0,
+    return Stack(
+      children: [
+        _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: _center,
+                  zoom: 10.0,
+                ),
+                markers: _markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
               ),
-              markers: _markers,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              onCameraIdle: _onCameraMove, // カメラの移動が停止したときに呼び出される
-            ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+        Positioned(
+          top: 50,
+          left: 10,
+          right: 10,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: '映画名・アニメ名、聖地名',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    filled: true, 
+                    fillColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  _showAddLocationModal();
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: const CircleBorder(),
+                  padding: const EdgeInsets.all(15),
+                ),
+                child: const Icon(Icons.add_location, size: 30),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-        ],
-        currentIndex: 0,
-        onTap: (index) {
-          
-        },
-      ),
+        ),
+      ],
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    super.dispose();
   }
 }

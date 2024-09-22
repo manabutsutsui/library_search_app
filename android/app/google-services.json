@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "399981015950",
+    "project_id": "movie-and-anime-holy-land",
+    "storage_bucket": "movie-and-anime-holy-land.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:399981015950:android:e469ff5d82ec11a3a9aadf",
+        "android_client_info": {
+          "package_name": "com.t"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYaU7pXQfGdW0Dp3XkLu50Jgc1eXbshrc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
