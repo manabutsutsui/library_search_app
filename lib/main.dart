@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'app.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geocoding/geocoding.dart';
-
+import 'map.dart';
+import 'login.dart';
+import 'profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'ad/ad_banner.dart';
+import 'ranking_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -27,218 +27,128 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const AppWithBottomNavigation(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
+class AppWithBottomNavigation extends StatefulWidget {
+  const AppWithBottomNavigation({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  AppWithBottomNavigationState createState() => AppWithBottomNavigationState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  GoogleMapController? mapController;
-  LatLng _center = const LatLng(35.6895, 139.6917);
-  Set<Marker> _markers = {};
-  bool _isLoading = true;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
+  int _selectedIndex = 0;
+  bool _isLoggedIn = false;
+  late List<GlobalKey<NavigatorState>> _navigatorKeys;
+  late List<Widget> _pages;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _checkLoginStatus();
+    _auth.authStateChanges().listen((User? user) {
+      _updateLoginStatus(user != null);
+    });
+    _navigatorKeys = [
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+    ];
+    _updatePages();
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await _determinePosition();
-      setState(() {
-        _center = LatLng(position.latitude, position.longitude);
-        _isLoading = false;
-      });
-      _fetchSpots();
-    } catch (e) {
-      print('エラーが発生しました: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  void _checkLoginStatus() {
+    final user = _auth.currentUser;
+    _updateLoginStatus(user != null);
   }
 
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('位置情報サービスが無効です。');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('位置情報の権限が永久に拒否されました。設定から変更してください。');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
+  void _updateLoginStatus(bool isLoggedIn) {
     setState(() {
-      mapController = controller;
+      _isLoggedIn = isLoggedIn;
+      _updatePages();
     });
   }
 
-  Future<void> _showAddLocationModal() async {
-    showModalBottomSheet(
-      isScrollControlled: true,
-      context: context,
-      builder: (BuildContext context) {
-        return FractionallySizedBox(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '聖地をリクエスト',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'スポット名'),
-                ),
-                TextField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(labelText: '住所'),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    String name = _nameController.text.trim();
-                    String address = _addressController.text.trim();
-
-                    if (name.isNotEmpty && address.isNotEmpty) {
-                      try {
-                        List<Location> locations = await locationFromAddress(address);
-                        if (locations.isNotEmpty) {
-                          double latitude = locations.first.latitude;
-                          double longitude = locations.first.longitude;
-
-                          // リクエストを Firestore に保存
-                          await FirebaseFirestore.instance.collection('spot_requests').add({
-                            'name': name,
-                            'latitude': latitude,
-                            'longitude': longitude,
-                            'address': address,
-                            'requested_at': FieldValue.serverTimestamp(),
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('リクエストが送信されました。承認待ちです。')),
-                          );
-
-                          Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('住所が見つかりませんでした。')),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('エラーが発生しました: $e')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('リクエスト送信'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  void _updatePages() {
+    _pages = [
+      const MyHomePage(),
+      const RankingPage(),
+      _isLoggedIn ? const ProfilePage() : LoginPage(onLoginSuccess: _handleLoginSuccess),
+    ];
   }
 
-  Future<void> _fetchSpots() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('spots').get();
+  void _handleLoginSuccess() {
+    _updateLoginStatus(true);
+  }
+
+  void _onItemTapped(int index) {
     setState(() {
-      _markers = snapshot.docs.map((doc) {
-        return Marker(
-          markerId: MarkerId(doc['name']),
-          position: LatLng(doc['latitude'], doc['longitude']),
-          infoWindow: InfoWindow(title: doc['name']),
-        );
-      }).toSet();
-      _isLoading = false;
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: _center,
-                  zoom: 10.0,
-                ),
-                markers: _markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-              ),
-        Positioned(
-          top: 50,
-          left: 10,
-          right: 10,
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: '映画名・アニメ名、聖地名',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    filled: true, 
-                    fillColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  _showAddLocationModal();
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  padding: const EdgeInsets.all(15),
-                ),
-                child: const Icon(Icons.add_location, size: 30),
-              ),
-            ],
-          ),
+    return WillPopScope(
+      onWillPop: () async {
+        final isFirstRouteInCurrentTab = !await _navigatorKeys[_selectedIndex].currentState!.maybePop();
+        if (isFirstRouteInCurrentTab) {
+          if (_selectedIndex != 0) {
+            _onItemTapped(0);
+            return false;
+          }
+        }
+        return isFirstRouteInCurrentTab;
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _pages.asMap().entries.map((entry) {
+            return Navigator(
+              key: _navigatorKeys[entry.key],
+              onGenerateRoute: (settings) {
+                Widget page;
+                if (settings.name == '/') {
+                  page = entry.value;
+                } else {
+                  page = const Scaffold(body: Center(child: Text('404')));
+                }
+                return MaterialPageRoute(builder: (_) => page);
+              },
+            );
+          }).toList(),
         ),
-      ],
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AdBanner(),
+            BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.map),
+                  label: '地図',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.leaderboard),
+                  label: 'ランキング',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: 'プロフィール',
+                ),
+              ],
+              currentIndex: _selectedIndex,
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Colors.blue,
+              onTap: _onItemTapped,
+            ),
+          ],
+        ),
+      ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _addressController.dispose();
-    super.dispose();
   }
 }

@@ -3,10 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'create_account.dart';
 import 'password_reset.dart';
+import 'profile.dart';
+
 class LoginPage extends StatefulWidget {
   final VoidCallback onLoginSuccess;
 
-  const LoginPage({Key? key, required this.onLoginSuccess}) : super(key: key);
+  const LoginPage({super.key, required this.onLoginSuccess});
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -36,6 +38,9 @@ class LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('ログインに成功しました')),
       );
       widget.onLoginSuccess(); // ログイン成功を親に通知
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const ProfilePage()),
+      );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('ログインに失敗しました: ${e.message}')),
@@ -46,6 +51,7 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('ログイン', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,

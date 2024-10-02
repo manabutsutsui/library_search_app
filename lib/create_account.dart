@@ -47,6 +47,7 @@ class CreateAccountPageState extends State<CreateAccountPage> {
         'username': username,
         'email': _emailController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
+        'profileImage': null,
       });
 
       await userCredential.user?.updateDisplayName(username);
