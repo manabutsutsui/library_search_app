@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>映画&amp;アニメ聖地マップ ~ アニメ&amp;映画の聖地を探すSNS ~</string>
+	<string>Seichi - アニメ聖地検索アプリ ~ アニメ&amp;映画の聖地を探すSNS ~</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>映画&amp;アニメ聖地マップ ~ アニメ&amp;映画の聖地を探すSNS ~</string>
+	<string>Seichi - アニメ聖地検索アプリ ~ アニメ&amp;映画の聖地を探すSNS ~</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

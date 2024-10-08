@@ -134,12 +134,15 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                 ],
               ),
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildReviewsTab(),
-                    _buildBookmarksTab(),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildReviewsTab(),
+                      _buildBookmarksTab(),
+                    ],
+                  ),
                 ),
               ),
             ],

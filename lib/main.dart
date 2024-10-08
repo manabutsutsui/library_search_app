@@ -7,6 +7,7 @@ import 'profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
 import 'ranking_page.dart';
+import 'home.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -57,6 +58,7 @@ class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
     ];
     _updatePages();
   }
@@ -75,7 +77,8 @@ class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
 
   void _updatePages() {
     _pages = [
-      const MyHomePage(),
+      const Home(),
+      const MapPage(),
       const RankingPage(),
       _isLoggedIn ? const ProfilePage() : LoginPage(onLoginSuccess: _handleLoginSuccess),
     ];
@@ -128,6 +131,10 @@ class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
             const AdBanner(),
             BottomNavigationBar(
               items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'ホーム',
+                ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.map),
                   label: '地図',

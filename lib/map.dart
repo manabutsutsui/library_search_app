@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geocoding/geocoding.dart';
 import 'spot_detail.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class MapPage extends StatefulWidget {
+  const MapPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MapPage> createState() => _MapPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MapPageState extends State<MapPage> {
   GoogleMapController? mapController;
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
@@ -76,15 +75,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     for (var doc in snapshot.docs) {
       try {
-        String address = doc['address'];
-        List<Location> locations = await locationFromAddress(address);
-        if (locations.isNotEmpty) {
-          newMarkers.add(Marker(
-            markerId: MarkerId(doc.id),
-            position: LatLng(locations.first.latitude, locations.first.longitude),
-            onTap: () => _showSpotDetails(doc),
-          ));
-        }
+        GeoPoint location = doc['location'];
+        newMarkers.add(Marker(
+          markerId: MarkerId(doc.id),
+          position: LatLng(location.latitude, location.longitude),
+          onTap: () => _showSpotDetails(doc),
+        ));
       } catch (e) {
         print('エラーが発生しました: ${doc['name']} - $e');
       }
@@ -125,9 +121,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.chat_bubble_outline, color: Colors.orange),
+                    const Icon(Icons.chat_bubble_outline, color: Colors.blue),
                     const SizedBox(width: 5),
-                    Text('$reviewCount件', style: const TextStyle(color: Colors.orange)),
+                    Text('$reviewCount件', style: const TextStyle(color: Colors.blue)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -142,17 +138,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                    _removeOverlay(); // オーバーレイを削除
+                    _removeOverlay();
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => SpotDetailPage(spot: spot)),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: Colors.blue,
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('聖地ページへ', style: TextStyle(color: Colors.white)),
+                  child: const Text('聖地ページへ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -212,7 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: '映画名・アニメ名、聖地名',
+                          hintText: 'アニメ名、聖地名',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -309,7 +305,6 @@ class CustomSearchDelegate extends SearchDelegate<String> {
         snapshot.data![0].docs.forEach((doc) => allDocs.add(doc));
         snapshot.data![1].docs.forEach((doc) => allDocs.add(doc));
 
-        // 重複を削除
         allDocs = allDocs.toSet().toList();
 
         return ListView(
@@ -360,18 +355,17 @@ class CustomSearchDelegate extends SearchDelegate<String> {
             ]),
             builder: (BuildContext context, AsyncSnapshot<List<QuerySnapshot>> snapshot) {
               if (snapshot.hasError) {
-                return Center(child: Text('エラーが発生しました'));
+                return const Center(child: Text('エラーが発生しました'));
               }
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               List<DocumentSnapshot> allDocs = [];
               snapshot.data![0].docs.forEach((doc) => allDocs.add(doc));
               snapshot.data![1].docs.forEach((doc) => allDocs.add(doc));
 
-              // 重複を削除
               allDocs = allDocs.toSet().toList();
 
               return ListView(
