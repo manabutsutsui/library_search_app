@@ -1,1 +1,57 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"movie-and-anime-holy-land","appId":"1:399981015950:android:e469ff5d82ec11a3a9aadf","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"movie-and-anime-holy-land","appId":"1:399981015950:ios:c28912acf8d66e7aa9aadf","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"movie-and-anime-holy-land","appId":"1:399981015950:ios:c28912acf8d66e7aa9aadf","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"movie-and-anime-holy-land","configurations":{"android":"1:399981015950:android:e469ff5d82ec11a3a9aadf","ios":"1:399981015950:ios:c28912acf8d66e7aa9aadf","macos":"1:399981015950:ios:c28912acf8d66e7aa9aadf","web":"1:399981015950:web:b5ea84ddee7551aca9aadf","windows":"1:399981015950:web:0584beacb23d2af1a9aadf"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "movie-and-anime-holy-land",
+          "appId": "1:399981015950:android:e469ff5d82ec11a3a9aadf",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "movie-and-anime-holy-land",
+          "appId": "1:399981015950:ios:c28912acf8d66e7aa9aadf",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "movie-and-anime-holy-land",
+          "appId": "1:399981015950:ios:c28912acf8d66e7aa9aadf",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "movie-and-anime-holy-land",
+          "configurations": {
+            "android": "1:399981015950:android:e469ff5d82ec11a3a9aadf",
+            "ios": "1:399981015950:ios:c28912acf8d66e7aa9aadf",
+            "macos": "1:399981015950:ios:c28912acf8d66e7aa9aadf",
+            "web": "1:399981015950:web:b5ea84ddee7551aca9aadf",
+            "windows": "1:399981015950:web:0584beacb23d2af1a9aadf"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

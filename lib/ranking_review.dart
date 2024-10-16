@@ -2,29 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 
-class RankingPage extends StatefulWidget {
-  const RankingPage({super.key});
+class RankingReviewPage extends StatefulWidget {
+  const RankingReviewPage({super.key});
 
   @override
-  RankingPageState createState() => RankingPageState();
+  RankingReviewPageState createState() => RankingReviewPageState();
 }
 
-class RankingPageState extends State<RankingPage> with SingleTickerProviderStateMixin {
+class RankingReviewPageState extends State<RankingReviewPage> {
   List<Map<String, dynamic>> _rankedSpotsByRating = [];
-  List<Map<String, dynamic>> _rankedSpotsByCount = [];
   bool _isLoading = true;
-  bool _isExpandedRating = false;
-  bool _isExpandedCount = false;
-  late TabController _tabController;
+  bool _isExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _fetchRankedSpots();
-    _tabController = TabController(length: 2, vsync: this);
   }
 
   Future<void> _fetchRankedSpots() async {
+    if (!mounted) return;  // この行を追加
     setState(() {
       _isLoading = true;
     });
@@ -61,32 +58,27 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
         });
       }
 
-      // 平均評価でソート
-      List<Map<String, dynamic>> sortedByRating = List.from(rankedSpots);
-      sortedByRating.sort((a, b) => b['averageRating'].compareTo(a['averageRating']));
+      rankedSpots.sort((a, b) => b['averageRating'].compareTo(a['averageRating']));
 
-      // 口コミ数でソート
-      List<Map<String, dynamic>> sortedByCount = List.from(rankedSpots);
-      sortedByCount.sort((a, b) => b['reviewCount'].compareTo(a['reviewCount']));
-
+      if (!mounted) return;  // この行を追加
       setState(() {
-        _rankedSpotsByRating = sortedByRating;
-        _rankedSpotsByCount = sortedByCount;
+        _rankedSpotsByRating = rankedSpots;
         _isLoading = false;
       });
     } catch (e) {
       print('ランキングデータの取得中にエラーが発生しました: $e');
+      if (!mounted) return;  // この行を追加
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  Widget _buildList(List<Map<String, dynamic>> spots, bool isRatingTab, bool isExpanded) {
-    int displayCount = isExpanded
-        ? (spots.length >= 15 ? 15 : spots.length)
-        : (spots.length >= 3 ? 3 : spots.length);
-    bool showMore = !isExpanded && spots.length > 3;
+  Widget _buildList() {
+    int displayCount = _isExpanded
+        ? (_rankedSpotsByRating.length >= 15 ? 15 : _rankedSpotsByRating.length)
+        : (_rankedSpotsByRating.length >= 3 ? 3 : _rankedSpotsByRating.length);
+    bool showMore = !_isExpanded && _rankedSpotsByRating.length > 3;
 
     return ListView.builder(
       shrinkWrap: true,
@@ -97,11 +89,7 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
           return GestureDetector(
             onTap: () {
               setState(() {
-                if (isRatingTab) {
-                  _isExpandedRating = true;
-                } else {
-                  _isExpandedCount = true;
-                }
+                _isExpanded = true;
               });
             },
             child: const Padding(
@@ -116,7 +104,7 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
           );
         }
 
-        final spot = spots[index];
+        final spot = _rankedSpotsByRating[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
@@ -133,20 +121,12 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
               spot['work'] ?? '作品不明',
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                isRatingTab
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 16),
-                          Text(spot['averageRating'].toStringAsFixed(1),
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      )
-                    : Text('${spot['reviewCount']}件の口コミ', style: const TextStyle(fontSize: 12)),
+                const Icon(Icons.star, color: Colors.orange, size: 16),
+                Text(spot['averageRating'].toStringAsFixed(1),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             onTap: () async {
@@ -183,27 +163,12 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          tabs: const [
-            Tab(text: 'レビューランキング', icon: Icon(Icons.star)),
-            Tab(text: '口コミ数ランキング', icon: Icon(Icons.comment)),
-          ],
-        ),
+        title: const Text('レビューランキング', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                SingleChildScrollView(
-                  child: _buildList(_rankedSpotsByRating, true, _isExpandedRating),
-                ),
-                SingleChildScrollView(
-                  child: _buildList(_rankedSpotsByCount, false, _isExpandedCount),
-                ),
-              ],
+          : SingleChildScrollView(
+              child: _buildList(),
             ),
     );
   }

@@ -24,6 +24,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-2226996425077631~8579659836</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -36,6 +38,10 @@
 	<string>写真ライブラリへのアクセスを許可してください。聖地の写真を投稿したり、プロフィール画像を設定したりするために使用します。</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -55,7 +61,13 @@
 	</array>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-2226996425077631~8579659836</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cDkw7geqH8.skadnetwork</string>
+		</dict>
+		<!-- 他の識別子を追加 -->
+	</array>
 </dict>
 </plist>

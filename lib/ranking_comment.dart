@@ -2,29 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 
-class RankingPage extends StatefulWidget {
-  const RankingPage({super.key});
+class RankingCommentPage extends StatefulWidget {
+  const RankingCommentPage({Key? key}) : super(key: key);
 
   @override
-  RankingPageState createState() => RankingPageState();
+  RankingCommentPageState createState() => RankingCommentPageState();
 }
 
-class RankingPageState extends State<RankingPage> with SingleTickerProviderStateMixin {
-  List<Map<String, dynamic>> _rankedSpotsByRating = [];
+class RankingCommentPageState extends State<RankingCommentPage> {
   List<Map<String, dynamic>> _rankedSpotsByCount = [];
   bool _isLoading = true;
-  bool _isExpandedRating = false;
-  bool _isExpandedCount = false;
-  late TabController _tabController;
+  bool _isExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _fetchRankedSpots();
-    _tabController = TabController(length: 2, vsync: this);
   }
 
   Future<void> _fetchRankedSpots() async {
+    if (!mounted) return;  // この行を追加
     setState(() {
       _isLoading = true;
     });
@@ -41,52 +38,38 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
             .where('spotId', isEqualTo: spot.id)
             .get();
 
-        final reviews = reviewsSnapshot.docs;
-        double totalRating = 0;
-        int reviewCount = reviews.length;
-
-        for (var review in reviews) {
-          totalRating += review['rating']?.toDouble() ?? 0.0;
-        }
-
-        double averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
+        final reviewCount = reviewsSnapshot.docs.length;
 
         rankedSpots.add({
           'id': spot.id,
           'name': spot['name'] ?? '名称不明',
           'address': spot['address'] ?? '住所不明',
           'work': spot['work'] ?? '作品不明',
-          'averageRating': averageRating,
           'reviewCount': reviewCount,
         });
       }
 
-      // 平均評価でソート
-      List<Map<String, dynamic>> sortedByRating = List.from(rankedSpots);
-      sortedByRating.sort((a, b) => b['averageRating'].compareTo(a['averageRating']));
+      rankedSpots.sort((a, b) => b['reviewCount'].compareTo(a['reviewCount']));
 
-      // 口コミ数でソート
-      List<Map<String, dynamic>> sortedByCount = List.from(rankedSpots);
-      sortedByCount.sort((a, b) => b['reviewCount'].compareTo(a['reviewCount']));
-
+      if (!mounted) return;  // この行を追加
       setState(() {
-        _rankedSpotsByRating = sortedByRating;
-        _rankedSpotsByCount = sortedByCount;
+        _rankedSpotsByCount = rankedSpots;
         _isLoading = false;
       });
     } catch (e) {
       print('ランキングデータの取得中にエラーが発生しました: $e');
+      if (!mounted) return;  // この行を追加
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  Widget _buildList(List<Map<String, dynamic>> spots, bool isRatingTab, bool isExpanded) {
-    int displayCount = isExpanded
-        ? (spots.length >= 15 ? 15 : spots.length)
-        : (spots.length >= 3 ? 3 : spots.length);
-    bool showMore = !isExpanded && spots.length > 3;
+  Widget _buildList() {
+    int displayCount = _isExpanded
+        ? (_rankedSpotsByCount.length >= 15 ? 15 : _rankedSpotsByCount.length)
+        : (_rankedSpotsByCount.length >= 3 ? 3 : _rankedSpotsByCount.length);
+    bool showMore = !_isExpanded && _rankedSpotsByCount.length > 3;
 
     return ListView.builder(
       shrinkWrap: true,
@@ -97,11 +80,7 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
           return GestureDetector(
             onTap: () {
               setState(() {
-                if (isRatingTab) {
-                  _isExpandedRating = true;
-                } else {
-                  _isExpandedCount = true;
-                }
+                _isExpanded = true;
               });
             },
             child: const Padding(
@@ -116,7 +95,7 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
           );
         }
 
-        final spot = spots[index];
+        final spot = _rankedSpotsByCount[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
@@ -133,22 +112,7 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
               spot['work'] ?? '作品不明',
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                isRatingTab
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 16),
-                          Text(spot['averageRating'].toStringAsFixed(1),
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      )
-                    : Text('${spot['reviewCount']}件の口コミ', style: const TextStyle(fontSize: 12)),
-              ],
-            ),
+            trailing: Text('${spot['reviewCount']}件の口コミ', style: const TextStyle(fontSize: 12)),
             onTap: () async {
               final spotDoc = await FirebaseFirestore.instance.collection('spots').doc(spot['id']).get();
               Navigator.push(
@@ -183,27 +147,12 @@ class RankingPageState extends State<RankingPage> with SingleTickerProviderState
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          tabs: const [
-            Tab(text: 'レビューランキング', icon: Icon(Icons.star)),
-            Tab(text: '口コミ数ランキング', icon: Icon(Icons.comment)),
-          ],
-        ),
+        title: const Text('口コミ数ランキング', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                SingleChildScrollView(
-                  child: _buildList(_rankedSpotsByRating, true, _isExpandedRating),
-                ),
-                SingleChildScrollView(
-                  child: _buildList(_rankedSpotsByCount, false, _isExpandedCount),
-                ),
-              ],
+          : SingleChildScrollView(
+              child: _buildList(),
             ),
     );
   }

@@ -7,9 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'review_detail.dart';
 import 'reviews_lists.dart';
 import 'recommended_products_lists.dart';
+import 'anime_lists.dart';
+import 'anime_detail.dart';
+import 'anime_more.dart';
+import 'ranking_review.dart';
+import 'ranking_comment.dart';
 
 class Home extends StatelessWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({super.key});
 
   Future<String> _loadRakutenApplicationId() async {
     final String jsonString = await rootBundle.loadString('assets/config/config.json');
@@ -45,7 +50,7 @@ class Home extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 150,
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
                 'assets/images/home_image.png',
@@ -68,11 +73,59 @@ class Home extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AnimeMorePage()),
+                      );
                     },
                     child: const Text('もっと見る'),
                   ),
                 ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 10,
+                  itemBuilder: (context, index) {
+                    final anime = animeList[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AnimeDetailPage(anime: anime),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 200,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.asset(
+                              anime.imageAsset,
+                              fit: BoxFit.cover,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              anime.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -133,6 +186,8 @@ class Home extends StatelessWidget {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.7,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -190,62 +245,142 @@ class Home extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: SizedBox(
-              height: 200,
-              child: FutureBuilder<List<dynamic>>(
-                future: fetchRakutenItems(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('商品が見つかりませんでした'));
-                  }
-
-                  return ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      final item = snapshot.data![index]['Item'];
-                      return GestureDetector(
-                        onTap: () => _launchURL(item['itemUrl']),
-                        child: Container(
-                          width: 150,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Image.network(
-                                item['mediumImageUrls'][0]['imageUrl'],
-                                height: 100,
-                                width: 150,
-                                fit: BoxFit.cover,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                item['itemName'],
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              Text(
-                                '¥${item['itemPrice']}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: SizedBox(
+                height: 200,
+                child: FutureBuilder<List<dynamic>>(
+                  future: fetchRakutenItems(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('商品が見つかりませんでした'));
+                    }
+              
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        final item = snapshot.data![index]['Item'];
+                        return GestureDetector(
+                          onTap: () => _launchURL(item['itemUrl']),
+                          child: Container(
+                            width: 150,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Image.network(
+                                  item['mediumImageUrls'][0]['imageUrl'],
+                                  height: 100,
+                                  width: 150,
+                                  fit: BoxFit.cover,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  item['itemName'],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                Text(
+                                  '¥${item['itemPrice']}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'ランキング',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RankingReviewPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(Icons.star, color: Colors.white, size: 30),
+                        SizedBox(height: 8),
+                        Text(
+                          '全国聖地ランキング',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                        ),
+                        Text(' by レビュー', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RankingCommentPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(Icons.comment, color: Colors.white, size: 30),
+                        SizedBox(height: 8),
+                        Text(
+                          '全国聖地ランキング',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                        ),
+                        Text(' by 口コミ数', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -288,84 +423,79 @@ class Home extends StatelessWidget {
 
         var spot = spotSnapshot.data!;
 
-        return Card(
-          elevation: 10,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReviewDetailPage(review: review, spot: spot),
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReviewDetailPage(review: review, spot: spot),
+              ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                child: Image.network(
+                  review['imageUrl'] ?? 'https://via.placeholder.com/150',
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
-              );
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                  child: Image.network(
-                    review['imageUrl'] ?? 'https://via.placeholder.com/150',
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        spot['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        spot['work'],
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundImage: review['userProfileImage'] != null
-                                ? NetworkImage(review['userProfileImage'])
-                                : null,
-                            child: review['userProfileImage'] == null
-                                ? const Icon(Icons.person, size: 16)
-                                : null,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      spot['name'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      spot['work'],
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 12,
+                          backgroundImage: review['userProfileImage'] != null
+                              ? NetworkImage(review['userProfileImage'])
+                              : null,
+                          child: review['userProfileImage'] == null
+                              ? const Icon(Icons.person, size: 16)
+                              : null,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            review['userName'] ?? '名無しユーザー',
+                            style: const TextStyle(fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              review['userName'] ?? '名無しユーザー',
-                              style: const TextStyle(fontSize: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      _buildRatingStars(review['rating']),
-                      const SizedBox(height: 4),
-                      Text(
-                        review['review'],
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _buildRatingStars(review['rating']),
+                    const SizedBox(height: 4),
+                    Text(
+                      review['review'],
+                      style: const TextStyle(fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

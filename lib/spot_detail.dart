@@ -9,6 +9,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 import 'ad/ad_native.dart';
+import 'seichi_registration.dart';
 
 class SpotDetailPage extends StatefulWidget {
   final DocumentSnapshot spot;
@@ -22,6 +23,7 @@ class SpotDetailPage extends StatefulWidget {
 class SpotDetailPageState extends State<SpotDetailPage> {
   List<DocumentSnapshot> _reviews = [];
   bool _isBookmarked = false;
+  bool _isVisited = false;
   double _averageRating = 0.0;
 
   @override
@@ -30,6 +32,7 @@ class SpotDetailPageState extends State<SpotDetailPage> {
     _getSpotLocation();
     _fetchReviews().then((_) => _calculateAverageRating());
     _checkBookmarkStatus();
+    _checkVisitedStatus();
   }
 
   LatLng? _spotLocation;
@@ -77,6 +80,22 @@ class SpotDetailPageState extends State<SpotDetailPage> {
     }
   }
 
+  Future<void> _checkVisitedStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final visitedRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('visited_spots')
+          .doc(widget.spot.id);
+
+      final visitedDoc = await visitedRef.get();
+      setState(() {
+        _isVisited = visitedDoc.exists;
+      });
+    }
+  }
+
   Future<void> _calculateAverageRating() async {
     if (_reviews.isEmpty) {
       setState(() {
@@ -106,6 +125,139 @@ class SpotDetailPageState extends State<SpotDetailPage> {
                 fontSize: 16)),
         backgroundColor: Colors.blue,
         actions: [
+          IconButton(
+            icon: Icon(
+              _isVisited ? Icons.favorite : Icons.favorite_border,
+              color: Colors.white,
+            ),
+            onPressed: () async {
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                final visitedRef = FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('visited_spots')
+                    .doc(widget.spot.id);
+
+                if (_isVisited) {
+                  // 登録解除の確認ダイアログを表示
+                  bool? confirmUnregister = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text(
+                          '登録解除の確認',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                        ),
+                        content: const Text(
+                          'この聖地の登録を解除してもよろしいですか？',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(false); // キャンセル
+                            },
+                            child: const Text(
+                              'キャンセル',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(true); // 解除を確定
+                            },
+                            child: const Text(
+                              '解除',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  // ユーザーが解除を確定した場合のみ実行
+                  if (confirmUnregister == true) {
+                    try {
+                      await visitedRef.delete();
+                      setState(() {
+                        _isVisited = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('聖地の登録を解除しました')),
+                      );
+                    } catch (e) {
+                      print('登録解除中にエラーが発生しました: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('登録解除に失敗しました')),
+                      );
+                    }
+                  }
+                } else {
+                  await visitedRef.set({
+                    'spotId': widget.spot.id,
+                    'name': widget.spot['name'],
+                    'address': widget.spot['address'],
+                    'work': widget.spot['work'],
+                    'timestamp': FieldValue.serverTimestamp(),
+                  });
+
+                  setState(() {
+                    _isVisited = true;
+                  });
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text(
+                          '登録完了',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.blue),
+                        ),
+                        content: const Text(
+                          '訪れた聖地に登録しました！\nこの聖地の記録を書きますか？',
+                          style:
+                              TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      SeichiRegistrationPage(spot: widget.spot),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              '記録を書く',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('後で'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content:
+                          Text('訪れた聖地として登録するにはログインが必要です')),
+                );
+              }
+            },
+          ),
           IconButton(
             icon: Icon(
               _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
