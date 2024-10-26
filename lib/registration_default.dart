@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'subscription_page.dart';
 
 class RegistrationDefaultPage extends StatelessWidget {
   const RegistrationDefaultPage({super.key});
@@ -51,7 +52,7 @@ class RegistrationDefaultPage extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                // プレミアムプランへのアップグレード処理をここに実装
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionScreen()));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,

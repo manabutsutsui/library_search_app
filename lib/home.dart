@@ -78,7 +78,7 @@ class Home extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => const AnimeMorePage()),
                       );
                     },
-                    child: const Text('もっと見る'),
+                    child: const Text('作品一覧'),
                   ),
                 ],
               ),
@@ -88,7 +88,7 @@ class Home extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: SizedBox(
-                height: 160,
+                height: 150,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: 10,
@@ -104,8 +104,8 @@ class Home extends StatelessWidget {
                         );
                       },
                       child: Container(
+                        padding: const EdgeInsets.only(right: 8),
                         width: 200,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

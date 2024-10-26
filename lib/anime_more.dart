@@ -11,7 +11,7 @@ class AnimeMorePage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text(
-          'おすすめ作品一覧',
+          '作品一覧',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,

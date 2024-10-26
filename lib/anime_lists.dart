@@ -81,4 +81,34 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/koenokatachi.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=22155',
   ),
+  AnimeList(
+    name: 'リコリス・リコイル',
+    imageAsset: 'assets/images/rikorisu.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=25620',
+  ),
+  AnimeList(
+    name: 'ひぐらしのなく頃に',
+    imageAsset: 'assets/images/higurashi.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10954',
+  ),
+  AnimeList(
+    name: '涼宮ハルヒの憂鬱',
+    imageAsset: 'assets/images/haruhi.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10853',
+  ),
+  AnimeList(
+    name: '秒速5センチメートル',
+    imageAsset: 'assets/images/byosoku.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10677',
+  ),
+  AnimeList(
+    name: '花咲くいろは',
+    imageAsset: 'assets/images/hanasaku.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10768',
+  ),
+  AnimeList(
+    name: 'ラブライブ！',
+    imageAsset: 'assets/images/lovelive.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=11141',
+  ),
 ];

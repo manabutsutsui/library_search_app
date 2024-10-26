@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'map.dart';
 import 'login.dart';
 import 'profile.dart';
@@ -12,15 +12,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
 import 'home.dart';
 import 'dart:convert';
-// import 'registration_default.dart';
 import 'registration.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:uuid/uuid.dart';
+import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'provider/subscription_state.dart';
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  print('バックグラウンドで通知を受信しました: ${message.messageId}');
-}
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp(
+//     options: DefaultFirebaseOptions.currentPlatform,
+//   );
+//   print('バックグラウンドで通知を受信しました: ${message.messageId}');
+// }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,127 +33,156 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  runApp(const MyApp());
+  const isDebug = !bool.fromEnvironment('dart.vm.product');
+  
+  final config = await loadConfig();
+  final configuration = PurchasesConfiguration(
+    Platform.isAndroid
+      ? config['revenueCatApiKeyAndroid']
+      : config['revenueCatApiKeyiOS'],
+  );
+  
+  String appUserId = await _getOrCreateAppUserId();
+  
+  await Purchases.configure(configuration..appUserID = appUserId);
+  
+  Purchases.setDebugLogsEnabled(isDebug);
+
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+Future<Map<String, dynamic>> loadConfig() async {
+  final configString = await rootBundle.loadString('assets/config/config.json');
+  return json.decode(configString);
+}
+
+Future<String> _getOrCreateAppUserId() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? appUserId = prefs.getString('app_user_id');
+  
+  if (appUserId == null) {
+    appUserId = const Uuid().v4();
+    await prefs.setString('app_user_id', appUserId);
+  }
+  
+  return appUserId;
+}
+
+class MyApp extends ConsumerStatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  late FirebaseMessaging _messaging;
-  late int _currentVersion;
+class _MyAppState extends ConsumerState<MyApp> {
+  // late FirebaseMessaging _messaging;
+  // late int _currentVersion;
 
   @override
   void initState() {
     super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    // パッケージ情報の取得
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    _currentVersion = int.parse(packageInfo.buildNumber);
-
-    // SharedPreferencesの取得
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int savedVersion = prefs.getInt('appVersion') ?? 0;
-
-    if (_currentVersion > savedVersion) {
-      // 新しいバージョンがリリースされた場合
-      await prefs.setInt('appVersion', _currentVersion);
-      await notifyUpdate(_currentVersion);
-    }
-
-    // FCMの初期化
-    _messaging = FirebaseMessaging.instance;
-
-    // 通知の権限をリクエスト（iOSのみ）
-    NotificationSettings settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('ユーザーは通知を許可しました');
-      _getToken();
-    } else {
-      print('ユーザーは通知を許可しませんでした');
-    }
-
-    // フォアグラウンド時の通知ハンドリング
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text(message.notification!.title ?? '通知'),
-            content: Text(message.notification!.body ?? ''),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('閉じる'),
-              ),
-            ],
-          ),
-        );
-      }
-    });
-
-    // 通知をタップしてアプリがバックグラウンドから復帰した場合のハンドリング
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('通知をタップしてアプリが起動されました: ${message.messageId}');
-      // 必要に応じてナビゲーションを追加
+    // _initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(subscriptionProvider.notifier).checkSubscription();
     });
   }
 
-  Future<void> _getToken() async {
-    String? token = await _messaging.getToken();
-    if (token != null) {
-      print('FCM トークン: $token');
-      await sendTokenToServer(token);
-    }
-  }
+  // Future<void> _initialize() async {
+  //   PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  //   _currentVersion = int.parse(packageInfo.buildNumber);
 
-  Future<void> sendTokenToServer(String token) async {
-    // サーバーのエンドポイントを設定
-    final url = Uri.parse('https://us-central1-movie-and-anime-holy-land.cloudfunctions.net/saveToken'); // 実際のサーバーURLに置き換えてください
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   int savedVersion = prefs.getInt('appVersion') ?? 0;
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'token': token}),
-    );
+  //   if (_currentVersion > savedVersion) {
+  //     await prefs.setInt('appVersion', _currentVersion);
+  //     await notifyUpdate(_currentVersion);
+  //   }
 
-    if (response.statusCode == 200) {
-      print('トークンをサーバーに正常に送信しました');
-    } else {
-      print('トークンの送信に失敗しました: ${response.statusCode}');
-    }
-  }
+  //   _messaging = FirebaseMessaging.instance;
 
-  Future<void> notifyUpdate(int version) async {
-    // バージョンアップ通知をサーバーにリクエスト
-    final url = Uri.parse('https://us-central1-movie-and-anime-holy-land.cloudfunctions.net/notifyUpdate'); // 実際のサーバーURLに置き換えてください
+  //   NotificationSettings settings = await _messaging.requestPermission(
+  //     alert: true,
+  //     badge: true,
+  //     sound: true,
+  //   );
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'version': version.toString()}),
-    );
+  //   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+  //     // print('ユーザーは通知を許可しました');
+  //     _getToken();
+  //   } else {
+  //     // print('ユーザーは通知を許可しませんでした');
+  //   }
 
-    if (response.statusCode == 200) {
-      print('アップデート通知が正常に送信されました');
-    } else {
-      print('アップデート通知の送信に失敗しました: ${response.statusCode}');
-    }
-  }
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //     if (message.notification != null) {
+  //       showDialog(
+  //         context: context,
+  //         builder: (_) => AlertDialog(
+  //           title: Text(message.notification!.title ?? '通知'),
+  //           content: Text(message.notification!.body ?? ''),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(),
+  //               child: const Text('閉じる'),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     }
+  //   });
+
+  //   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+  //     // print('通知をタップしてアプリが起動されました: ${message.messageId}');
+  //   });
+  // }
+
+  // Future<void> _getToken() async {
+  //   String? token = await _messaging.getToken();
+  //   if (token != null) {
+  //     // print('FCM トークン: $token');
+  //     await sendTokenToServer(token);
+  //   }
+  // }
+
+  // Future<void> sendTokenToServer(String token) async {
+  //   final url = Uri.parse('https://us-central1-movie-and-anime-holy-land.cloudfunctions.net/saveToken');
+
+  //   final response = await http.post(
+  //     url,
+  //     headers: {'Content-Type': 'application/json'},
+  //     body: json.encode({'token': token}),
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     print('トークンをサーバーに正常に送信しました');
+  //   } else {
+  //     print('トークンの送信に失敗しました: ${response.statusCode}');
+  //   }
+  // }
+
+  // Future<void> notifyUpdate(int version) async {
+  //   final url = Uri.parse('https://us-central1-movie-and-anime-holy-land.cloudfunctions.net/notifyUpdate');
+
+  //   final response = await http.post(
+  //     url,
+  //     headers: {'Content-Type': 'application/json'},
+  //     body: json.encode({'version': version.toString()}),
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     print('アップデート通知が正常に送信されました');
+  //   } else {
+  //     print('アップデート通知の送信に失敗しました: ${response.statusCode}');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -164,14 +198,14 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class AppWithBottomNavigation extends StatefulWidget {
-  const AppWithBottomNavigation({super.key});
+class AppWithBottomNavigation extends ConsumerStatefulWidget {
+  const AppWithBottomNavigation({Key? key}) : super(key: key);
 
   @override
-  AppWithBottomNavigationState createState() => AppWithBottomNavigationState();
+  ConsumerState<AppWithBottomNavigation> createState() => AppWithBottomNavigationState();
 }
 
-class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
+class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation> {
   int _selectedIndex = 0;
   bool _isLoggedIn = false;
   late List<GlobalKey<NavigatorState>> _navigatorKeys;
@@ -210,7 +244,7 @@ class AppWithBottomNavigationState extends State<AppWithBottomNavigation> {
     _pages = [
       const Home(),
       const MapPage(),
-      RegistrationPage(),
+      const RegistrationPage(),
       _isLoggedIn ? const ProfilePage() : LoginPage(onLoginSuccess: _handleLoginSuccess),
     ];
   }

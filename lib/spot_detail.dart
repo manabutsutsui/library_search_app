@@ -10,8 +10,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 import 'ad/ad_native.dart';
 import 'seichi_registration.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'provider/subscription_state.dart';
+import 'subscription_page.dart';
+import 'anime_lists.dart';
 
-class SpotDetailPage extends StatefulWidget {
+class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
 
   const SpotDetailPage({super.key, required this.spot});
@@ -20,7 +24,7 @@ class SpotDetailPage extends StatefulWidget {
   SpotDetailPageState createState() => SpotDetailPageState();
 }
 
-class SpotDetailPageState extends State<SpotDetailPage> {
+class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   List<DocumentSnapshot> _reviews = [];
   bool _isBookmarked = false;
   bool _isVisited = false;
@@ -113,6 +117,21 @@ class SpotDetailPageState extends State<SpotDetailPage> {
     });
   }
 
+  AnimeList? _getAnimeInfo(String workName) {
+    return animeList.firstWhere(
+      (anime) => anime.name == workName,
+      orElse: () => AnimeList(name: '', imageAsset: '', imageUrl: ''),
+    );
+  }
+
+  Future<void> _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'URLを開けませんでした: $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,6 +150,15 @@ class SpotDetailPageState extends State<SpotDetailPage> {
               color: Colors.white,
             ),
             onPressed: () async {
+              final isSubscribed = ref.read(subscriptionProvider).value == true;
+              if (!isSubscribed) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SubscriptionScreen()),
+                );
+                return;
+              }
+
               final user = FirebaseAuth.instance.currentUser;
               if (user != null) {
                 final visitedRef = FirebaseFirestore.instance
@@ -363,6 +391,37 @@ class SpotDetailPageState extends State<SpotDetailPage> {
                       style: const TextStyle(
                           fontSize: 32, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
+                  Builder(
+                    builder: (context) {
+                      final animeInfo = _getAnimeInfo(widget.spot['work']);
+                      if (animeInfo != null) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              animeInfo.imageAsset,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () => _launchURL(animeInfo.imageUrl),
+                              child: Text(
+                                '出典元: ${animeInfo.imageUrl}',
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.blue,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -625,7 +684,7 @@ class SpotDetailPageState extends State<SpotDetailPage> {
                                                                         .showSnackBar(
                                                                       const SnackBar(
                                                                           content:
-                                                                              Text('報告の送信に失敗しました。')),
+                                                                              Text('報告の送信���失敗しました。')),
                                                                     );
                                                                   }
                                                                 }
@@ -973,7 +1032,7 @@ class _ReportDialog extends StatefulWidget {
 
 class _ReportDialogState extends State<_ReportDialog> {
   final List<String> _reportReasons = [
-    '不適切なコンテンツ',
+    '不適なコンテンツ',
     'スパムまたは広告',
     '誤った情報',
     'その他',
