@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
+import 'subscription_premium.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'provider/subscription_state.dart';
 
-class RankingCommentPage extends StatefulWidget {
+class RankingCommentPage extends ConsumerStatefulWidget {
   const RankingCommentPage({Key? key}) : super(key: key);
 
   @override
-  RankingCommentPageState createState() => RankingCommentPageState();
+  ConsumerState<RankingCommentPage> createState() => RankingCommentPageState();
 }
 
-class RankingCommentPageState extends State<RankingCommentPage> {
+class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
   List<Map<String, dynamic>> _rankedSpotsByCount = [];
   bool _isLoading = true;
-  bool _isExpanded = false;
 
   @override
   void initState() {
@@ -21,44 +23,50 @@ class RankingCommentPageState extends State<RankingCommentPage> {
   }
 
   Future<void> _fetchRankedSpots() async {
-    if (!mounted) return;  // この行を追加
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final spotsSnapshot = await FirebaseFirestore.instance.collection('spots').get();
+      final spotsSnapshot = await FirebaseFirestore.instance
+          .collection('spots')
+          .get(const GetOptions(source: Source.serverAndCache));
+      
       final spots = spotsSnapshot.docs;
-
-      List<Map<String, dynamic>> rankedSpots = [];
-
-      for (var spot in spots) {
-        final reviewsSnapshot = await FirebaseFirestore.instance
+      final List<Future<QuerySnapshot>> reviewQueries = spots.map((spot) =>
+        FirebaseFirestore.instance
             .collection('reviews')
             .where('spotId', isEqualTo: spot.id)
-            .get();
+            .get(const GetOptions(source: Source.serverAndCache))
+      ).toList();
 
-        final reviewCount = reviewsSnapshot.docs.length;
+      final reviewSnapshots = await Future.wait(reviewQueries);
+
+      List<Map<String, dynamic>> rankedSpots = [];
+      for (var i = 0; i < spots.length; i++) {
+        final spot = spots[i];
+        final reviews = reviewSnapshots[i].docs;
 
         rankedSpots.add({
           'id': spot.id,
           'name': spot['name'] ?? '名称不明',
           'address': spot['address'] ?? '住所不明',
           'work': spot['work'] ?? '作品不明',
-          'reviewCount': reviewCount,
+          'reviewCount': reviews.length,
         });
       }
 
       rankedSpots.sort((a, b) => b['reviewCount'].compareTo(a['reviewCount']));
 
-      if (!mounted) return;  // この行を追加
+      if (!mounted) return;
       setState(() {
         _rankedSpotsByCount = rankedSpots;
         _isLoading = false;
       });
     } catch (e) {
       print('ランキングデータの取得中にエラーが発生しました: $e');
-      if (!mounted) return;  // この行を追加
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -66,35 +74,22 @@ class RankingCommentPageState extends State<RankingCommentPage> {
   }
 
   Widget _buildList() {
-    int displayCount = _isExpanded
-        ? (_rankedSpotsByCount.length >= 15 ? 15 : _rankedSpotsByCount.length)
-        : (_rankedSpotsByCount.length >= 3 ? 3 : _rankedSpotsByCount.length);
-    bool showMore = !_isExpanded && _rankedSpotsByCount.length > 3;
+    // サブスクリプション状態を取得
+    final subscriptionState = ref.watch(subscriptionProvider);
+    
+    int displayCount = subscriptionState.when(
+      data: (isPro) => isPro 
+          ? (_rankedSpotsByCount.length >= 30 ? 30 : _rankedSpotsByCount.length)
+          : (_rankedSpotsByCount.length >= 15 ? 15 : _rankedSpotsByCount.length),
+      loading: () => _rankedSpotsByCount.length >= 15 ? 15 : _rankedSpotsByCount.length,
+      error: (_, __) => _rankedSpotsByCount.length >= 15 ? 15 : _rankedSpotsByCount.length,
+    );
 
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: showMore ? displayCount + 1 : displayCount,
+      itemCount: displayCount,
       itemBuilder: (context, index) {
-        if (showMore && index == displayCount) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _isExpanded = true;
-              });
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Text(
-                  'もっと見る',
-                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          );
-        }
-
         final spot = _rankedSpotsByCount[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -143,6 +138,8 @@ class RankingCommentPageState extends State<RankingCommentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final subscriptionState = ref.watch(subscriptionProvider);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -152,7 +149,46 @@ class RankingCommentPageState extends State<RankingCommentPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: _buildList(),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SubscriptionPremium(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.blue,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Image.asset(
+                        'assets/subscription_images/premium_image_seichi.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  subscriptionState.when(
+                    data: (isPro) => isPro 
+                        ? const SizedBox.shrink()
+                        : const Text(
+                            'Premiumプランなら、閲覧できるランキング数が増えます!',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                  _buildList(),
+                ],
+              ),
             ),
     );
   }

@@ -31,9 +31,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Subscription', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),),
-      ),
       body: SafeArea(
         child: Center(
           child: PaywallView(

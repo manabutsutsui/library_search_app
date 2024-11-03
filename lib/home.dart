@@ -12,12 +12,14 @@ import 'anime_detail.dart';
 import 'anime_more.dart';
 import 'ranking_review.dart';
 import 'ranking_comment.dart';
+import 'subscription_premium.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
 
   Future<String> _loadRakutenApplicationId() async {
-    final String jsonString = await rootBundle.loadString('assets/config/config.json');
+    final String jsonString =
+        await rootBundle.loadString('assets/config/config.json');
     final Map<String, dynamic> jsonMap = json.decode(jsonString);
     return jsonMap['rakutenApplicationId'];
   }
@@ -60,6 +62,34 @@ class Home extends StatelessWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
+              padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SubscriptionPremium(),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.blue,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Image.asset(
+                    'assets/subscription_images/premium_image_seichi.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,7 +105,8 @@ class Home extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AnimeMorePage()),
+                        MaterialPageRoute(
+                            builder: (context) => const AnimeMorePage()),
                       );
                     },
                     child: const Text('作品一覧'),
@@ -118,7 +149,8 @@ class Home extends StatelessWidget {
                               anime.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -146,7 +178,8 @@ class Home extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ReviewsListPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const ReviewsListPage()),
                       );
                     },
                     child: const Text('もっと見る'),
@@ -207,13 +240,18 @@ class Home extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ReviewsListPage()),
+                    MaterialPageRoute(
+                        builder: (context) => const ReviewsListPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
-                child: const Text('口コミ一覧', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('口コミ一覧',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
           ),
@@ -235,7 +273,9 @@ class Home extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RecommendedProductsListPage()),
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const RecommendedProductsListPage()),
                       );
                     },
                     child: const Text('もっと見る'),
@@ -255,11 +295,12 @@ class Home extends StatelessWidget {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError) {
-                      return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+                      return Center(
+                          child: Text('エラーが発生しました: ${snapshot.error}'));
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(child: Text('商品が見つかりませんでした'));
                     }
-              
+
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: snapshot.data!.length,
@@ -318,7 +359,8 @@ class Home extends StatelessWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -327,7 +369,8 @@ class Home extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RankingReviewPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const RankingReviewPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -343,9 +386,14 @@ class Home extends StatelessWidget {
                         SizedBox(height: 8),
                         Text(
                           '全国聖地ランキング',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20),
                         ),
-                        Text(' by レビュー', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        Text(' by レビュー',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
@@ -354,7 +402,8 @@ class Home extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RankingCommentPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const RankingCommentPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -370,9 +419,63 @@ class Home extends StatelessWidget {
                         SizedBox(height: 8),
                         Text(
                           '全国聖地ランキング',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20),
                         ),
-                        Text(' by 口コミ数', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        Text(' by 口コミ数',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SubscriptionPremium(),
+                        ),
+                      );
+                    },
+                    child: Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.blue,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Image.asset(
+                            'assets/subscription_images/4.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Premiumプラン',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -389,9 +492,7 @@ class Home extends StatelessWidget {
                   GestureDetector(
                     onTap: () => _launchURL('https://x.com/Seichi_map_app'),
                     child: Image.asset(
-                      'assets/images/xtwitter-1.jpg',
-                      width: 50,
-                      height: 50,
+                      'assets/images/x_icon.png',
                     ),
                   ),
                   const Text(
@@ -411,7 +512,10 @@ class Home extends StatelessWidget {
 
   Widget _buildReviewItem(BuildContext context, DocumentSnapshot review) {
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('spots').doc(review['spotId']).get(),
+      future: FirebaseFirestore.instance
+          .collection('spots')
+          .doc(review['spotId'])
+          .get(),
       builder: (context, spotSnapshot) {
         if (spotSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -428,7 +532,8 @@ class Home extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ReviewDetailPage(review: review, spot: spot),
+                builder: (context) =>
+                    ReviewDetailPage(review: review, spot: spot),
               ),
             );
           },

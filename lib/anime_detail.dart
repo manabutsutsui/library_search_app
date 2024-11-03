@@ -7,13 +7,13 @@ import 'spot_detail.dart';
 class AnimeDetailPage extends StatefulWidget {
   final AnimeList anime;
 
-  const AnimeDetailPage({Key? key, required this.anime}) : super(key: key);
+  const AnimeDetailPage({super.key, required this.anime});
 
   @override
-  _AnimeDetailPageState createState() => _AnimeDetailPageState();
+  AnimeDetailPageState createState() => AnimeDetailPageState();
 }
 
-class _AnimeDetailPageState extends State<AnimeDetailPage> {
+class AnimeDetailPageState extends State<AnimeDetailPage> {
   List<DocumentSnapshot> _spots = [];
   bool _isLoading = true;
 
@@ -74,25 +74,62 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
                       ? const Center(child: CircularProgressIndicator())
                       : _spots.isEmpty
                           ? const Center(child: Text('聖地が見つかりませんでした'))
-                          : ListView.builder(
+                          : GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 8.0,
+                                mainAxisSpacing: 8.0,
+                                childAspectRatio: 1.3,
+                              ),
                               itemCount: _spots.length,
                               itemBuilder: (context, index) {
                                 final spot = _spots[index];
-                                return Card(
-                                  child: ListTile(
-                                    title: Text(spot['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text(spot['address']),
-                                    trailing: const Icon(Icons.arrow_forward_ios),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SpotDetailPage(spot: spot),
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SpotDetailPage(spot: spot),
+                                      ),
+                                    );
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: spot['imageURL'] != null && spot['imageURL'].toString().isNotEmpty
+                                            ? ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: Image.network(
+                                                  spot['imageURL'],
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              )
+                                            : Container(
+                                                color: Colors.grey[200],
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.image_not_supported,
+                                                    size: 40,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                      ),
+                                      Text(
+                                        spot['name'],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
                                         ),
-                                      );
-                                    },
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                    ],
                                   ),
                                 );
                               },

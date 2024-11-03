@@ -23,9 +23,10 @@ class AnimeMorePage extends StatelessWidget {
       body: GridView.builder(
         itemCount: animeList.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2列に設定
+          crossAxisCount: 2,
           crossAxisSpacing: 8.0,
           mainAxisSpacing: 8.0,
+          childAspectRatio: 1.2,
         ),
         itemBuilder: (context, index) {
           final anime = animeList[index];

@@ -8,12 +8,12 @@ import 'dart:io';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
-import 'ad/ad_native.dart';
 import 'seichi_registration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'provider/subscription_state.dart';
-import 'subscription_page.dart';
 import 'anime_lists.dart';
+import 'provider/visited_spots_provider.dart';
+import 'subscription_premium.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -152,10 +152,46 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
             onPressed: () async {
               final isSubscribed = ref.read(subscriptionProvider).value == true;
               if (!isSubscribed) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SubscriptionScreen()),
+                final bool? shouldNavigate = await showDialog<bool>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text(
+                        '👑Premiumプラン👑',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      content: const Text(
+                        '訪れた聖地として登録するには、Premiumプランへの登録が必要です。\n\nPremiumプランの詳細を確認しますか？',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('キャンセル'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text(
+                            '詳細を見る',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
+
+                if (shouldNavigate == true) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SubscriptionPremium()),
+                  );
+                }
                 return;
               }
 
@@ -175,11 +211,13 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                       return AlertDialog(
                         title: const Text(
                           '登録解除の確認',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.red),
                         ),
                         content: const Text(
                           'この聖地の登録を解除してもよろしいですか？',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         actions: <Widget>[
                           TextButton(
@@ -198,7 +236,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                             child: const Text(
                               '解除',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: Colors.red),
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red),
                             ),
                           ),
                         ],
@@ -210,6 +249,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                   if (confirmUnregister == true) {
                     try {
                       await visitedRef.delete();
+                      ref
+                          .read(visitedSpotsProvider.notifier)
+                          .removeVisitedSpot(widget.spot.id);
                       setState(() {
                         _isVisited = false;
                       });
@@ -231,7 +273,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                     'work': widget.spot['work'],
                     'timestamp': FieldValue.serverTimestamp(),
                   });
-
+                  ref
+                      .read(visitedSpotsProvider.notifier)
+                      .addVisitedSpot(widget.spot.id);
                   setState(() {
                     _isVisited = true;
                   });
@@ -247,8 +291,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         ),
                         content: const Text(
                           '訪れた聖地に登録しました！\nこの聖地の記録を書きますか？',
-                          style:
-                              TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         actions: <Widget>[
                           TextButton(
@@ -279,9 +323,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('訪れた聖地として登録するにはログインが必要です')),
+                  const SnackBar(content: Text('訪れた聖地として登録するにはログインが必要です')),
                 );
               }
             },
@@ -422,20 +464,73 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 237, 249, 254),
-                      border: Border.all(color: Colors.blue),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      widget.spot['detail'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 21, 148, 251),
+                  Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.blue),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Column(
+                            children: [
+                              if (widget.spot['imageURL'] != null && 
+                                  widget.spot['imageURL'].toString().isNotEmpty) ...[
+                                Image.network(
+                                  widget.spot['imageURL'],
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                                const SizedBox(height: 16),
+                              ] else ...[
+                                Container(
+                                  width: double.infinity,
+                                  height: 200,
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.image_not_supported,
+                                      size: 64,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              Text(
+                                widget.spot['detail'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            '登場シーン',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 32),
                   Center(
@@ -684,7 +779,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                         .showSnackBar(
                                                                       const SnackBar(
                                                                           content:
-                                                                              Text('報告の送信���失敗しました。')),
+                                                                              Text('報告の送信失敗しました。')),
                                                                     );
                                                                   }
                                                                 }
@@ -747,8 +842,6 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                             );
                           },
                         ),
-                  const SizedBox(height: 16),
-                  const NativeAdWidget(),
                 ],
               ),
             ),
@@ -975,8 +1068,7 @@ class ReviewFormState extends State<ReviewForm> {
                     direction: Axis.horizontal,
                     allowHalfRating: false,
                     itemCount: 5,
-                    itemPadding:
-                        const EdgeInsets.symmetric(horizontal: 4.0),
+                    itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
                     itemBuilder: (context, _) => const Icon(
                       Icons.star,
                       color: Colors.orange,
@@ -1013,7 +1105,11 @@ class ReviewFormState extends State<ReviewForm> {
                       backgroundColor: Colors.blue,
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: const Text('投稿する', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text('投稿する',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

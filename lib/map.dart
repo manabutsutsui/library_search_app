@@ -3,15 +3,18 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'provider/visited_spots_provider.dart';
 
-class MapPage extends StatefulWidget {
+class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
 
   @override
-  State<MapPage> createState() => _MapPageState();
+  ConsumerState<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends ConsumerState<MapPage> {
   GoogleMapController? mapController;
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
@@ -20,10 +23,13 @@ class _MapPageState extends State<MapPage> {
 
   final TextEditingController _searchController = TextEditingController();
 
+  bool _showOnlyVisited = false;
+
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _fetchVisitedSpots();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -70,17 +76,29 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _fetchSpots() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('spots').get();
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('spots').get();
     Set<Marker> newMarkers = {};
+    Set<String> visitedSpots = ref.read(visitedSpotsProvider);
 
     for (var doc in snapshot.docs) {
       try {
         GeoPoint location = doc['location'];
-        newMarkers.add(Marker(
-          markerId: MarkerId(doc.id),
-          position: LatLng(location.latitude, location.longitude),
-          onTap: () => _showSpotDetails(doc),
-        ));
+        bool isVisited = visitedSpots.contains(doc.id);
+        if (!_showOnlyVisited || isVisited) {
+          newMarkers.add(Marker(
+            markerId: MarkerId(doc.id),
+            position: LatLng(location.latitude, location.longitude),
+            onTap: () => _showSpotDetails(doc),
+            icon: isVisited
+                ? BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueBlue)
+                : BitmapDescriptor.defaultMarker,
+            infoWindow: InfoWindow(
+              title: doc['name'],
+            ),
+          ));
+        }
       } catch (e) {
         print('エラーが発生しました: ${doc['name']} - $e');
       }
@@ -115,7 +133,8 @@ class _MapPageState extends State<MapPage> {
               children: [
                 Text(
                   spot['name'],
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(spot['address']),
                 const SizedBox(height: 10),
@@ -123,7 +142,8 @@ class _MapPageState extends State<MapPage> {
                   children: [
                     const Icon(Icons.chat_bubble_outline, color: Colors.blue),
                     const SizedBox(width: 5),
-                    Text('$reviewCount件', style: const TextStyle(color: Colors.blue)),
+                    Text('$reviewCount件',
+                        style: const TextStyle(color: Colors.blue)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -141,14 +161,17 @@ class _MapPageState extends State<MapPage> {
                     _removeOverlay();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SpotDetailPage(spot: spot)),
+                      MaterialPageRoute(
+                          builder: (context) => SpotDetailPage(spot: spot)),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('聖地ページへ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text('聖地ページへ',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -172,15 +195,48 @@ class _MapPageState extends State<MapPage> {
     _overlayEntry = null;
   }
 
+  Future<void> _fetchVisitedSpots() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final visitedSpotsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('visited_spots')
+          .get();
+      final visitedSpotIds =
+          visitedSpotsSnapshot.docs.map((doc) => doc.id).toList();
+      ref.read(visitedSpotsProvider.notifier).setVisitedSpots(visitedSpotIds);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(visitedSpotsProvider, (previous, next) {
+      _fetchSpots();
+    });
+
     return Scaffold(
       body: Stack(
         children: [
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : GoogleMap(
-                  onMapCreated: _onMapCreated,
+                  onMapCreated: (GoogleMapController controller) {
+                    _onMapCreated(controller);
+                    controller.setMapStyle('''
+                      [
+                        {
+                          "featureType": "poi",
+                          "elementType": "labels",
+                          "stylers": [
+                            {
+                              "visibility": "off"
+                            }
+                          ]
+                        }
+                      ]
+                    ''');
+                  },
                   initialCameraPosition: CameraPosition(
                     target: _center,
                     zoom: 10.0,
@@ -239,6 +295,43 @@ class _MapPageState extends State<MapPage> {
               ],
             ),
           ),
+          Positioned(
+            top: 110,
+            left: 10,
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _showOnlyVisited = !_showOnlyVisited;
+                });
+                _fetchSpots();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _showOnlyVisited ? Colors.blue : Colors.grey,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '登録済み',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -283,16 +376,19 @@ class CustomSearchDelegate extends SearchDelegate<String> {
   Widget buildResults(BuildContext context) {
     return FutureBuilder<List<QuerySnapshot>>(
       future: Future.wait([
-        FirebaseFirestore.instance.collection('spots')
+        FirebaseFirestore.instance
+            .collection('spots')
             .where('name', isGreaterThanOrEqualTo: query)
             .where('name', isLessThan: query + 'z')
             .get(),
-        FirebaseFirestore.instance.collection('spots')
+        FirebaseFirestore.instance
+            .collection('spots')
             .where('work', isGreaterThanOrEqualTo: query)
             .where('work', isLessThan: query + 'z')
             .get(),
       ]),
-      builder: (BuildContext context, AsyncSnapshot<List<QuerySnapshot>> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<List<QuerySnapshot>> snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('エラーが発生しました'));
         }
@@ -311,12 +407,14 @@ class CustomSearchDelegate extends SearchDelegate<String> {
           children: allDocs.map((DocumentSnapshot document) {
             Map<String, dynamic> data = document.data() as Map<String, dynamic>;
             return ListTile(
-              title: Text('聖地名: ${data['name']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text('聖地名: ${data['name']}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text('作品名: ${data['work']}'),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SpotDetailPage(spot: document)),
+                  MaterialPageRoute(
+                      builder: (context) => SpotDetailPage(spot: document)),
                 );
               },
               trailing: const Icon(Icons.arrow_forward_ios),
@@ -342,18 +440,21 @@ class CustomSearchDelegate extends SearchDelegate<String> {
         Expanded(
           child: FutureBuilder<List<QuerySnapshot>>(
             future: Future.wait([
-              FirebaseFirestore.instance.collection('spots')
+              FirebaseFirestore.instance
+                  .collection('spots')
                   .where('name', isGreaterThanOrEqualTo: query)
                   .where('name', isLessThan: query + 'z')
                   .limit(3)
                   .get(),
-              FirebaseFirestore.instance.collection('spots')
+              FirebaseFirestore.instance
+                  .collection('spots')
                   .where('work', isGreaterThanOrEqualTo: query)
                   .where('work', isLessThan: query + 'z')
                   .limit(3)
                   .get(),
             ]),
-            builder: (BuildContext context, AsyncSnapshot<List<QuerySnapshot>> snapshot) {
+            builder: (BuildContext context,
+                AsyncSnapshot<List<QuerySnapshot>> snapshot) {
               if (snapshot.hasError) {
                 return const Center(child: Text('エラーが発生しました'));
               }
@@ -370,9 +471,11 @@ class CustomSearchDelegate extends SearchDelegate<String> {
 
               return ListView(
                 children: allDocs.map((DocumentSnapshot document) {
-                  Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                  Map<String, dynamic> data =
+                      document.data() as Map<String, dynamic>;
                   return ListTile(
-                    title: Text('聖地名: ${data['name']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text('聖地名: ${data['name']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text('作品名: ${data['work']}'),
                     onTap: () {
                       query = data['name'];
@@ -421,7 +524,8 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
               ),
               title: const Text(
                 '聖地をリクエスト',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -436,7 +540,8 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                       color: Colors.white,
                     ),
                     const SizedBox(height: 16),
-                    const Text('あなたが追加したい聖地をリクエストできます。', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    const Text('あなたが追加したい聖地をリクエストできます。',
+                        style: TextStyle(color: Colors.white, fontSize: 16)),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _spotNameController,
@@ -477,7 +582,9 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                             _addressController.text.isNotEmpty &&
                             _workNameController.text.isNotEmpty) {
                           try {
-                            await FirebaseFirestore.instance.collection('spot_requests').add({
+                            await FirebaseFirestore.instance
+                                .collection('spot_requests')
+                                .add({
                               'spotName': _spotNameController.text,
                               'address': _addressController.text,
                               'workName': _workNameController.text,
@@ -501,14 +608,18 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                       ),
-                      child: const Text('リクエスト申請', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text('リクエスト請',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     ),
                     if (_errorMessage.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
                         child: Text(
                           _errorMessage,
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.red, fontWeight: FontWeight.bold),
                         ),
                       ),
                   ],

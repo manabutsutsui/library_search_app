@@ -111,4 +111,59 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/lovelive.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=11141',
   ),
+  AnimeList(
+    name: 'サマータイムレンダ',
+    imageAsset: 'assets/images/summertime.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=25892',
+  ),
+  AnimeList(
+    name: '艦隊これくしょん',
+    imageAsset: 'assets/images/kankore.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=25861',
+  ),
+  AnimeList(
+    name: '夏目友人帳',
+    imageAsset: 'assets/images/natsume.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10847',
+  ),
+  AnimeList(
+    name: 'すずめの戸締まり',
+    imageAsset: 'assets/images/suzumeno.jpg',
+    imageUrl: 'https://www.netflix.com/jp/title/81696498',
+  ),
+  AnimeList(
+    name: 'サマーウォーズ',
+    imageAsset: 'assets/images/summerwars.png',
+    imageUrl: 'https://s-wars.jp/special/images/SW-Wallpaper1-HD.jpg',
+  ),
+  AnimeList(
+    name: 'らき☆すた',
+    imageAsset: 'assets/images/rakisuta.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10338',
+  ),
+  AnimeList(
+    name: '千と千尋の神隠し',
+    imageAsset: 'assets/images/sentochihiro.png',
+    imageUrl: 'https://www.ghibli.jp/works/chihiro/',
+  ),
+  AnimeList(
+    name: 'ガールズ&パンツァー',
+    imageAsset: 'assets/images/girlsand.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27105',
+  ),
+  AnimeList(
+    name: 'となりのトトロ',
+    imageAsset: 'assets/images/tonarinototoro.png',
+    imageUrl: 'https://www.youtube.com/watch?v=S2AdSjrG5iM',
+  ),
+  AnimeList(
+    name: '響け！ユーフォニアム',
+    imageAsset: 'assets/images/hibike.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20098',
+  ),
+  AnimeList(
+    name: 'ゆるキャン△',
+    imageAsset: 'assets/images/yurukyan.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21928',
+  ),
 ];
