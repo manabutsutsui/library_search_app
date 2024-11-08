@@ -21,18 +21,53 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
   String? _profileImageUrl;
   late TabController _tabController;
   late Stream<DocumentSnapshot> _userStream;
+  late Stream<QuerySnapshot> _reviewsStream;
+  late Stream<QuerySnapshot> _visitedSpotsStream;
+  int _reviewCount = 0;
+  int _visitedSpotsCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _initUserStream();
+    _initStreams();
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  void _initUserStream() {
-    final User? user = FirebaseAuth.instance.currentUser;
+  void _initStreams() {
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _userStream = FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots();
+      _userStream = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots();
+
+      _reviewsStream = FirebaseFirestore.instance
+          .collection('reviews')
+          .where('userId', isEqualTo: user.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots();
+
+      _visitedSpotsStream = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('visited_spots')
+          .snapshots();
+
+      _reviewsStream.listen((snapshot) {
+        if (mounted) {
+          setState(() {
+            _reviewCount = snapshot.docs.length;
+          });
+        }
+      });
+
+      _visitedSpotsStream.listen((snapshot) {
+        if (mounted) {
+          setState(() {
+            _visitedSpotsCount = snapshot.docs.length;
+          });
+        }
+      });
     }
   }
 
@@ -110,20 +145,41 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
           return Column(
             children: [
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
-                  child: _profileImageUrl == null
-                      ? Icon(Icons.add_photo_alternate, size: 50, color: Colors.grey[700])
-                      : null,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
+                        child: _profileImageUrl == null
+                            ? Icon(Icons.add_photo_alternate, size: 50, color: Colors.grey[700])
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _username ?? '名前: 未設定',
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
+                            const SizedBox(width: 16),
+                            _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                _username ?? '名前が設定されていません',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TabBar(
@@ -170,7 +226,26 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('ブックマークはありません'));
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.bookmark_border,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'ブックマークはありません',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         return ListView.builder(
@@ -209,10 +284,15 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
   }
 
   Widget _buildReviewsTab() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('ログインが必要です'));
+    }
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('reviews')
-          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+          .where('userId', isEqualTo: user.uid)
           .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
@@ -225,7 +305,16 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('口コミはありません'));
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.rate_review, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text('口コミはありません', style: TextStyle(color: Colors.grey, fontSize: 16)),
+              ],
+            ),
+          );
         }
 
         return ListView.builder(
@@ -384,6 +473,30 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
           },
         );
       },
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String count, String label) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.blue),
+        const SizedBox(width: 4),
+        Text(
+          count,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
     );
   }
 }

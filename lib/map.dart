@@ -6,6 +6,8 @@ import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'provider/visited_spots_provider.dart';
+import 'utils/search_anime.dart';
+import 'utils/seichi_request.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -20,6 +22,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   Set<Marker> _markers = {};
   bool _isLoading = true;
   OverlayEntry? _overlayEntry;
+  String? _selectedAnime;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -76,8 +79,13 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   Future<void> _fetchSpots() async {
-    QuerySnapshot snapshot =
-        await FirebaseFirestore.instance.collection('spots').get();
+    Query spotsQuery = FirebaseFirestore.instance.collection('spots');
+    
+    if (_selectedAnime != null) {
+      spotsQuery = spotsQuery.where('work', isEqualTo: _selectedAnime);
+    }
+    
+    QuerySnapshot snapshot = await spotsQuery.get();
     Set<Marker> newMarkers = {};
     Set<String> visitedSpots = ref.read(visitedSpotsProvider);
 
@@ -91,11 +99,11 @@ class _MapPageState extends ConsumerState<MapPage> {
             position: LatLng(location.latitude, location.longitude),
             onTap: () => _showSpotDetails(doc),
             icon: isVisited
-                ? BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue)
+                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
                 : BitmapDescriptor.defaultMarker,
             infoWindow: InfoWindow(
               title: doc['name'],
+              snippet: doc['work'],
             ),
           ));
         }
@@ -108,6 +116,14 @@ class _MapPageState extends ConsumerState<MapPage> {
       _markers = newMarkers;
       _isLoading = false;
     });
+
+    // 選択されたアニメの聖地の位置に基づいてカメラを移動
+    if (_selectedAnime != null && _markers.isNotEmpty) {
+      LatLngBounds bounds = _getBounds(_markers);
+      mapController?.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 50),
+      );
+    }
   }
 
   void _showSpotDetails(DocumentSnapshot spot) async {
@@ -133,8 +149,7 @@ class _MapPageState extends ConsumerState<MapPage> {
               children: [
                 Text(
                   spot['name'],
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(spot['address']),
                 const SizedBox(height: 10),
@@ -209,6 +224,80 @@ class _MapPageState extends ConsumerState<MapPage> {
     }
   }
 
+  LatLngBounds _getBounds(Set<Marker> markers) {
+    double? minLat, maxLat, minLng, maxLng;
+    
+    for (Marker marker in markers) {
+      if (minLat == null || marker.position.latitude < minLat) {
+        minLat = marker.position.latitude;
+      }
+      if (maxLat == null || marker.position.latitude > maxLat) {
+        maxLat = marker.position.latitude;
+      }
+      if (minLng == null || marker.position.longitude < minLng) {
+        minLng = marker.position.longitude;
+      }
+      if (maxLng == null || marker.position.longitude > maxLng) {
+        maxLng = marker.position.longitude;
+      }
+    }
+    
+    return LatLngBounds(
+      southwest: LatLng(minLat!, minLng!),
+      northeast: LatLng(maxLat!, maxLng!),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Stack(
+      alignment: Alignment.centerRight,
+      children: [
+        TextField(
+          controller: _searchController,
+          readOnly: true,
+          onTap: () {
+            showSearch(
+              context: context,
+              delegate: AnimeSearchDelegate(
+                onAnimeSelected: (animeName) {
+                  setState(() {
+                    _selectedAnime = animeName;
+                    _searchController.text = animeName;
+                  });
+                  _fetchSpots();
+                },
+              ),
+            );
+          },
+          decoration: InputDecoration(
+            hintText: _selectedAnime ?? 'アニメ名で検索',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.only(right: 40),
+          ),
+        ),
+        if (_selectedAnime != null)
+          Positioned(
+            right: 8,
+            child: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                setState(() {
+                  _selectedAnime = null;
+                  _searchController.clear();
+                });
+                _fetchSpots();
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(visitedSpotsProvider, (previous, next) {
@@ -253,28 +342,7 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      showSearch(
-                        context: context,
-                        delegate: CustomSearchDelegate(spots: _markers),
-                      );
-                    },
-                    child: AbsorbPointer(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'アニメ名、聖地名',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: _buildSearchBar(),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
@@ -307,8 +375,7 @@ class _MapPageState extends ConsumerState<MapPage> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _showOnlyVisited ? Colors.blue : Colors.grey,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -342,293 +409,5 @@ class _MapPageState extends ConsumerState<MapPage> {
     _removeOverlay();
     _searchController.dispose();
     super.dispose();
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  final Set<Marker> spots;
-
-  CustomSearchDelegate({required this.spots});
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return FutureBuilder<List<QuerySnapshot>>(
-      future: Future.wait([
-        FirebaseFirestore.instance
-            .collection('spots')
-            .where('name', isGreaterThanOrEqualTo: query)
-            .where('name', isLessThan: query + 'z')
-            .get(),
-        FirebaseFirestore.instance
-            .collection('spots')
-            .where('work', isGreaterThanOrEqualTo: query)
-            .where('work', isLessThan: query + 'z')
-            .get(),
-      ]),
-      builder:
-          (BuildContext context, AsyncSnapshot<List<QuerySnapshot>> snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました'));
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        List<DocumentSnapshot> allDocs = [];
-        snapshot.data![0].docs.forEach((doc) => allDocs.add(doc));
-        snapshot.data![1].docs.forEach((doc) => allDocs.add(doc));
-
-        allDocs = allDocs.toSet().toList();
-
-        return ListView(
-          children: allDocs.map((DocumentSnapshot document) {
-            Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-            return ListTile(
-              title: Text('聖地名: ${data['name']}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('作品名: ${data['work']}'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => SpotDetailPage(spot: document)),
-                );
-              },
-              trailing: const Icon(Icons.arrow_forward_ios),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            '聖地名、または映画・アニメ名を入力して下さい。',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<List<QuerySnapshot>>(
-            future: Future.wait([
-              FirebaseFirestore.instance
-                  .collection('spots')
-                  .where('name', isGreaterThanOrEqualTo: query)
-                  .where('name', isLessThan: query + 'z')
-                  .limit(3)
-                  .get(),
-              FirebaseFirestore.instance
-                  .collection('spots')
-                  .where('work', isGreaterThanOrEqualTo: query)
-                  .where('work', isLessThan: query + 'z')
-                  .limit(3)
-                  .get(),
-            ]),
-            builder: (BuildContext context,
-                AsyncSnapshot<List<QuerySnapshot>> snapshot) {
-              if (snapshot.hasError) {
-                return const Center(child: Text('エラーが発生しました'));
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              List<DocumentSnapshot> allDocs = [];
-              snapshot.data![0].docs.forEach((doc) => allDocs.add(doc));
-              snapshot.data![1].docs.forEach((doc) => allDocs.add(doc));
-
-              allDocs = allDocs.toSet().toList();
-
-              return ListView(
-                children: allDocs.map((DocumentSnapshot document) {
-                  Map<String, dynamic> data =
-                      document.data() as Map<String, dynamic>;
-                  return ListTile(
-                    title: Text('聖地名: ${data['name']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('作品名: ${data['work']}'),
-                    onTap: () {
-                      query = data['name'];
-                      showResults(context);
-                    },
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class SpotRequestDialog extends StatefulWidget {
-  const SpotRequestDialog({super.key});
-
-  @override
-  SpotRequestDialogState createState() => SpotRequestDialogState();
-}
-
-class SpotRequestDialogState extends State<SpotRequestDialog> {
-  final TextEditingController _spotNameController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _workNameController = TextEditingController();
-  String _errorMessage = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: EdgeInsets.zero,
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        color: Colors.grey[900],
-        child: Column(
-          children: [
-            AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              title: const Text(
-                '聖地をリクエスト',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.add_location,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('あなたが追加したい聖地をリクエストできます。',
-                        style: TextStyle(color: Colors.white, fontSize: 16)),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _spotNameController,
-                      decoration: const InputDecoration(
-                        hintText: '聖地名',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        hintText: '住所',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _workNameController,
-                      decoration: const InputDecoration(
-                        hintText: '作品名',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () async {
-                        setState(() {
-                          _errorMessage = '';
-                        });
-                        if (_spotNameController.text.isNotEmpty &&
-                            _addressController.text.isNotEmpty &&
-                            _workNameController.text.isNotEmpty) {
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('spot_requests')
-                                .add({
-                              'spotName': _spotNameController.text,
-                              'address': _addressController.text,
-                              'workName': _workNameController.text,
-                              'timestamp': FieldValue.serverTimestamp(),
-                            });
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('リクエストが送信されました')),
-                            );
-                          } catch (e) {
-                            setState(() {
-                              _errorMessage = 'エラーが発生しました: $e';
-                            });
-                          }
-                        } else {
-                          setState(() {
-                            _errorMessage = 'すべてのフィールドを入力してください';
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                      ),
-                      child: const Text('リクエスト請',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                    if (_errorMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          _errorMessage,
-                          style: const TextStyle(
-                              color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

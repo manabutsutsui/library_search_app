@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'create_account.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -20,7 +21,7 @@ class SettingPageState extends State<SettingPage> {
     try {
       await FirebaseAuth.instance.signOut();
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => LoginPage(onLoginSuccess: () {})),
+        MaterialPageRoute(builder: (context) => const CreateAccountPage()),
         (Route<dynamic> route) => false,
       );
     } catch (e) {
@@ -125,7 +126,7 @@ class SettingPageState extends State<SettingPage> {
 
         // ログイン画面に遷移
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => LoginPage(onLoginSuccess: () {})),
+          MaterialPageRoute(builder: (context) => const LoginPage()),
           (Route<dynamic> route) => false,
         );
       }

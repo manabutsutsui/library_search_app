@@ -15,51 +15,49 @@ class RegistrationPage extends ConsumerWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/home_image.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(user?.uid)
-                .collection('visited_spots')
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text('聖地登録', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+        backgroundColor: Colors.blue,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .collection('visited_spots')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+            
+          if (snapshot.hasError) {
+            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+          }
+            
+          final visitedSpotsSnapshot = snapshot.data!;
+          final visitedSpots = visitedSpotsSnapshot.docs.length;
+            
+          return FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance.collection('spots').get(),
+            builder: (context, spotsSnapshot) {
+              if (spotsSnapshot.connectionState ==
+                  ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-
-              if (snapshot.hasError) {
-                return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+            
+              if (spotsSnapshot.hasError) {
+                return Center(
+                    child: Text('エラーが発生しました: ${spotsSnapshot.error}'));
               }
-
-              final visitedSpotsSnapshot = snapshot.data!;
-              final visitedSpots = visitedSpotsSnapshot.docs.length;
-
-              return FutureBuilder<QuerySnapshot>(
-                future: FirebaseFirestore.instance.collection('spots').get(),
-                builder: (context, spotsSnapshot) {
-                  if (spotsSnapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (spotsSnapshot.hasError) {
-                    return Center(
-                        child: Text('エラーが発生しました: ${spotsSnapshot.error}'));
-                  }
-
-                  final totalSpots = spotsSnapshot.data!.docs.length;
-
-                  return Column(
+            
+              final totalSpots = spotsSnapshot.data!.docs.length;
+            
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
                     children: [
-                      const SizedBox(height: 64),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -96,7 +94,7 @@ class RegistrationPage extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       ref.watch(subscriptionProvider).when(
                             data: (isSubscribed) => isSubscribed
                                 ? const SizedBox()
@@ -172,93 +170,93 @@ class RegistrationPage extends ConsumerWidget {
                             loading: () => const CircularProgressIndicator(),
                             error: (_, __) => const Text('エラーが発生しました'),
                           ),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: visitedSpotsSnapshot.docs.length,
-                          itemBuilder: (context, index) {
-                            final visitedSpot =
-                                visitedSpotsSnapshot.docs[index];
-                            final visitedSpotData =
-                                visitedSpot.data() as Map<String, dynamic>;
-                            final imageUrls =
-                                visitedSpotData['imageUrls'] as List<dynamic>?;
-                            final visitedDate =
-                                visitedSpotData['visitedDate'] as Timestamp?;
-
-                            String formattedVisitedDate = '未設定';
-
-                            if (visitedDate != null) {
-                              formattedVisitedDate = DateFormat('yyyy/MM/dd')
-                                  .format(visitedDate.toDate());
-                            }
-
-                            return Card(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          VisitedSeichiDetailPage(
-                                        visitedSpotData: visitedSpotData,
-                                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: visitedSpotsSnapshot.docs.length,
+                        itemBuilder: (context, index) {
+                          final visitedSpot =
+                              visitedSpotsSnapshot.docs[index];
+                          final visitedSpotData =
+                              visitedSpot.data() as Map<String, dynamic>;
+                          final imageUrls =
+                              visitedSpotData['imageUrls'] as List<dynamic>?;
+                          final visitedDate =
+                              visitedSpotData['visitedDate'] as Timestamp?;
+                          
+                          String formattedVisitedDate = '未設定';
+                          
+                          if (visitedDate != null) {
+                            formattedVisitedDate = DateFormat('yyyy/MM/dd')
+                                .format(visitedDate.toDate());
+                          }
+                          
+                          return Card(
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        VisitedSeichiDetailPage(
+                                      visitedSpotData: visitedSpotData,
                                     ),
-                                  );
-                                },
-                                child: Column(
-                                  children: [
-                                    imageUrls != null && imageUrls.isNotEmpty
-                                        ? AspectRatio(
-                                            aspectRatio: 16 / 9,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    const BorderRadius.vertical(
-                                                        top:
-                                                            Radius.circular(8)),
-                                                image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      imageUrls.first),
-                                                  fit: BoxFit.cover,
-                                                ),
+                                  ),
+                                );
+                              },
+                              child: Column(
+                                children: [
+                                  imageUrls != null && imageUrls.isNotEmpty
+                                      ? AspectRatio(
+                                          aspectRatio: 16 / 9,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                      top:
+                                                          Radius.circular(8)),
+                                              image: DecorationImage(
+                                                image: NetworkImage(
+                                                    imageUrls.first),
+                                                fit: BoxFit.cover,
                                               ),
                                             ),
-                                          )
-                                        : const AspectRatio(
-                                            aspectRatio: 16 / 9,
-                                            child: Icon(Icons.landscape,
-                                                size: 100, color: Colors.grey),
                                           ),
-                                    ListTile(
-                                      title: Text(visitedSpot.id,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              '作品名: ${visitedSpotData['work']}',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis),
-                                          Text('訪問日: $formattedVisitedDate'),
-                                        ],
-                                      ),
+                                        )
+                                      : const AspectRatio(
+                                          aspectRatio: 16 / 9,
+                                          child: Icon(Icons.landscape,
+                                              size: 100, color: Colors.grey),
+                                        ),
+                                  ListTile(
+                                    title: Text(visitedSpot.id,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            '作品名: ${visitedSpotData['work']}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis),
+                                        Text('訪問日: $formattedVisitedDate'),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     ],
-                  );
-                },
+                  ),
+                ),
               );
             },
-          ),
-        ),
+          );
+        },
       ),
     );
   }

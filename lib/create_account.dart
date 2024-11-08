@@ -1,228 +1,219 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'login.dart';
+import 'create_account_mailaddress.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'create_username.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
 
   @override
-  CreateAccountPageState createState() => CreateAccountPageState();
+  State<CreateAccountPage> createState() => _CreateAccountPageState();
 }
 
-class CreateAccountPageState extends State<CreateAccountPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _usernameController = TextEditingController();
-  bool _agreeToTerms = false;
-
-  Future<void> _createAccount() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('パスワードが一致しません')),
-      );
-      return;
-    }
-
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('利用規約に同意してください')),
-      );
-      return;
-    }
-
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      String uid = userCredential.user!.uid;
-      String username = _usernameController.text.trim();
-
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'username': username,
-        'email': _emailController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'profileImage': null,
-      });
-
-      await userCredential.user?.updateDisplayName(username);
-      await userCredential.user?.sendEmailVerification();
-
-      Navigator.pop(context, true);
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('アカウント作成に失敗しました: ${e.message}')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('予期せぬエラーが発生しました: $e')),
-      );
-    }
-  }
-
+class _CreateAccountPageState extends State<CreateAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('アカウント作成',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blue,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'メールアドレス',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'パスワード（英数字6文字以上）',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _confirmPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'パスワード（確認用）',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'ユーザー名',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.blue, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox(
-                    value: _agreeToTerms,
-                    onChanged: (value) {
-                      setState(() {
-                        _agreeToTerms = value!;
-                      });
-                    },
-                  ),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '利用規約',
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () async {
-                              const url = 'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/';
-                              if (await canLaunch(url)) {
-                                await launch(url);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('URLを開けませんでした')),
-                                );
-                              }
-                            },
-                        ),
-                        const TextSpan(text: 'を確認の上、同意する'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'プライバシーポリシー',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () async {
-                        const url = 'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/';
-                        if (await canLaunch(url)) {
-                        await launch(url);
-                      } else {
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/account_page/home_image.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildButton(
+                  'メールアドレスで登録',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const CreateAccountMailaddressPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildButton(
+                  'Googleで登録',
+                  onPressed: () async {
+                    try {
+                      // Googleサインインの初期化
+                      final GoogleSignIn googleSignIn = GoogleSignIn();
+                      final GoogleSignInAccount? googleUser =
+                          await googleSignIn.signIn();
+
+                      if (googleUser == null) return;
+
+                      // Google認証情報の取得
+                      final GoogleSignInAuthentication googleAuth =
+                          await googleUser.authentication;
+                      final credential = GoogleAuthProvider.credential(
+                        accessToken: googleAuth.accessToken,
+                        idToken: googleAuth.idToken,
+                      );
+
+                      // Firebase認証
+                      final UserCredential userCredential = await FirebaseAuth
+                          .instance
+                          .signInWithCredential(credential);
+
+                      if (userCredential.user != null) {
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('URLを開けませんでした')),
+                          const SnackBar(
+                              content: Text('Googleアカウントでの登録が完了しました')),
+                        );
+
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const CreateUserNamePage(),
+                          ),
+                          (route) => false,
                         );
                       }
-                    },
-                  ),
-                  const TextSpan(text: 'を読む'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _createAccount,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text('登録', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(text: 'アカウント登録済みの方は'),
-                  TextSpan(
-                    text: 'こちら',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('登録に失敗しました: $e')),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildButton(
+                  'Appleで登録',
+                  onPressed: () async {
+                    try {
+                      final appleCredential =
+                          await SignInWithApple.getAppleIDCredential(
+                        scopes: [
+                          AppleIDAuthorizationScopes.email,
+                          AppleIDAuthorizationScopes.fullName,
+                        ],
+                      );
+
+                      final oauthCredential =
+                          OAuthProvider("apple.com").credential(
+                        idToken: appleCredential.identityToken,
+                        accessToken: appleCredential.authorizationCode,
+                      );
+
+                      final userCredential = await FirebaseAuth.instance
+                          .signInWithCredential(oauthCredential);
+                      if (mounted && userCredential.user != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Appleアカウントでの登録が完了しました')),
+                        );
+                      }
+
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => const CreateUserNamePage(),
+                        ),
+                        (route) => false,
+                      );
+                    } catch (e) {
+                      if (e is SignInWithAppleAuthorizationException) {
+                        switch (e.code) {
+                          case AuthorizationErrorCode.canceled:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Appleアカウントでログインがキャンセルされました。')),
+                            );
+                            break;
+                          case AuthorizationErrorCode.failed:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('サインインに失敗しました。')),
+                            );
+                            break;
+                          case AuthorizationErrorCode.invalidResponse:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('無効なレスポンスが返されました。')),
+                            );
+                            break;
+                          case AuthorizationErrorCode.notHandled:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('サインインが処理されませんでした。')),
+                            );
+                            break;
+                          case AuthorizationErrorCode.unknown:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('不明なエラーが発生しました。')),
+                            );
+                            break;
+                          case AuthorizationErrorCode.notInteractive:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('インタラクティブではありません。')),
+                            );
+                            break;
+                          default:
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('未処理のエラーが発生しました。')),
+                            );
+                            break;
+                        }
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'ログインはこちら',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    recognizer: TapGestureRecognizer()..onTap = () {
-                      Navigator.pop(context);
-                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _usernameController.dispose();
-    super.dispose();
+  Widget _buildButton(String text, {required VoidCallback onPressed}) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white.withOpacity(0.2),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          side: BorderSide(
+            color: Colors.white.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
   }
 }

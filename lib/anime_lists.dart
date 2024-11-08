@@ -166,4 +166,14 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/yurukyan.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21928',
   ),
+  AnimeList(
+    name: 'やはり俺の青春ラブコメはまちがっている。',
+    imageAsset: 'assets/images/oregairu.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=22967',
+  ),
+  AnimeList(
+    name: '僕のヒーローアカデミア',
+    imageAsset: 'assets/images/my_hero.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20868',
+  ),
 ];

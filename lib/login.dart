@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
-import 'create_account.dart';
+import 'create_account_mailaddress.dart';
 import 'password_reset.dart';
-import 'profile.dart';
+// import 'profile.dart';
 
 class LoginPage extends StatefulWidget {
-  final VoidCallback onLoginSuccess;
-
-  const LoginPage({super.key, required this.onLoginSuccess});
+  const LoginPage({super.key});
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -27,6 +25,7 @@ class LoginPageState extends State<LoginPage> {
       );
       
       if (userCredential.user != null && !userCredential.user!.emailVerified) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('メールアドレスの認証が完了していません。認証メールのリンクをクリックしてください。')),
         );
@@ -34,14 +33,12 @@ class LoginPageState extends State<LoginPage> {
         return;
       }
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ログインに成功しました')),
       );
-      widget.onLoginSuccess(); // ログイン成功を親に通知
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const ProfilePage()),
-      );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('ログインに失敗しました: ${e.message}')),
       );
@@ -113,7 +110,7 @@ class LoginPageState extends State<LoginPage> {
                     recognizer: TapGestureRecognizer()..onTap = () async {
                       final result = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const CreateAccountPage()),
+                        MaterialPageRoute(builder: (context) => const CreateAccountMailaddressPage()),
                       );
                       if (result == true) {
                         setState(() {

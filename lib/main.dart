@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'map.dart';
-import 'login.dart';
 import 'profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
@@ -16,6 +15,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'provider/subscription_state.dart';
+import 'create_account.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +82,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '映画&アニメ聖地SNS',
+      title: 'アニメ聖地マップ - Seichi',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -140,12 +140,8 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
       const Home(),
       const MapPage(),
       const RegistrationPage(),
-      _isLoggedIn ? const ProfilePage() : LoginPage(onLoginSuccess: _handleLoginSuccess),
+      _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
-  }
-
-  void _handleLoginSuccess() {
-    _updateLoginStatus(true);
   }
 
   void _onItemTapped(int index) {

@@ -3,10 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 import 'seichi_registration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +11,9 @@ import 'provider/subscription_state.dart';
 import 'anime_lists.dart';
 import 'provider/visited_spots_provider.dart';
 import 'subscription_premium.dart';
+import 'utils/kuchikomi.dart';
+import 'utils/report.dart';
+import 'ad/ad_banner.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -222,7 +222,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context).pop(false); // キャンセル
+                              Navigator.of(context).pop(false);
                             },
                             child: const Text(
                               'キャンセル',
@@ -231,7 +231,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context).pop(true); // 解除を確定
+                              Navigator.of(context).pop(true);
                             },
                             child: const Text(
                               '解除',
@@ -369,6 +369,21 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Consumer(
+              builder: (context, ref, child) {
+                final subscriptionState = ref.watch(subscriptionProvider);
+                return subscriptionState.when(
+                  data: (isSubscribed) {
+                    if (isSubscribed) {
+                      return const SizedBox.shrink();
+                    }
+                    return const AdBanner();
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const AdBanner(),
+                );
+              },
+            ),
             SizedBox(
               width: MediaQuery.of(context).size.width,
               height: 250,
@@ -738,7 +753,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                   builder:
                                                                       (BuildContext
                                                                           context) {
-                                                                    return _ReportDialog();
+                                                                    return const ReportDialog();
                                                                   },
                                                                 );
 
@@ -849,10 +864,10 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
-            Navigator.of(context).push(
+            final result = await Navigator.of(context).push(
               MaterialPageRoute(
                 fullscreenDialog: true,
                 builder: (BuildContext context) {
@@ -860,6 +875,12 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 },
               ),
             );
+
+            // レビューが投稿された場合（result == true）、レビューリストを更新
+            if (result == true) {
+              await _fetchReviews();
+              await _calculateAverageRating();
+            }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('ログインが必要です')),
@@ -906,267 +927,5 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     } else {
       throw '地図を開けませんでした: $url';
     }
-  }
-}
-
-class ReviewForm extends StatefulWidget {
-  final DocumentSnapshot spot;
-
-  const ReviewForm({super.key, required this.spot});
-
-  @override
-  ReviewFormState createState() => ReviewFormState();
-}
-
-class ReviewFormState extends State<ReviewForm> {
-  final _formKey = GlobalKey<FormState>();
-  final _reviewController = TextEditingController();
-  int _rating = 1;
-  XFile? _image;
-  bool _isPickingImage = false;
-  bool _showImageError = false; // 追加
-
-  Future<void> _pickImage() async {
-    if (_isPickingImage) return;
-    setState(() {
-      _isPickingImage = true;
-      _showImageError = false; // 画像を選択した際にエラーをリセット
-    });
-
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      setState(() {
-        _image = image;
-      });
-    } catch (e) {
-      print('画像選択中にエラーが発生しました: $e');
-    } finally {
-      setState(() {
-        _isPickingImage = false;
-      });
-    }
-  }
-
-  Future<String?> _uploadImage(XFile image) async {
-    try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final imageRef = storageRef
-          .child('images/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = imageRef.putFile(File(image.path));
-      final snapshot = await uploadTask.whenComplete(() {});
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print('画像のアップロード中にエラーが発生しました: $e');
-      return null;
-    }
-  }
-
-  Future<void> _submitReview() async {
-    setState(() {
-      _showImageError = _image == null;
-    });
-
-    if (_formKey.currentState!.validate() && _image != null) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        String? imageUrl;
-        if (_image != null) {
-          imageUrl = await _uploadImage(_image!);
-        }
-
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-        final userName = userDoc['username'];
-        final userProfileImage = userDoc['profileImage'];
-
-        await FirebaseFirestore.instance.collection('reviews').add({
-          'userId': user.uid,
-          'userName': userName,
-          'userProfileImage': userProfileImage,
-          'spotId': widget.spot.id,
-          'work': widget.spot['work'],
-          'rating': _rating,
-          'review': _reviewController.text,
-          'imageUrl': imageUrl,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-        Navigator.pop(context);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('口コミを投稿',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('写真を追加',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _image == null
-                          ? const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo,
-                                    size: 64, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text('タップして写真を追加',
-                                    style: TextStyle(color: Colors.grey)),
-                              ],
-                            )
-                          : Image.file(
-                              File(_image!.path),
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
-                  if (_showImageError)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        '画像を選択してください。',
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  const Text('聖地の評価',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  RatingBar.builder(
-                    initialRating: _rating.toDouble(),
-                    minRating: 1,
-                    direction: Axis.horizontal,
-                    allowHalfRating: false,
-                    itemCount: 5,
-                    itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    itemBuilder: (context, _) => const Icon(
-                      Icons.star,
-                      color: Colors.orange,
-                    ),
-                    onRatingUpdate: (rating) {
-                      setState(() {
-                        _rating = rating.toInt();
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('口コミの内容',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _reviewController,
-                    decoration: const InputDecoration(
-                      hintText: '聖地の感想を書いてください',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 5,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '口コミの内容を入力してください';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _submitReview,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: const Text('投稿する',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReportDialog extends StatefulWidget {
-  @override
-  _ReportDialogState createState() => _ReportDialogState();
-}
-
-class _ReportDialogState extends State<_ReportDialog> {
-  final List<String> _reportReasons = [
-    '不適なコンテンツ',
-    'スパムまたは広告',
-    '誤った情報',
-    'その他',
-  ];
-  String? _selectedReason;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('報告理由を選択してください',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(_reportReasons.length, (index) {
-          return RadioListTile<String>(
-            title: Text(_reportReasons[index]),
-            value: _reportReasons[index],
-            groupValue: _selectedReason,
-            onChanged: (String? value) {
-              setState(() {
-                _selectedReason = value;
-              });
-            },
-          );
-        }),
-      ),
-      actions: <Widget>[
-        TextButton(
-          child: const Text('キャンセル'),
-          onPressed: () => Navigator.of(context).pop(null),
-        ),
-        TextButton(
-          child: const Text('報告する'),
-          onPressed: () {
-            Navigator.of(context).pop(_selectedReason);
-          },
-        ),
-      ],
-    );
   }
 }
