@@ -13,10 +13,18 @@ import 'anime_more.dart';
 import 'ranking_review.dart';
 import 'ranking_comment.dart';
 import 'subscription_premium.dart';
+import 'ad/ad_native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'provider/subscription_state.dart';
 
-class Home extends StatelessWidget {
+class Home extends ConsumerStatefulWidget {
   const Home({super.key});
 
+  @override
+  HomeState createState() => HomeState();
+}
+
+class HomeState extends ConsumerState<Home> {
   Future<String> _loadRakutenApplicationId() async {
     final String jsonString =
         await rootBundle.loadString('assets/config/config.json');
@@ -48,7 +56,10 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final subscriptionState = ref.watch(subscriptionProvider);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -60,32 +71,45 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SubscriptionPremium(),
+          subscriptionState.when(
+            data: (isPro) => isPro 
+              ? const SliverToBoxAdapter(child: SizedBox.shrink())
+              : SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SubscriptionPremium(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.blue,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'assets/subscription_images/premium_image_seichi.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
                     ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.blue,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Image.asset(
-                    'assets/subscription_images/premium_image_seichi.png',
-                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
+            loading: () => const SliverToBoxAdapter(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => SliverToBoxAdapter(
+              child: Center(child: Text('エラーが発生しました: $error')),
             ),
           ),
           SliverToBoxAdapter(
@@ -431,59 +455,81 @@ class Home extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubscriptionPremium(),
-                        ),
-                      );
-                    },
-                    child: Stack(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.blue,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Image.asset(
-                            'assets/subscription_images/4.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'Premiumプラン',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                  subscriptionState.when(
+                    data: (isPro) => isPro 
+                      ? const SizedBox.shrink()
+                      : GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SubscriptionPremium(),
                               ),
-                            ),
+                            );
+                          },
+                          child: Stack(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.blue,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Image.asset(
+                                  'assets/subscription_images/4.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    'Premiumプラン',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => Center(child: Text('エラーが発生しました: $error')),
                   ),
                 ],
               ),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          subscriptionState.when(
+            data: (isPro) => isPro 
+              ? const SliverToBoxAdapter(child: SizedBox.shrink())
+              : const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: NativeAdWidget(),
+                  ),
+                ),
+            loading: () => const SliverToBoxAdapter(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => SliverToBoxAdapter(
+              child: Center(child: Text('エラーが発生しました: $error')),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -541,12 +587,27 @@ class Home extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                child: Image.network(
-                  review['imageUrl'] ?? 'https://via.placeholder.com/150',
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                borderRadius: BorderRadius.circular(8),
+                child: review['imageUrl'] != null
+                  ? Image.network(
+                      review['imageUrl'],
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.grey[200],
+                      ),
+                      height: 120,
+                      width: double.infinity,
+                      child: const Icon(
+                        Icons.photo_outlined,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8),

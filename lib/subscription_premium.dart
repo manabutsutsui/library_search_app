@@ -186,95 +186,102 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                'Premiumプランで\nSeichiをもっと楽しもう!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 16, bottom: 8),
-              padding: const EdgeInsets.all(8),
-              width: 0.6 * MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 225, 254, 255),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.blue,
-                  width: 2,
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    '月額プラン',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'Premiumプランで\nSeichiをもっと楽しもう!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handlePurchase,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                  Container(
+                    margin: const EdgeInsets.only(top: 16, bottom: 8),
+                    padding: const EdgeInsets.all(8),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 225, 254, 255),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.blue,
+                        width: 2,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            '¥500/月',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          '月額プラン',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _handlePurchase,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  '¥500/月',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          _launchURL('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/');
+                        },
+                        child: const Text(
+                          '利用規約',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _launchURL('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/');
+                        },
+                        child: const Text(
+                          'プライバシーポリシー',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    _launchURL('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/');
-                  },
-                  child: const Text(
-                    '利用規約',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    _launchURL('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/');
-                  },
-                  child: const Text(
-                    'プライバシーポリシー',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),

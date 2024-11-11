@@ -94,9 +94,26 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
         final uploadTask = imageRef.putFile(File(image.path));
         final snapshot = await uploadTask.whenComplete(() {});
         final downloadUrl = await snapshot.ref.getDownloadURL();
+        
+        // ユーザードキュメントの更新
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'profileImage': downloadUrl,
         });
+
+        // レビューコレクションの更新
+        final reviewsQuery = await FirebaseFirestore.instance
+            .collection('reviews')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        final batch = FirebaseFirestore.instance.batch();
+        for (var doc in reviewsQuery.docs) {
+          batch.update(doc.reference, {
+            'userProfileImage': downloadUrl,
+          });
+        }
+        await batch.commit();
+
         setState(() {
           _profileImageUrl = downloadUrl;
         });

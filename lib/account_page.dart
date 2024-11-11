@@ -44,10 +44,25 @@ class AccountPageState extends State<AccountPage> {
       await _firestore.collection('users').doc(user.uid).update({
         'username': _usernameController.text,
       });
+
+      final reviewsQuery = await _firestore
+          .collection('reviews')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      final batch = _firestore.batch();
+      for (var doc in reviewsQuery.docs) {
+        batch.update(doc.reference, {
+          'userName': _usernameController.text,
+        });
+      }
+      await batch.commit();
+
       setState(() {
         _username = _usernameController.text;
         _isEditing = false;
       });
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ユーザー名を更新しました')),
       );

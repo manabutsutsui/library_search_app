@@ -60,11 +60,7 @@ class ReviewFormState extends State<ReviewForm> {
   }
 
   Future<void> _submitReview() async {
-    setState(() {
-      _showImageError = _image == null;
-    });
-
-    if (_formKey.currentState!.validate() && _image != null) {
+    if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         String? imageUrl;
@@ -101,13 +97,15 @@ class ReviewFormState extends State<ReviewForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('口コミを投稿',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: Colors.blue,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -118,7 +116,7 @@ class ReviewFormState extends State<ReviewForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('写真を追加',
+                  const Text('写真を追加（任意）',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   GestureDetector(
@@ -148,13 +146,7 @@ class ReviewFormState extends State<ReviewForm> {
                     ),
                   ),
                   if (_showImageError)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        '画像を選択してください。',
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      ),
-                    ),
+                    const SizedBox.shrink(),
                   const SizedBox(height: 16),
                   const Text('聖地の評価',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

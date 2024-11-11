@@ -191,9 +191,12 @@ class RankingReviewPageState extends ConsumerState<RankingReviewPage> {
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Image.asset(
-                        'assets/subscription_images/premium_image_seichi.png',
-                        fit: BoxFit.cover,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/subscription_images/premium_image_seichi.png',
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

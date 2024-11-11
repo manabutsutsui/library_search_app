@@ -176,4 +176,19 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/my_hero.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20868',
   ),
+  AnimeList(
+    name: '君に届け',
+    imageAsset: 'assets/images/kiminitodoke.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21219',
+  ),
+  AnimeList(
+    name: 'もののけ姫',
+    imageAsset: 'assets/images/mononoke.png',
+    imageUrl: 'https://www.ghibli.jp/works/mononoke/',
+  ),
+  AnimeList(
+    name: '呪術廻戦',
+    imageAsset: 'assets/images/jujutsu.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=26467',
+  ),
 ];

@@ -1,263 +1,396 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
-import 'visited_seichi_detail.dart';
-import 'subscription_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'provider/subscription_state.dart';
+import 'other_user_profile.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'utils/seichi_registration.dart';
 
 class RegistrationPage extends ConsumerWidget {
   const RegistrationPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          title: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [
+              Tab(
+                child: Text(
+                  '聖地登録',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'ユーザーランキング',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _VisitedSpotsTab(),
+            _UserRankingTab(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (BuildContext context) => const SeichiRegistrationPage(),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('ログインが必要です')),
+              );
+            }
+          },
+          child: const Icon(Icons.edit),
+        ),
+      ),
+    );
+  }
+}
+
+class _VisitedSpotsTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text('聖地登録', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-        backgroundColor: Colors.blue,
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user?.uid)
-            .collection('visited_spots')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    if (user == null) {
+      return _buildEmptyState(context);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('visited_spots')
+          .orderBy('visitDate', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+        }
+
+        final spots = snapshot.data?.docs ?? [];
+
+        if (spots.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: spots.length,
+          itemBuilder: (context, index) {
+            final spot = spots[index].data() as Map<String, dynamic>;
+            final visitDate = (spot['visitDate'] as Timestamp).toDate();
             
-          if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-          }
-            
-          final visitedSpotsSnapshot = snapshot.data!;
-          final visitedSpots = visitedSpotsSnapshot.docs.length;
-            
-          return FutureBuilder<QuerySnapshot>(
-            future: FirebaseFirestore.instance.collection('spots').get(),
-            builder: (context, spotsSnapshot) {
-              if (spotsSnapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-            
-              if (spotsSnapshot.hasError) {
-                return Center(
-                    child: Text('エラーが発生しました: ${spotsSnapshot.error}'));
-              }
-            
-              final totalSpots = spotsSnapshot.data!.docs.length;
-            
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Container(
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (spot['imageUrl'] != null)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                      child: Image.network(
+                        spot['imageUrl'],
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
+                            const Icon(Icons.location_on),
                             Text(
-                              '⭐️あなたの訪れた聖地⭐️',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$visitedSpots / $totalSpots 件',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                              spot['spotName'] ?? '不明な聖地',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      ref.watch(subscriptionProvider).when(
-                            data: (isSubscribed) => isSubscribed
-                                ? const SizedBox()
-                                : Column(
-                                    children: [
-                                      Stack(
-                                        children: [
-                                          Container(
-                                            margin: const EdgeInsets.symmetric(
-                                                vertical: 16),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: Colors.blue,
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Image.asset(
-                                              'assets/subscription_images/2.png',
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 0,
-                                            right: 8,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: const Text(
-                                                'Premiumプラン',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const SubscriptionPremium()),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 32, vertical: 16),
-                                        ),
-                                        child: const Text(
-                                          'Premiumプランの詳細',
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                            loading: () => const CircularProgressIndicator(),
-                            error: (_, __) => const Text('エラーが発生しました'),
+                        Text(
+                          '訪問日: ${visitDate.year}年${visitDate.month}月${visitDate.day}日',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
                           ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: visitedSpotsSnapshot.docs.length,
-                        itemBuilder: (context, index) {
-                          final visitedSpot =
-                              visitedSpotsSnapshot.docs[index];
-                          final visitedSpotData =
-                              visitedSpot.data() as Map<String, dynamic>;
-                          final imageUrls =
-                              visitedSpotData['imageUrls'] as List<dynamic>?;
-                          final visitedDate =
-                              visitedSpotData['visitedDate'] as Timestamp?;
-                          
-                          String formattedVisitedDate = '未設定';
-                          
-                          if (visitedDate != null) {
-                            formattedVisitedDate = DateFormat('yyyy/MM/dd')
-                                .format(visitedDate.toDate());
-                          }
-                          
-                          return Card(
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        VisitedSeichiDetailPage(
-                                      visitedSpotData: visitedSpotData,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Column(
-                                children: [
-                                  imageUrls != null && imageUrls.isNotEmpty
-                                      ? AspectRatio(
-                                          aspectRatio: 16 / 9,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  const BorderRadius.vertical(
-                                                      top:
-                                                          Radius.circular(8)),
-                                              image: DecorationImage(
-                                                image: NetworkImage(
-                                                    imageUrls.first),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : const AspectRatio(
-                                          aspectRatio: 16 / 9,
-                                          child: Icon(Icons.landscape,
-                                              size: 100, color: Colors.grey),
-                                        ),
-                                  ListTile(
-                                    title: Text(visitedSpot.id,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                            '作品名: ${visitedSpotData['work']}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis),
-                                        Text('訪問日: $formattedVisitedDate'),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                        ),
+                        if (spot['memo'] != null && spot['memo'].isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            spot['memo'],
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          const Text(
+            'ここにあなたの「聖地記録」の一覧が\n表示されます。',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  final Uri url = Uri.parse('https://www.tiktok.com/@seichi_tiktok_4012');
+                  if (!await launchUrl(url)) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('URLを開けませんでした')),
+                      );
+                    }
+                  }
+                },
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.videocam,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Seichiの使い方',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'TikTokで紹介',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+class _UserRankingTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').get().asStream(),
+      builder: (context, usersSnapshot) {
+        if (usersSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (usersSnapshot.hasError) {
+          return Center(child: Text('エラーが発生しました: ${usersSnapshot.error}'));
+        }
+
+        final users = usersSnapshot.data!.docs;
+
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: Future.wait(
+            users.map((user) async {
+              final visitedSpotsSnapshot = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.id)
+                  .collection('visited_spots')
+                  .get();
+
+              final userData = user.data() as Map<String, dynamic>;
+
+              return {
+                'userId': user.id,
+                'userName': userData['username'] ?? '名無しユーザー',
+                'profileImage': userData['profileImage'],
+                'visitedCount': visitedSpotsSnapshot.docs.length,
+              };
+            }),
+          ),
+          builder: (context, rankingSnapshot) {
+            if (rankingSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (rankingSnapshot.hasError) {
+              return Center(
+                  child: Text('エラーが発生しました: ${rankingSnapshot.error}'));
+            }
+
+            final rankings = rankingSnapshot.data!;
+            rankings
+                .sort((a, b) => b['visitedCount'].compareTo(a['visitedCount']));
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: rankings.length,
+              itemBuilder: (context, index) {
+                final ranking = rankings[index];
+                final isCurrentUser =
+                    ranking['userId'] == FirebaseAuth.instance.currentUser?.uid;
+
+                return Card(
+                  elevation: isCurrentUser ? 8 : 2,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => OtherUserProfilePage(
+                                userId: ranking['userId'],
+                                userName: ranking['userName'],
+                                profileImage: ranking['profileImage'])),
+                      );
+                    },
+                    child: ListTile(
+                      leading: Container(
+                        width: 60,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _getRankingColor(index),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}位',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: ranking['profileImage'] != null
+                                ? NetworkImage(ranking['profileImage'])
+                                : null,
+                            child: ranking['profileImage'] == null
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ranking['userName'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  '訪問した聖地: ${ranking['visitedCount']}件',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      tileColor:
+                          isCurrentUser ? Colors.blue.withOpacity(0.1) : null,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Color _getRankingColor(int index) {
+    switch (index) {
+      case 0:
+        return Colors.amber;
+      case 1:
+        return Colors.grey[400]!;
+      case 2:
+        return Colors.brown[300]!;
+      default:
+        return Colors.blue;
+    }
   }
 }
