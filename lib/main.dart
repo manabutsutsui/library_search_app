@@ -14,7 +14,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'provider/subscription_state.dart';
+import 'providers/subscription_state.dart';
 import 'create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 

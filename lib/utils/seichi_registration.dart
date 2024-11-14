@@ -5,15 +5,17 @@ import 'seichi_search.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/visited_spots_provider.dart';
 
-class SeichiRegistrationPage extends StatefulWidget {
+class SeichiRegistrationPage extends ConsumerStatefulWidget {
   const SeichiRegistrationPage({super.key});
 
   @override
-  State<SeichiRegistrationPage> createState() => _SeichiRegistrationPageState();
+  ConsumerState<SeichiRegistrationPage> createState() => _SeichiRegistrationPageState();
 }
 
-class _SeichiRegistrationPageState extends State<SeichiRegistrationPage> {
+class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final _memoController = TextEditingController();
   DateTime _visitDate = DateTime.now();
@@ -57,6 +59,9 @@ class _SeichiRegistrationPageState extends State<SeichiRegistrationPage> {
         });
 
         if (mounted) {
+          final visitedSpotsNotifier = ref.read(visitedSpotsProvider.notifier);
+          visitedSpotsNotifier.addVisitedSpot(_selectedSpot!.id, _selectedSpot!['name']);
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('聖地を登録しました')),
           );
@@ -138,6 +143,8 @@ class _SeichiRegistrationPageState extends State<SeichiRegistrationPage> {
                 },
               ),
               const SizedBox(height: 16),
+              const Text('聖地を選択', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
@@ -177,6 +184,8 @@ class _SeichiRegistrationPageState extends State<SeichiRegistrationPage> {
                 ),
               ),
               const SizedBox(height: 16),
+              const Text('写真を追加', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
@@ -226,6 +235,8 @@ class _SeichiRegistrationPageState extends State<SeichiRegistrationPage> {
                 ),
               ),
               const SizedBox(height: 16),
+              const Text('メモ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
               TextFormField(
                 controller: _memoController,
                 decoration: const InputDecoration(

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import 'subscription_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'provider/subscription_state.dart';
+import 'providers/subscription_state.dart';
 
 class RankingReviewPage extends ConsumerStatefulWidget {
   const RankingReviewPage({super.key});

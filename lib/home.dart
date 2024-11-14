@@ -15,7 +15,7 @@ import 'ranking_comment.dart';
 import 'subscription_premium.dart';
 import 'ad/ad_native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'provider/subscription_state.dart';
+import 'providers/subscription_state.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});

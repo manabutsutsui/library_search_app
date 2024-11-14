@@ -10,6 +10,8 @@ import 'anime_lists.dart';
 import 'utils/kuchikomi.dart';
 import 'utils/report.dart';
 import 'subscription_premium.dart';
+import 'providers/subscription_state.dart';
+import 'utils/seichi_note.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -222,39 +224,112 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         const Text('・聖地メモ',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.blue,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Builder(
-                            builder: (BuildContext context) {
-                              return GestureDetector(
-                                onTap: () {
-                                  DefaultTabController.of(context).animateTo(1);
-                                },
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
-                                    'assets/subscription_images/seichi_note.png',
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Center(
-                          child: Text(
-                            '🔐あなたにだけ表示されます。',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 119, 119, 119)),
-                          ),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final subscriptionState = ref.watch(subscriptionProvider);
+                            
+                            return subscriptionState.when(
+                              data: (isPro) {
+                                if (isPro) {
+                                  return FutureBuilder<DocumentSnapshot>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .collection('seichi_notes')
+                                        .doc(widget.spot.id)
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      }
+
+                                      if (!snapshot.hasData || !snapshot.data!.exists) {
+                                        return const SizedBox.shrink();
+                                      }
+
+                                      final noteData = snapshot.data!.data() as Map<String, dynamic>;
+                                      final note = noteData['note'] as String?;
+
+                                      if (note == null || note.isEmpty) {
+                                        return const SizedBox.shrink();
+                                      }
+
+                                      return Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[100],
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey[300]!),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              note,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                height: 1.5,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            const Text(
+                                              '※このメモはあなただけに表示されています',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }
+                                return Column(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.blue,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Builder(
+                                        builder: (BuildContext context) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              DefaultTabController.of(context).animateTo(1);
+                                            },
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(8),
+                                              child: Image.asset(
+                                                'assets/subscription_images/seichi_note.png',
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Center(
+                                      child: Text(
+                                        '🔐あなたにだけ表示されます。',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color.fromARGB(255, 119, 119, 119),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                              loading: () => const Center(child: CircularProgressIndicator()),
+                              error: (_, __) => const SizedBox.shrink(),
+                            );
+                          },
                         ),
                         const SizedBox(height: 32),
                         const Text('・基本情報',
@@ -290,7 +365,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         const SizedBox(height: 8),
                         Text(widget.spot['work'],
                             style: const TextStyle(
-                                fontSize: 32, fontWeight: FontWeight.bold)),
+                                fontSize: 20, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Builder(
                           builder: (context) {
@@ -346,6 +421,20 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         widget.spot['imageURL'],
                                         width: double.infinity,
                                         fit: BoxFit.cover,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      InkWell(
+                                        onTap: () => _launchURL(widget.spot['imageURL']),
+                                        child: Center(
+                                          child: Text(
+                                            '出典元: ${widget.spot['imageURL']}',
+                                            style: const TextStyle(
+                                              fontSize: 4,
+                                              color: Colors.blue,
+                                              decoration: TextDecoration.underline,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                       const SizedBox(height: 16),
                                     ] else ...[
@@ -703,113 +792,133 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SubscriptionPremium(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                        ),
-                        child: const Text(
-                          'PREMIUMプラン 限定機能',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SubscriptionPremium(),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final subscriptionState = ref.watch(subscriptionProvider);
+                        
+                        return subscriptionState.when(
+                          data: (isPro) {
+                            if (isPro) {
+                              return SeichiNote(spotId: widget.spot.id);
+                            }
+                            return Column(
                               children: [
-                                Text(
-                                  '👑 PREMIUMプラン限定機能 👑',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                                Center(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const SubscriptionPremium(),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                    ),
+                                    child: const Text(
+                                      'PREMIUMプラン 限定機能',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const SubscriptionPremium(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              '👑 PREMIUMプラン限定機能 👑',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Text(
+                                          'PREMIUMプランに加入すると、\n「ノート機能」が使えるようになります❗',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        SizedBox(height: 20),
+                                        Text(
+                                          '◆ あなただけに表示されるメモ\n◆ 写真を何枚でも保存できる',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        SizedBox(height: 20),
+                                        Text(
+                                          '<<詳細はこのメモをタップ👆>>',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const SubscriptionPremium(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.blue,
+                                        width: 2,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.asset(
+                                        'assets/subscription_images/premium_image_seichi.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              'PREMIUMプランに加入すると、\n「ノート機能」が使えるようになります❗',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              '◆ あなただけに表示されるメモ\n◆ 写真を何枚でも保存できる',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              '<<詳細はこのメモをタップ👆>>',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SubscriptionPremium(),
-                          ),
+                            );
+                          },
+                          loading: () => const Center(child: CircularProgressIndicator()),
+                          error: (_, __) => const SizedBox.shrink(),
                         );
                       },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.blue,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'assets/subscription_images/premium_image_seichi.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 ),

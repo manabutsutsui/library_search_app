@@ -5,9 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'provider/visited_spots_provider.dart';
+import 'providers/visited_spots_provider.dart';
 import 'utils/search_anime.dart';
 import 'utils/seichi_request.dart';
+import 'utils/cluster_manager.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -18,14 +19,16 @@ class MapPage extends ConsumerStatefulWidget {
 
 class _MapPageState extends ConsumerState<MapPage> {
   GoogleMapController? mapController;
+  ClusterManager? _clusterManager;
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
+  List<MarkerData> _markerDataList = [];
   bool _isLoading = true;
   OverlayEntry? _overlayEntry;
   String? _selectedAnime;
+  double _currentZoom = 10.0;
 
   final TextEditingController _searchController = TextEditingController();
-
   bool _showOnlyVisited = false;
 
   @override
@@ -75,7 +78,24 @@ class _MapPageState extends ConsumerState<MapPage> {
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
+      _clusterManager = ClusterManager(
+        mapController: controller,
+        markers: _markerDataList,
+      );
     });
+    controller.setMapStyle('''
+      [
+        {
+          "featureType": "poi",
+          "elementType": "labels",
+          "stylers": [
+            {
+              "visibility": "off"
+            }
+          ]
+        }
+      ]
+    ''');
   }
 
   Future<void> _fetchSpots() async {
@@ -86,25 +106,22 @@ class _MapPageState extends ConsumerState<MapPage> {
     }
     
     QuerySnapshot snapshot = await spotsQuery.get();
-    Set<Marker> newMarkers = {};
-    Set<String> visitedSpots = ref.read(visitedSpotsProvider);
+    _markerDataList.clear();
+    final visitedSpots = ref.read(visitedSpotsProvider);
 
     for (var doc in snapshot.docs) {
       try {
         GeoPoint location = doc['location'];
-        bool isVisited = visitedSpots.contains(doc.id);
+        bool isVisited = visitedSpots.containsKey(doc.id);
+        
         if (!_showOnlyVisited || isVisited) {
-          newMarkers.add(Marker(
-            markerId: MarkerId(doc.id),
+          _markerDataList.add(MarkerData(
+            id: doc.id,
             position: LatLng(location.latitude, location.longitude),
+            title: doc['name'],
+            snippet: doc['work'],
+            isVisited: isVisited,
             onTap: () => _showSpotDetails(doc),
-            icon: isVisited
-                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
-                : BitmapDescriptor.defaultMarker,
-            infoWindow: InfoWindow(
-              title: doc['name'],
-              snippet: doc['work'],
-            ),
           ));
         }
       } catch (e) {
@@ -112,17 +129,30 @@ class _MapPageState extends ConsumerState<MapPage> {
       }
     }
 
-    setState(() {
-      _markers = newMarkers;
-      _isLoading = false;
-    });
+    if (_clusterManager != null) {
+      _clusterManager = ClusterManager(
+        mapController: mapController!,
+        markers: _markerDataList,
+      );
+    }
 
-    // 選択されたアニメの聖地の位置に基づいてカメラを移動
+    await _updateMarkers();
+
     if (_selectedAnime != null && _markers.isNotEmpty) {
       LatLngBounds bounds = _getBounds(_markers);
       mapController?.animateCamera(
         CameraUpdate.newLatLngBounds(bounds, 50),
       );
+    }
+  }
+
+  Future<void> _updateMarkers() async {
+    if (_clusterManager != null) {
+      final markers = await _clusterManager!.getClusteredMarkers(_currentZoom);
+      setState(() {
+        _markers = markers;
+        _isLoading = false;
+      });
     }
   }
 
@@ -218,9 +248,16 @@ class _MapPageState extends ConsumerState<MapPage> {
           .doc(user.uid)
           .collection('visited_spots')
           .get();
-      final visitedSpotIds =
-          visitedSpotsSnapshot.docs.map((doc) => doc.id).toList();
-      ref.read(visitedSpotsProvider.notifier).setVisitedSpots(visitedSpotIds);
+          
+      final visitedSpots = visitedSpotsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'spotId': data['spotId'],
+          'spotName': data['spotName'],
+        };
+      }).toList();
+      
+      ref.read(visitedSpotsProvider.notifier).setVisitedSpots(visitedSpots);
     }
   }
 
@@ -310,26 +347,18 @@ class _MapPageState extends ConsumerState<MapPage> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    _onMapCreated(controller);
-                    controller.setMapStyle('''
-                      [
-                        {
-                          "featureType": "poi",
-                          "elementType": "labels",
-                          "stylers": [
-                            {
-                              "visibility": "off"
-                            }
-                          ]
-                        }
-                      ]
-                    ''');
-                  },
+                  onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: _center,
-                    zoom: 10.0,
+                    zoom: _currentZoom,
                   ),
+                  onCameraMove: (position) {
+                    _currentZoom = position.zoom;
+                    _updateMarkers();
+                  },
+                  onCameraIdle: () {
+                    _updateMarkers();
+                  },
                   markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
@@ -408,6 +437,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   void dispose() {
     _removeOverlay();
     _searchController.dispose();
+    mapController?.dispose();
     super.dispose();
   }
 }

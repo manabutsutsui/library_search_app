@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'create_account_mailaddress.dart';
 import 'password_reset.dart';
-// import 'profile.dart';
+import 'profile.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,23 +19,32 @@ class LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      
+
       if (userCredential.user != null && !userCredential.user!.emailVerified) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('メールアドレスの認証が完了していません。認証メールのリンクをクリックしてください。')),
+          const SnackBar(
+              content: Text('メールアドレスの認証が完了していません。認証メールのリンクをクリックしてください。')),
         );
         await FirebaseAuth.instance.signOut();
         return;
       }
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ログインに成功しました')),
+      );
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const ProfilePage(),
+        ),
+        (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -50,7 +59,11 @@ class LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('ログイン', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('ログイン',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
       ),
       body: Padding(
@@ -80,7 +93,11 @@ class LoginPageState extends State<LoginPage> {
                 backgroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text('ログイン', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text('ログイン',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ),
             if (_showVerificationMessage)
               Container(
@@ -107,17 +124,20 @@ class LoginPageState extends State<LoginPage> {
                       color: Colors.blue,
                       decoration: TextDecoration.underline,
                     ),
-                    recognizer: TapGestureRecognizer()..onTap = () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CreateAccountMailaddressPage()),
-                      );
-                      if (result == true) {
-                        setState(() {
-                          _showVerificationMessage = true;
-                        });
-                      }
-                    },
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const CreateAccountMailaddressPage()),
+                        );
+                        if (result == true) {
+                          setState(() {
+                            _showVerificationMessage = true;
+                          });
+                        }
+                      },
                   ),
                 ],
               ),
@@ -133,12 +153,14 @@ class LoginPageState extends State<LoginPage> {
                       color: Colors.blue,
                       decoration: TextDecoration.underline,
                     ),
-                    recognizer: TapGestureRecognizer()..onTap = () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PasswordResetPage()),
-                      );
-                    },
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PasswordResetPage()),
+                        );
+                      },
                   ),
                 ],
               ),
