@@ -92,27 +92,33 @@ class _SeichiNoteState extends State<SeichiNote> {
 
     setState(() => _isLoading = true);
 
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
 
-    for (final image in images) {
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final Reference ref = FirebaseStorage.instance
-          .ref()
-          .child('seichi_notes')
-          .child(userId)
-          .child(widget.spotId)
-          .child(fileName);
+      for (final image in images) {
+        final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final Reference ref = FirebaseStorage.instance
+            .ref()
+            .child('seichi_notes')
+            .child(userId)
+            .child(widget.spotId)
+            .child(fileName);
 
-      await ref.putFile(File(image.path));
-      final String downloadUrl = await ref.getDownloadURL();
+        await ref.putFile(File(image.path));
+        final String downloadUrl = await ref.getDownloadURL();
 
-      setState(() {
-        _imageUrls.add(downloadUrl);
-      });
+        setState(() {
+          _imageUrls.add(downloadUrl);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('画像のアップロードに失敗しました')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    await _saveNote();
   }
 
   Future<void> _removeImage(int index) async {
