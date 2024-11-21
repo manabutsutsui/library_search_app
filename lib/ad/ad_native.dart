@@ -36,7 +36,7 @@ class NativeAdWidgetState extends State<NativeAdWidget> {
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
-          print('Native ad failed to load: $error');
+          // print('Native ad failed to load: $error');
         },
       ),
       nativeTemplateStyle: NativeTemplateStyle(

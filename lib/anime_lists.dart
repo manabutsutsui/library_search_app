@@ -191,4 +191,29 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/jujutsu.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=26467',
   ),
+  AnimeList(
+    name: '弱虫ペダル',
+    imageAsset: 'assets/images/yowamushi.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=11443',
+  ),
+  AnimeList(
+    name: 'STEINS;GATE',
+    imageAsset: 'assets/images/syutage.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=10693',
+  ),
+  AnimeList(
+    name: 'りゅうおうのおしごと！',
+    imageAsset: 'assets/images/ryuono.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21953',
+  ),
+  AnimeList(
+    name: '僕の心のヤバイやつ',
+    imageAsset: 'assets/images/bokunokokoro.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27390',
+  ),
+  AnimeList(
+    name: '青春ブタ野郎はバニーガール先輩の夢を見ない',
+    imageAsset: 'assets/images/aobuta.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=22406',
+  ),
 ];

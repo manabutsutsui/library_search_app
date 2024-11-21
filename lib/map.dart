@@ -6,9 +6,8 @@ import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/visited_spots_provider.dart';
-import 'utils/search_anime.dart';
 import 'utils/seichi_request.dart';
-import 'utils/cluster_manager.dart';
+import 'utils/search_anime.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -19,14 +18,10 @@ class MapPage extends ConsumerStatefulWidget {
 
 class _MapPageState extends ConsumerState<MapPage> {
   GoogleMapController? mapController;
-  ClusterManager? _clusterManager;
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
-  List<MarkerData> _markerDataList = [];
   bool _isLoading = true;
   OverlayEntry? _overlayEntry;
-  String? _selectedAnime;
-  double _currentZoom = 10.0;
 
   final TextEditingController _searchController = TextEditingController();
   bool _showOnlyVisited = false;
@@ -78,10 +73,6 @@ class _MapPageState extends ConsumerState<MapPage> {
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
-      _clusterManager = ClusterManager(
-        mapController: controller,
-        markers: _markerDataList,
-      );
     });
     controller.setMapStyle('''
       [
@@ -100,27 +91,28 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   Future<void> _fetchSpots() async {
     Query spotsQuery = FirebaseFirestore.instance.collection('spots');
-    
-    if (_selectedAnime != null) {
-      spotsQuery = spotsQuery.where('work', isEqualTo: _selectedAnime);
-    }
-    
+
     QuerySnapshot snapshot = await spotsQuery.get();
-    _markerDataList.clear();
+    Set<Marker> newMarkers = {};
     final visitedSpots = ref.read(visitedSpotsProvider);
 
     for (var doc in snapshot.docs) {
       try {
         GeoPoint location = doc['location'];
         bool isVisited = visitedSpots.containsKey(doc.id);
-        
+
         if (!_showOnlyVisited || isVisited) {
-          _markerDataList.add(MarkerData(
-            id: doc.id,
+          newMarkers.add(Marker(
+            markerId: MarkerId(doc.id),
             position: LatLng(location.latitude, location.longitude),
-            title: doc['name'],
-            snippet: doc['work'],
-            isVisited: isVisited,
+            icon: isVisited
+                ? BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueBlue)
+                : BitmapDescriptor.defaultMarker,
+            infoWindow: InfoWindow(
+              title: doc['name'],
+              snippet: doc['work'],
+            ),
             onTap: () => _showSpotDetails(doc),
           ));
         }
@@ -129,31 +121,10 @@ class _MapPageState extends ConsumerState<MapPage> {
       }
     }
 
-    if (_clusterManager != null) {
-      _clusterManager = ClusterManager(
-        mapController: mapController!,
-        markers: _markerDataList,
-      );
-    }
-
-    await _updateMarkers();
-
-    if (_selectedAnime != null && _markers.isNotEmpty) {
-      LatLngBounds bounds = _getBounds(_markers);
-      mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 50),
-      );
-    }
-  }
-
-  Future<void> _updateMarkers() async {
-    if (_clusterManager != null) {
-      final markers = await _clusterManager!.getClusteredMarkers(_currentZoom);
-      setState(() {
-        _markers = markers;
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _markers = newMarkers;
+      _isLoading = false;
+    });
   }
 
   void _showSpotDetails(DocumentSnapshot spot) async {
@@ -179,7 +150,8 @@ class _MapPageState extends ConsumerState<MapPage> {
               children: [
                 Text(
                   spot['name'],
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(spot['address']),
                 const SizedBox(height: 10),
@@ -248,7 +220,7 @@ class _MapPageState extends ConsumerState<MapPage> {
           .doc(user.uid)
           .collection('visited_spots')
           .get();
-          
+
       final visitedSpots = visitedSpotsSnapshot.docs.map((doc) {
         final data = doc.data();
         return {
@@ -256,83 +228,9 @@ class _MapPageState extends ConsumerState<MapPage> {
           'spotName': data['spotName'],
         };
       }).toList();
-      
+
       ref.read(visitedSpotsProvider.notifier).setVisitedSpots(visitedSpots);
     }
-  }
-
-  LatLngBounds _getBounds(Set<Marker> markers) {
-    double? minLat, maxLat, minLng, maxLng;
-    
-    for (Marker marker in markers) {
-      if (minLat == null || marker.position.latitude < minLat) {
-        minLat = marker.position.latitude;
-      }
-      if (maxLat == null || marker.position.latitude > maxLat) {
-        maxLat = marker.position.latitude;
-      }
-      if (minLng == null || marker.position.longitude < minLng) {
-        minLng = marker.position.longitude;
-      }
-      if (maxLng == null || marker.position.longitude > maxLng) {
-        maxLng = marker.position.longitude;
-      }
-    }
-    
-    return LatLngBounds(
-      southwest: LatLng(minLat!, minLng!),
-      northeast: LatLng(maxLat!, maxLng!),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Stack(
-      alignment: Alignment.centerRight,
-      children: [
-        TextField(
-          controller: _searchController,
-          readOnly: true,
-          onTap: () {
-            showSearch(
-              context: context,
-              delegate: AnimeSearchDelegate(
-                onAnimeSelected: (animeName) {
-                  setState(() {
-                    _selectedAnime = animeName;
-                    _searchController.text = animeName;
-                  });
-                  _fetchSpots();
-                },
-              ),
-            );
-          },
-          decoration: InputDecoration(
-            hintText: _selectedAnime ?? 'アニメ名で検索',
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.only(right: 40),
-          ),
-        ),
-        if (_selectedAnime != null)
-          Positioned(
-            right: 8,
-            child: IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                setState(() {
-                  _selectedAnime = null;
-                  _searchController.clear();
-                });
-                _fetchSpots();
-              },
-            ),
-          ),
-      ],
-    );
   }
 
   @override
@@ -350,15 +248,8 @@ class _MapPageState extends ConsumerState<MapPage> {
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: _center,
-                    zoom: _currentZoom,
+                    zoom: 10.0,
                   ),
-                  onCameraMove: (position) {
-                    _currentZoom = position.zoom;
-                    _updateMarkers();
-                  },
-                  onCameraIdle: () {
-                    _updateMarkers();
-                  },
                   markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
@@ -371,7 +262,61 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: _buildSearchBar(),
+                  child: TextField(
+                    controller: _searchController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: '聖地名、作品名で検索',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                });
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (BuildContext context) =>
+                              AnimeSearchBottomSheet(
+                            onSpotSelected: (spot) {
+                              final data = spot.data() as Map<String, dynamic>;
+                              final location = data['location'] as GeoPoint;
+                              
+                              setState(() {
+                                _searchController.text = data['name'] ?? '';
+                              });
+
+                              mapController?.animateCamera(
+                                CameraUpdate.newCameraPosition(
+                                  CameraPosition(
+                                    target: LatLng(
+                                      location.latitude,
+                                      location.longitude,
+                                    ),
+                                    zoom: 15.0,
+                                  ),
+                                ),
+                              );
+
+                              _showSpotDetails(spot);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
@@ -404,7 +349,8 @@ class _MapPageState extends ConsumerState<MapPage> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _showOnlyVisited ? Colors.blue : Colors.grey,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

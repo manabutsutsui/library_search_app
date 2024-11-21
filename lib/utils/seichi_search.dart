@@ -124,14 +124,7 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
                         
                         return ListTile(
                           title: Text(data['name'] ?? ''),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(data['work'] ?? ''),
-                              Text(data['address'] ?? '', 
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                            ],
-                          ),
+                          subtitle: Text('作品名: ${data['work'] ?? ''}'),
                           onTap: () {
                             widget.onSpotSelected(spot);
                           },

@@ -293,7 +293,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                         horizontal: 24, vertical: 12),
                                   ),
                                   child: const Text(
-                                    '¥5,000/年',
+                                    '￥5,000/年',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -329,6 +329,27 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '※ 購入後に「特典（限定機能）」が反映されない場合、一度アプリを再起動してください。もしくは、数分ほど時間を空けてください。',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            '※ 月額プラン ¥500/月 | 年割プラン ¥5,000/年',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            '※ 旧料金で購入している場合、プラン料金は購入時のままで変更はありません',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

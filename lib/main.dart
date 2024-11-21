@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/subscription_state.dart';
 import 'create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'anime_more.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -130,6 +131,7 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
     ];
     _updatePages();
   }
@@ -150,6 +152,7 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
     _pages = [
       const Home(),
       const MapPage(),
+      const AnimeMorePage(),
       const RegistrationPage(),
       _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
@@ -210,6 +213,10 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
                 BottomNavigationBarItem(
                   icon: Icon(Icons.map),
                   label: '地図',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.library_add_check),
+                  label: '作品',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.favorite),

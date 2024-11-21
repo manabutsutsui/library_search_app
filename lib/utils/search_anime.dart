@@ -1,113 +1,141 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AnimeSearchDelegate extends SearchDelegate<String> {
-  final Function(String) onAnimeSelected;
+class AnimeSearchBottomSheet extends StatefulWidget {
+  final Function(DocumentSnapshot) onSpotSelected;
 
-  AnimeSearchDelegate({required this.onAnimeSelected});
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
+  const AnimeSearchBottomSheet({
+    Key? key,
+    required this.onSpotSelected,
+  }) : super(key: key);
 
   @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
+  State<AnimeSearchBottomSheet> createState() => _AnimeSearchBottomSheetState();
+}
 
-  @override
-  Widget buildResults(BuildContext context) {
-    return _buildAnimeList();
-  }
+class _AnimeSearchBottomSheetState extends State<AnimeSearchBottomSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<DocumentSnapshot> _searchResults = [];
+  bool _isLoading = false;
 
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'アニメ作品名を入力してください',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-        if (query.isNotEmpty)
-          Expanded(
-            child: _buildAnimeList(),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildAnimeList() {
+  Future<void> _searchSpots(String query) async {
     if (query.isEmpty) {
-      return const SizedBox.shrink();
+      setState(() {
+        _searchResults = [];
+      });
+      return;
     }
 
-    final String searchQuery = query.toLowerCase();
+    setState(() {
+      _isLoading = true;
+    });
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('spots')
+    try {
+      final spotsRef = FirebaseFirestore.instance.collection('spots');
+      
+      // 聖地名での検索（部分一致）
+      final nameQuerySnapshot = await spotsRef
+          .orderBy('name')
+          .startAt([query])
+          .endAt([query + '\uf8ff'])
+          .get();
+
+      // 作品名での検索（部分一致）
+      final workQuerySnapshot = await spotsRef
           .orderBy('work')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Center(child: Text('エラーが発生しました'));
+          .startAt([query])
+          .endAt([query + '\uf8ff'])
+          .get();
+
+      // 結果をマージして重複を除去
+      final Set<String> uniqueIds = {};
+      final List<DocumentSnapshot> mergedResults = [];
+
+      for (var doc in nameQuerySnapshot.docs) {
+        if (!uniqueIds.contains(doc.id)) {
+          uniqueIds.add(doc.id);
+          mergedResults.add(doc);
         }
+      }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+      for (var doc in workQuerySnapshot.docs) {
+        if (!uniqueIds.contains(doc.id)) {
+          uniqueIds.add(doc.id);
+          mergedResults.add(doc);
         }
+      }
 
-        Set<String> uniqueAnimes = snapshot.data!.docs
-            .map((doc) => (doc.data() as Map<String, dynamic>)['work'] as String)
-            .where((work) => work.toLowerCase().contains(searchQuery))
-            .toSet();
+      setState(() {
+        _searchResults = mergedResults;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('検索エラー: $e');
+    }
+  }
 
-        final sortedAnimes = uniqueAnimes.toList()..sort();
-
-        if (sortedAnimes.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('該当する作品が見つかりませんでした'),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: sortedAnimes.length,
-          itemBuilder: (context, index) {
-            final animeName = sortedAnimes[index];
-            return ListTile(
-              title: Text(
-                animeName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text('聖地を選択',
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16)),
+        backgroundColor: Colors.blue,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '聖地名・作品名で検索',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
               ),
-              leading: const Icon(Icons.movie_outlined),
-              onTap: () {
-                onAnimeSelected(animeName);
-                close(context, animeName);
+              onChanged: (value) {
+                _searchSpots(value);
               },
-            );
-          },
-        );
-      },
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final spot = _searchResults[index];
+                        final data = spot.data() as Map<String, dynamic>;
+                        
+                        return ListTile(
+                          title: Text(data['name'] ?? ''),
+                          subtitle: Text('作品名: ${data['work'] ?? ''}'),
+                          onTap: () {
+                            widget.onSpotSelected(spot);
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

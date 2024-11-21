@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SpotRequestDialog extends StatefulWidget {
   const SpotRequestDialog({super.key});
@@ -107,6 +108,7 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                               'spotName': _spotNameController.text,
                               'address': _addressController.text,
                               'workName': _workNameController.text,
+                              'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'unknown',
                               'timestamp': FieldValue.serverTimestamp(),
                             });
                             Navigator.of(context).pop();
