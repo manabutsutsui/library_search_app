@@ -530,24 +530,26 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                         color: Colors.blue,
                                                         borderRadius: BorderRadius.circular(8),
                                                       ),
-                                                      child: const Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Icon(
-                                                            Icons.lock,
-                                                            color: Colors.white,
-                                                            size: 32,
-                                                          ),
-                                                          SizedBox(height: 8),
-                                                          Text(
-                                                            'Premiumプランで\n登場シーンを見る',
-                                                            textAlign: TextAlign.center,
-                                                            style: TextStyle(
+                                                      child: const SingleChildScrollView(
+                                                        child: Column(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons.lock,
                                                               color: Colors.white,
-                                                              fontWeight: FontWeight.bold,
+                                                              size: 32,
                                                             ),
-                                                          ),
-                                                        ],
+                                                            SizedBox(height: 8),
+                                                            Text(
+                                                              'Premiumプランで\n登場シーンを見る',
+                                                              textAlign: TextAlign.center,
+                                                              style: TextStyle(
+                                                                color: Colors.white,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
