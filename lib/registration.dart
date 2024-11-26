@@ -6,6 +6,7 @@ import 'other_user_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'utils/seichi_registration.dart';
 import 'registration_detail.dart';
+import 'utils/seichi_de_dekirukoto.dart';
 
 class RegistrationPage extends ConsumerWidget {
   const RegistrationPage({super.key});
@@ -207,7 +208,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () async {
-                  final Uri url = Uri.parse('https://www.tiktok.com/@seichi_tiktok_4012');
+                  final Uri url = Uri.parse('https://www.tiktok.com/@seichimapapp');
                   if (!await launchUrl(url)) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -253,6 +254,21 @@ class _VisitedSpotsTab extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: GestureDetector(
+              onTap: () {
+                SeichiDeDekirukoto.show(context);
+              },
+              child: Image.asset(
+                'assets/registration_page/seichi_de_dekiru.png',
+                width: 300,
+                height: 300,
+                fit: BoxFit.cover,
               ),
             ),
           ),

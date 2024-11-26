@@ -101,7 +101,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   AnimeList? _getAnimeInfo(String workName) {
     return animeList.firstWhere(
       (anime) => anime.name == workName,
-      orElse: () => AnimeList(name: '', imageAsset: '', imageUrl: ''),
+      orElse: () => AnimeList(name: '', genre: '', imageAsset: '', imageUrl: ''),
     );
   }
 

@@ -156,7 +156,7 @@ class SeichiRegistrationDetail extends ConsumerWidget {
               onPressed: () async {
                 final spotDoc = await FirebaseFirestore.instance
                     .collection('spots')
-                    .doc(spot['spotId'])
+                    .doc(spot['spotName'])
                     .get();
 
                 if (context.mounted) {

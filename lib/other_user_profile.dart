@@ -19,7 +19,8 @@ class OtherUserProfilePage extends StatefulWidget {
   State<OtherUserProfilePage> createState() => _OtherUserProfilePageState();
 }
 
-class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
+class _OtherUserProfilePageState extends State<OtherUserProfilePage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   late Stream<QuerySnapshot> _reviewsStream;
   late Stream<QuerySnapshot> _visitedSpotsStream;
   int _reviewCount = 0;
@@ -28,7 +29,14 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _initStreams();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _initStreams() {
@@ -38,12 +46,6 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
         .orderBy('timestamp', descending: true)
         .snapshots();
 
-    _visitedSpotsStream = FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .collection('visited_spots')
-        .snapshots();
-
     _reviewsStream.listen((snapshot) {
       if (mounted) {
         setState(() {
@@ -51,6 +53,12 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
         });
       }
     });
+
+    _visitedSpotsStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .collection('visited_spots')
+        .snapshots();
 
     _visitedSpotsStream.listen((snapshot) {
       if (mounted) {
@@ -87,7 +95,11 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
 
   Widget _buildReviewsTab() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _reviewsStream,
+      stream: FirebaseFirestore.instance
+          .collection('reviews')
+          .where('userId', isEqualTo: widget.userId)
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -201,6 +213,111 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
     );
   }
 
+  Widget _buildVisitedSpotsTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('visited_spots')
+          .orderBy('visitDate', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final spots = snapshot.data!.docs;
+          if (spots.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.place, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('聖地登録はありません', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: spots.length,
+            itemBuilder: (context, index) {
+              try {
+                final spot = spots[index].data() as Map<String, dynamic>;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (spot['imageUrl'] != null)
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                          child: Image.network(
+                            spot['imageUrl'],
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const SizedBox(
+                                height: 200,
+                                child: Center(child: Icon(Icons.error)),
+                              );
+                            },
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.location_on),
+                                Text(
+                                  spot['spotName'] ?? '不明な聖地',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            if (spot['visitDate'] != null)
+                              Text(
+                                '訪問日: ${(spot['visitDate'] as Timestamp).toDate().year}年'
+                                '${(spot['visitDate'] as Timestamp).toDate().month}月'
+                                '${(spot['visitDate'] as Timestamp).toDate().day}日',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            const SizedBox(height: 4),
+                            Text(
+                              spot['memo'] ?? '',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              } catch (e, stackTrace) {
+                print('Error rendering spot at index $index: $e');
+                print('Stack trace: $stackTrace');
+                return const SizedBox.shrink();
+              }
+            },
+          );
+        }
+        // データ待ち
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -256,11 +373,23 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          TabBar(
+            controller: _tabController,
+            labelColor: Colors.blue,
+            unselectedLabelColor: Colors.grey,
+            tabs: const [
+              Tab(text: '口コミ'),
+              Tab(text: '聖地登録'),
+            ],
+          ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: _buildReviewsTab(),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildReviewsTab(),
+                _buildVisitedSpotsTab(),
+              ],
             ),
           ),
         ],

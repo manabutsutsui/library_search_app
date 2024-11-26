@@ -271,7 +271,14 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
             final doc = snapshot.data!.docs[index];
             final data = doc.data() as Map<String, dynamic>;
             return ListTile(
-              title: Text(data['name'] ?? '名称不明', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Icon(Icons.place, size: 24, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Text(data['name'] ?? '名称不明', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
               subtitle: Text(data['address'] ?? '住所不明'),
               onTap: () async {
                 final spotDoc = await FirebaseFirestore.instance

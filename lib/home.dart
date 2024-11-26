@@ -13,7 +13,7 @@ import 'anime_more.dart';
 import 'ranking_review.dart';
 import 'ranking_comment.dart';
 import 'subscription_premium.dart';
-import 'ad/ad_native.dart';
+import 'ad/ad_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/subscription_state.dart';
 import 'spot_detail.dart';
@@ -167,9 +167,12 @@ class HomeState extends ConsumerState<Home> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Image.asset(
-                              anime.imageAsset,
-                              fit: BoxFit.cover,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                anime.imageAsset,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -589,78 +592,15 @@ class HomeState extends ConsumerState<Home> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  subscriptionState.when(
-                    data: (isPro) => isPro
-                        ? const SizedBox.shrink()
-                        : GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SubscriptionPremium(),
-                                ),
-                              );
-                            },
-                            child: Stack(
-                              children: [
-                                Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.blue,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Image.asset(
-                                    'assets/subscription_images/4.png',
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 8,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'Premiumプラン',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) =>
-                        Center(child: Text('エラーが発生しました: $error')),
-                  ),
                 ],
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           subscriptionState.when(
             data: (isPro) => isPro
                 ? const SliverToBoxAdapter(child: SizedBox.shrink())
                 : const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: NativeAdWidget(),
-                    ),
+                    child: AdBanner(),
                   ),
             loading: () => const SliverToBoxAdapter(
               child: Center(child: CircularProgressIndicator()),

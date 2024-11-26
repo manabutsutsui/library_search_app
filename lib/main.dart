@@ -18,6 +18,7 @@ import 'providers/subscription_state.dart';
 import 'create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'anime_more.dart';
+import 'utils/seichi_de_dekirukoto.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,6 +124,9 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
   void initState() {
     super.initState();
     _checkLoginStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFirstLaunch();
+    });
     _auth.authStateChanges().listen((User? user) {
       _updateLoginStatus(user != null);
     });
@@ -134,6 +138,16 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
       GlobalKey<NavigatorState>(),
     ];
     _updatePages();
+  }
+
+  Future<void> _checkFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+
+    if (isFirstLaunch && mounted) {
+      await prefs.setBool('is_first_launch', false);
+      SeichiDeDekirukoto.show(context);
+    }
   }
 
   void _checkLoginStatus() {
@@ -224,7 +238,7 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
-                  label: 'プロフィール',
+                  label: '個人',
                 ),
               ],
               currentIndex: _selectedIndex,

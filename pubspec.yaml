@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.3.0+1
+version: 1.3.2+1
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
@@ -55,7 +55,7 @@ dependencies:
   font_awesome_flutter: ^10.7.0
   firebase_messaging: ^15.1.3
   package_info_plus: ^8.0.3
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.3.3
   purchases_flutter: ^8.1.5
   uuid: ^4.5.1
   purchases_ui_flutter: ^8.1.5
@@ -65,6 +65,8 @@ dependencies:
   google_sign_in: ^6.2.2
   sign_in_with_apple: ^6.1.3
   google_maps_cluster_manager: ^3.1.0
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.2.0+3
 
 flutter_icons:
   android: true
@@ -139,6 +141,10 @@ flutter:
     - assets/images/ryuono.png
     - assets/images/bokunokokoro.png
     - assets/images/aobuta.png
+    - assets/images/oreimo.png
+    - assets/images/ansatu.png
+    - assets/images/saekano.png
+    - assets/images/shika.png
     - assets/subscription_images/premium_image_seichi.png
     - assets/subscription_images/seichi_note.png
     - assets/subscription_images/1.png
@@ -147,6 +153,13 @@ flutter:
     - assets/subscription_images/4.png
     - assets/subscription_images/5.png
     - assets/account_page/home_image.png
+    - assets/registration_page/seichi_de_dekiru.png
+    - assets/registration_page/dekiru_00.png
+    - assets/registration_page/dekiru_01.png
+    - assets/registration_page/dekiru_02.png
+    - assets/registration_page/dekiru_03.png
+    - assets/registration_page/dekiru_04.png
+    - assets/registration_page/dekiru_05.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
