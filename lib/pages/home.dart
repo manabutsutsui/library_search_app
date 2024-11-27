@@ -13,9 +13,9 @@ import 'anime_more.dart';
 import 'ranking_review.dart';
 import 'ranking_comment.dart';
 import 'subscription_premium.dart';
-import 'ad/ad_banner.dart';
+import '../ad/ad_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/subscription_state.dart';
+import '../providers/subscription_state.dart';
 import 'spot_detail.dart';
 import 'new_seichi.dart';
 

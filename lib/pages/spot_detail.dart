@@ -7,11 +7,11 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'anime_lists.dart';
-import 'utils/kuchikomi.dart';
-import 'utils/report.dart';
+import '../utils/kuchikomi.dart';
+import '../utils/report.dart';
 import 'subscription_premium.dart';
-import 'providers/subscription_state.dart';
-import 'utils/seichi_note.dart';
+import '../providers/subscription_state.dart';
+import '../utils/seichi_note.dart';
 import 'dart:ui';
 
 class SpotDetailPage extends ConsumerStatefulWidget {

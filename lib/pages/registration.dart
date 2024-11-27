@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'other_user_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'utils/seichi_registration.dart';
+import '../utils/seichi_registration.dart';
 import 'registration_detail.dart';
-import 'utils/seichi_de_dekirukoto.dart';
+import '../utils/seichi_de_dekirukoto.dart';
 
 class RegistrationPage extends ConsumerWidget {
   const RegistrationPage({super.key});

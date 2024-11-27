@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/visited_spots_provider.dart';
-import 'utils/seichi_request.dart';
-import 'utils/search_anime.dart';
+import '../providers/visited_spots_provider.dart';
+import '../utils/seichi_request.dart';
+import '../utils/search_anime.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});

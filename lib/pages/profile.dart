@@ -279,7 +279,7 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                   Text(data['name'] ?? '名称不明', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
-              subtitle: Text(data['address'] ?? '住所不明'),
+              subtitle: Text('住所: ${data['address'] ?? '住所不明'}', maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () async {
                 final spotDoc = await FirebaseFirestore.instance
                     .collection('spots')

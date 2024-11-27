@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/visited_spots_provider.dart';
+import '../../providers/visited_spots_provider.dart';
 
 class SeichiRegistrationDetail extends ConsumerWidget {
   final Map<String, dynamic> spot;

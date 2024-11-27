@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'pages/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'map.dart';
-import 'profile.dart';
+import 'pages/map.dart';
+import 'pages/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
-import 'home.dart';
+import 'pages/home.dart';
 import 'dart:convert';
-import 'registration.dart';
+import 'pages/registration.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/subscription_state.dart';
-import 'create_account.dart';
+import 'pages/create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'anime_more.dart';
+import 'pages/anime_more.dart';
 import 'utils/seichi_de_dekirukoto.dart';
 
 void main() async {
