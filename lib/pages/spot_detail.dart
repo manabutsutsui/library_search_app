@@ -6,13 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'anime_lists.dart';
+import '../utils/anime_lists.dart';
 import '../utils/kuchikomi.dart';
 import '../utils/report.dart';
 import 'subscription_premium.dart';
 import '../providers/subscription_state.dart';
 import '../utils/seichi_note.dart';
-import 'dart:ui';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -412,157 +411,55 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.only(top: 8),
-                                child: Consumer(
-                                  builder: (context, ref, child) {
-                                    final subscriptionState = ref.watch(subscriptionProvider);
-                                    
-                                    return subscriptionState.when(
-                                      data: (isPro) {
-                                        if (isPro) {
-                                          return Column(
-                                            children: [
-                                              if (widget.spot['imageURL'] != null &&
-                                                  widget.spot['imageURL'].toString().isNotEmpty) ...[
-                                                Image.network(
-                                                  widget.spot['imageURL'],
-                                                  width: double.infinity,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Builder(
-                                                  builder: (context) {
-                                                    final animeInfo = _getAnimeInfo(widget.spot['work']);
-                                                    return InkWell(
-                                                      onTap: () => _launchURL(animeInfo?.imageUrl ?? ''),
-                                                      child: Center(
-                                                        child: Text(
-                                                          '出典元: ${animeInfo?.imageUrl ?? ''}',
-                                                          style: const TextStyle(
-                                                            fontSize: 8,
-                                                            color: Colors.blue,
-                                                            decoration: TextDecoration.underline,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                                const SizedBox(height: 16),
-                                              ] else ...[
-                                                Container(
-                                                  width: double.infinity,
-                                                  height: 200,
-                                                  color: Colors.grey[200],
-                                                  child: const Center(
-                                                    child: Icon(
-                                                      Icons.image_not_supported,
-                                                      size: 64,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 16),
-                                              ],
-                                              Text(
-                                                widget.spot['detail'],
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                child: Column(
+                                  children: [
+                                    if (widget.spot['imageURL'] != null &&
+                                        widget.spot['imageURL'].toString().isNotEmpty) ...[
+                                      Image.network(
+                                        widget.spot['imageURL'],
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Builder(
+                                        builder: (context) {
+                                          return InkWell(
+                                            onTap: () => _launchURL(widget.spot['source']),
+                                            child: Text(
+                                              '出典元: ${widget.spot['source'] ?? ''}',
+                                              style: const TextStyle(
+                                                fontSize: 8,
+                                                color: Colors.blue,
+                                                decoration: TextDecoration.underline,
                                               ),
-                                            ],
+                                              textAlign: TextAlign.center,
+                                            ),
                                           );
-                                        } else {
-                                          return Stack(
-                                            children: [
-                                              ImageFiltered(
-                                                imageFilter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-                                                child: Column(
-                                                  children: [
-                                                    if (widget.spot['imageURL'] != null &&
-                                                        widget.spot['imageURL'].toString().isNotEmpty) ...[
-                                                      Image.network(
-                                                        widget.spot['imageURL'],
-                                                        width: double.infinity,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                      const SizedBox(height: 16),
-                                                    ] else ...[
-                                                      Container(
-                                                        width: double.infinity,
-                                                        height: 200,
-                                                        color: Colors.grey[200],
-                                                        child: const Center(
-                                                          child: Icon(
-                                                            Icons.image_not_supported,
-                                                            size: 64,
-                                                            color: Colors.grey,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 16),
-                                                    ],
-                                                    Text(
-                                                      widget.spot['detail'],
-                                                      style: const TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Positioned.fill(
-                                                child: Center(
-                                                  child: GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) => const SubscriptionPremium(),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: Container(
-                                                      padding: const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.blue,
-                                                        borderRadius: BorderRadius.circular(8),
-                                                      ),
-                                                      child: const SingleChildScrollView(
-                                                        child: Column(
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            Icon(
-                                                              Icons.lock,
-                                                              color: Colors.white,
-                                                              size: 32,
-                                                            ),
-                                                            SizedBox(height: 8),
-                                                            Text(
-                                                              'Premiumプランで\n登場シーンを見る',
-                                                              textAlign: TextAlign.center,
-                                                              style: TextStyle(
-                                                                color: Colors.white,
-                                                                fontWeight: FontWeight.bold,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        }
-                                      },
-                                      loading: () => const Center(child: CircularProgressIndicator()),
-                                      error: (_, __) => const SizedBox.shrink(),
-                                    );
-                                  },
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ] else ...[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.image_not_supported,
+                                            size: 64,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    Text(
+                                      widget.spot['detail'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

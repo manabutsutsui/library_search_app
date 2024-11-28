@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'review_detail.dart';
 import 'reviews_lists.dart';
 import 'recommended_products_lists.dart';
-import 'anime_lists.dart';
+import '../utils/anime_lists.dart';
 import 'anime_detail.dart';
 import 'anime_more.dart';
 import 'ranking_review.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'anime_lists.dart';
+import '../utils/anime_lists.dart';
 import 'anime_detail.dart';
 
 class AnimeMorePage extends StatefulWidget {
