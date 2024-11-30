@@ -22,7 +22,6 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
     'assets/subscription_images/2.png',
     'assets/subscription_images/3.png',
     'assets/subscription_images/4.png',
-    'assets/subscription_images/5.png',
   ];
 
   @override

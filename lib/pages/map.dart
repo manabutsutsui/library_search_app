@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/visited_spots_provider.dart';
 import '../utils/seichi_request.dart';
 import '../utils/search_anime.dart';
+import '../utils/cluster.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -25,6 +26,8 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   final TextEditingController _searchController = TextEditingController();
   bool _showOnlyVisited = false;
+  double _currentZoom = 12.0;
+  List<SpotData> _allSpots = [];
 
   @override
   void initState() {
@@ -91,40 +94,110 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   Future<void> _fetchSpots() async {
     Query spotsQuery = FirebaseFirestore.instance.collection('spots');
-
     QuerySnapshot snapshot = await spotsQuery.get();
-    Set<Marker> newMarkers = {};
     final visitedSpots = ref.read(visitedSpotsProvider);
 
-    for (var doc in snapshot.docs) {
-      try {
-        GeoPoint location = doc['location'];
-        bool isVisited = visitedSpots.containsKey(doc.id);
+    _allSpots = snapshot.docs
+        .map((doc) => SpotData.fromFirestore(doc, visitedSpots.containsKey(doc.id)))
+        .toList();
 
-        if (!_showOnlyVisited || isVisited) {
-          newMarkers.add(Marker(
-            markerId: MarkerId(doc.id),
-            position: LatLng(location.latitude, location.longitude),
-            icon: isVisited
-                ? BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue)
-                : BitmapDescriptor.defaultMarker,
+    _updateMarkers();
+  }
+
+  void _updateMarkers() {
+    Set<Marker> newMarkers = {};
+    
+    if (_currentZoom <= ClusterManager.clusterZoomThreshold) {
+      final clusters = ClusterManager.createClusters(_allSpots, _currentZoom);
+      
+      clusters.forEach((prefecture, spots) {
+        final center = _calculateClusterCenter(spots);
+        newMarkers.add(
+          Marker(
+            markerId: MarkerId('cluster_$prefecture'),
+            position: center,
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
             infoWindow: InfoWindow(
-              title: doc['name'],
-              snippet: doc['work'],
+              title: prefecture,
+              snippet: '${spots.length}件の聖地',
             ),
-            onTap: () => _showSpotDetails(doc),
+            onTap: () => _showClusterSpots(spots),
+          ),
+        );
+      });
+    } else {
+      for (var spot in _allSpots) {
+        if (!_showOnlyVisited || spot.isVisited) {
+          newMarkers.add(Marker(
+            markerId: MarkerId(spot.id),
+            position: spot.location,
+            icon: spot.isVisited
+                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+                : BitmapDescriptor.defaultMarker,
+            onTap: () async => _showSpotDetails(
+              await FirebaseFirestore.instance.collection('spots').doc(spot.id).get(),
+            ),
           ));
         }
-      } catch (e) {
-        print('エラーが発生しました: ${doc['name']} - $e');
       }
     }
 
     setState(() {
       _markers = newMarkers;
-      _isLoading = false;
     });
+  }
+
+  LatLng _calculateClusterCenter(List<SpotData> spots) {
+    double sumLat = 0;
+    double sumLng = 0;
+    
+    for (var spot in spots) {
+      sumLat += spot.location.latitude;
+      sumLng += spot.location.longitude;
+    }
+    
+    return LatLng(sumLat / spots.length, sumLng / spots.length);
+  }
+
+  void _showClusterSpots(List<SpotData> spots) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              '${spots.first.prefecture}の聖地一覧',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: spots.length,
+                itemBuilder: (context, index) {
+                  final spot = spots[index];
+                  return ListTile(
+                    title: Text(spot.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    subtitle: Text('作品名: ${spot.work}'),
+                    leading: Icon(
+                      Icons.location_on,
+                      color: spot.isVisited ? Colors.blue : Colors.red,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      mapController?.animateCamera(
+                        CameraUpdate.newLatLngZoom(spot.location, 15),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showSpotDetails(DocumentSnapshot spot) async {
@@ -248,12 +321,16 @@ class _MapPageState extends ConsumerState<MapPage> {
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: _center,
-                    zoom: 10.0,
+                    zoom: _currentZoom,
                   ),
                   markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   onTap: (_) => _removeOverlay(),
+                  onCameraMove: (position) {
+                    _currentZoom = position.zoom;
+                    _updateMarkers();
+                  },
                 ),
           Positioned(
             top: 50,

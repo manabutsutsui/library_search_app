@@ -221,6 +221,34 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 32),
+                        const Text('・基本情報',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Divider(color: Colors.grey),
+                        _buildInfoRow('住所', widget.spot['address']),
+                        const SizedBox(height: 8),
+                        const Divider(color: Colors.grey),
+                        _buildInfoRow('地図', 'Google Mapsを開く'),
+                        const SizedBox(height: 8),
+                        const Divider(color: Colors.grey),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            height: 200,
+                            child: _spotLocation == null
+                                ? const Center(
+                                    child: CircularProgressIndicator())
+                                : GoogleMap(
+                                    initialCameraPosition: CameraPosition(
+                                      target: _spotLocation!,
+                                      zoom: 15,
+                                    ),
+                                    markers: _markers,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
                         const Text('・聖地メモ',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
@@ -330,34 +358,6 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               error: (_, __) => const SizedBox.shrink(),
                             );
                           },
-                        ),
-                        const SizedBox(height: 32),
-                        const Text('・基本情報',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const Divider(color: Colors.grey),
-                        _buildInfoRow('住所', widget.spot['address']),
-                        const SizedBox(height: 8),
-                        const Divider(color: Colors.grey),
-                        _buildInfoRow('地図', 'Google Mapsを開く'),
-                        const SizedBox(height: 8),
-                        const Divider(color: Colors.grey),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            height: 200,
-                            child: _spotLocation == null
-                                ? const Center(
-                                    child: CircularProgressIndicator())
-                                : GoogleMap(
-                                    initialCameraPosition: CameraPosition(
-                                      target: _spotLocation!,
-                                      zoom: 15,
-                                    ),
-                                    markers: _markers,
-                                  ),
-                          ),
                         ),
                         const SizedBox(height: 32),
                         const Text('・作品名',
