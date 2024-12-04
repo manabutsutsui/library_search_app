@@ -49,7 +49,7 @@ class ReviewFormState extends State<ReviewForm> {
     try {
       final storageRef = FirebaseStorage.instance.ref();
       final imageRef = storageRef
-          .child('images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child('reviews_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
       final uploadTask = imageRef.putFile(File(image.path));
       final snapshot = await uploadTask.whenComplete(() {});
       return await snapshot.ref.getDownloadURL();

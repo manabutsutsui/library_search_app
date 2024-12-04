@@ -91,6 +91,13 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
       if (user != null) {
         final storageRef = FirebaseStorage.instance.ref();
         final imageRef = storageRef.child('profile_images/${user.uid}.jpg');
+
+        try {
+          await imageRef.delete();
+        } catch (e) {
+          print('古い画像の削除中にエラーが発生しました（初回または存在しない場合）: $e');
+        }
+
         final uploadTask = imageRef.putFile(File(image.path));
         final snapshot = await uploadTask.whenComplete(() {});
         final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -429,6 +436,17 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
 
                                               if (confirmDelete == true) {
                                                 try {
+                                                  // 画像がある場合、Storageから削除
+                                                  if (review['imageUrl'] != null) {
+                                                    try {
+                                                      final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
+                                                      await storageRef.delete();
+                                                    } catch (e) {
+                                                      print('画像の削除中にエラーが発生しました: $e');
+                                                    }
+                                                  }
+
+                                                  // Firestoreから口コミを削除
                                                   await FirebaseFirestore.instance
                                                       .collection('reviews')
                                                       .doc(review.id)

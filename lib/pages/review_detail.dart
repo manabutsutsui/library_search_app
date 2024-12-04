@@ -4,6 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ReviewDetailPage extends StatelessWidget {
   final DocumentSnapshot review;
@@ -38,8 +39,8 @@ class ReviewDetailPage extends StatelessWidget {
                   children: [
                     if (review['imageUrl'] != null)
                       ClipRRect(
-                        borderRadius:
-                            const BorderRadius.vertical(top: Radius.circular(8)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8)),
                         child: Image.network(
                           review['imageUrl'],
                           width: double.infinity,
@@ -54,7 +55,8 @@ class ReviewDetailPage extends StatelessWidget {
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage: review['userProfileImage'] != null
+                                backgroundImage: review['userProfileImage'] !=
+                                        null
                                     ? NetworkImage(review['userProfileImage'])
                                     : null,
                                 child: review['userProfileImage'] == null
@@ -74,7 +76,8 @@ class ReviewDetailPage extends StatelessWidget {
                                     Text(
                                       '投稿日: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
                                       style: TextStyle(
-                                          color: Colors.grey[600], fontSize: 12),
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -88,63 +91,76 @@ class ReviewDetailPage extends StatelessWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: <Widget>[
                                           if (review['userId'] ==
-                                              FirebaseAuth.instance.currentUser?.uid)
+                                              FirebaseAuth
+                                                  .instance.currentUser?.uid)
                                             ListTile(
                                               leading: const Icon(Icons.delete,
                                                   color: Colors.red),
                                               title: const Text('削除する',
-                                                  style:
-                                                      TextStyle(color: Colors.red)),
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
                                               onTap: () async {
                                                 final bool? confirmDelete =
                                                     await showDialog<bool>(
                                                   context: context,
-                                                  builder: (BuildContext context) {
+                                                  builder:
+                                                      (BuildContext context) {
                                                     return AlertDialog(
                                                       title: const Text('確認'),
                                                       content: const Text(
                                                           'この口コミを削除してもよろしいですか？'),
                                                       actions: <Widget>[
                                                         TextButton(
-                                                          child: const Text('キャンセル'),
+                                                          child: const Text(
+                                                              'キャンセル'),
                                                           onPressed: () =>
-                                                              Navigator.of(context)
+                                                              Navigator.of(
+                                                                      context)
                                                                   .pop(false),
                                                         ),
                                                         TextButton(
-                                                          child: const Text('削除',
+                                                          child: const Text(
+                                                              '削除',
                                                               style: TextStyle(
-                                                                  color: Colors.red)),
+                                                                  color: Colors
+                                                                      .red)),
                                                           onPressed: () =>
-                                                              Navigator.of(context)
+                                                              Navigator.of(
+                                                                      context)
                                                                   .pop(true),
                                                         ),
                                                       ],
                                                     );
                                                   },
                                                 );
-                
+
                                                 if (confirmDelete == true) {
                                                   try {
+                                                    // 画像がある場合、Storageから削除
+                                                    if (review['imageUrl'] != null) {
+                                                      try {
+                                                        final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
+                                                        await storageRef.delete();
+                                                      } catch (e) {
+                                                        print('画像の削除中にエラーが発生しました: $e');
+                                                      }
+                                                    }
+
+                                                    // Firestoreから口コミを削除
                                                     await FirebaseFirestore.instance
                                                         .collection('reviews')
                                                         .doc(review.id)
                                                         .delete();
-                
+
                                                     Navigator.of(context).pop();
-                                                    ScaffoldMessenger.of(context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content:
-                                                              Text('口コミを削除しました')),
+                                                    Navigator.of(context).pop(); // 詳細画面を閉じる
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('口コミを削除しました')),
                                                     );
                                                   } catch (e) {
                                                     print('口コミの削除中にエラーが発生しました: $e');
-                                                    ScaffoldMessenger.of(context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content:
-                                                              Text('口コミの削除に失敗しました')),
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('口コミの削除に失敗しました')),
                                                     );
                                                   }
                                                 } else {
@@ -157,43 +173,50 @@ class ReviewDetailPage extends StatelessWidget {
                                               leading: const Icon(Icons.flag,
                                                   color: Colors.red),
                                               title: const Text('報告する',
-                                                  style:
-                                                      TextStyle(color: Colors.red)),
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
                                               onTap: () async {
                                                 final String? reportReason =
                                                     await showDialog<String>(
                                                   context: context,
-                                                  builder: (BuildContext context) {
+                                                  builder:
+                                                      (BuildContext context) {
                                                     return _ReportDialog();
                                                   },
                                                 );
-                
+
                                                 if (reportReason != null) {
                                                   try {
-                                                    await FirebaseFirestore.instance
+                                                    await FirebaseFirestore
+                                                        .instance
                                                         .collection('reports')
                                                         .add({
                                                       'reviewId': review.id,
                                                       'reporterId': FirebaseAuth
-                                                          .instance.currentUser?.uid,
+                                                          .instance
+                                                          .currentUser
+                                                          ?.uid,
                                                       'reason': reportReason,
                                                       'timestamp': FieldValue
                                                           .serverTimestamp(),
                                                     });
-                
-                                                    ScaffoldMessenger.of(context)
+
+                                                    ScaffoldMessenger.of(
+                                                            context)
                                                         .showSnackBar(
                                                       const SnackBar(
-                                                          content:
-                                                              Text('報告を受け付けました。')),
+                                                          content: Text(
+                                                              '報告を受け付けました。')),
                                                     );
                                                   } catch (e) {
-                                                    print('報告の送信中にエラーが発生しました: $e');
-                                                    ScaffoldMessenger.of(context)
+                                                    print(
+                                                        '報告の送信中にエラーが発生しました: $e');
+                                                    ScaffoldMessenger.of(
+                                                            context)
                                                         .showSnackBar(
                                                       const SnackBar(
-                                                          content:
-                                                              Text('報告の送信に失敗しました。')),
+                                                          content: Text(
+                                                              '報告の送信に失敗しました。')),
                                                     );
                                                   }
                                                 }

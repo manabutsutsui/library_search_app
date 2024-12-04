@@ -283,4 +283,10 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/shika.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27226',
   ),
+  AnimeList(
+    name: '推しの子',
+    genre: 'ホラー/サスペンス/推理',
+    imageAsset: 'assets/images/oshinoko.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=26315',
+  ),
 ];

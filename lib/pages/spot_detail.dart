@@ -12,6 +12,7 @@ import '../utils/report.dart';
 import 'subscription_premium.dart';
 import '../providers/subscription_state.dart';
 import '../utils/seichi_note.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -375,10 +376,13 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Image.asset(
-                                    animeInfo.imageAsset,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.asset(
+                                      animeInfo.imageAsset,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   InkWell(
@@ -415,10 +419,13 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                   children: [
                                     if (widget.spot['imageURL'] != null &&
                                         widget.spot['imageURL'].toString().isNotEmpty) ...[
-                                      Image.network(
-                                        widget.spot['imageURL'],
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          widget.spot['imageURL'],
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
                                       Builder(
@@ -616,7 +623,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                             title:
                                                                                 const Text('確認'),
                                                                             content:
-                                                                                const Text('この口コミを削除してもよろしいですか？'),
+                                                                                const Text('この口コミを削除してもよろしいですか？', style: TextStyle(fontSize: 12)),
                                                                             actions: <Widget>[
                                                                               TextButton(
                                                                                 child: const Text('キャンセル'),
@@ -634,30 +641,35 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                       if (confirmDelete ==
                                                                           true) {
                                                                         try {
-                                                                          await FirebaseFirestore
-                                                                              .instance
+                                                                          // 画像がある場合、Storageから削除
+                                                                          if (review['imageUrl'] != null) {
+                                                                            try {
+                                                                              final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
+                                                                              await storageRef.delete();
+                                                                            } catch (e) {
+                                                                              print('画像の削除中にエラーが発生しました: $e');
+                                                                            }
+                                                                          }
+
+                                                                          // Firestoreから口コミを削除
+                                                                          await FirebaseFirestore.instance
                                                                               .collection('reviews')
                                                                               .doc(review.id)
                                                                               .delete();
 
-                                                                          Navigator.of(context)
-                                                                              .pop();
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
+                                                                          Navigator.of(context).pop();
+                                                                          ScaffoldMessenger.of(context).showSnackBar(
                                                                             const SnackBar(content: Text('口コミを削除しました')),
                                                                           );
                                                                           _fetchReviews();
                                                                         } catch (e) {
-                                                                          print(
-                                                                              '口コミの削除中にエラーが発生しました: $e');
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
+                                                                          print('口コミの削除中にエラーが発生しました: $e');
+                                                                          ScaffoldMessenger.of(context).showSnackBar(
                                                                             const SnackBar(content: Text('口コミの削除に失敗しました')),
                                                                           );
                                                                         }
                                                                       } else {
-                                                                        Navigator.of(context)
-                                                                            .pop();
+                                                                        Navigator.of(context).pop();
                                                                       }
                                                                     },
                                                                   )
