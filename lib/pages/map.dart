@@ -134,6 +134,10 @@ class _MapPageState extends ConsumerState<MapPage> {
             icon: spot.isVisited
                 ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
                 : BitmapDescriptor.defaultMarker,
+            infoWindow: InfoWindow(
+              title: spot.name,
+              snippet: spot.work,
+            ),
             onTap: () async => _showSpotDetails(
               await FirebaseFirestore.instance.collection('spots').doc(spot.id).get(),
             ),

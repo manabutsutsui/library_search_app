@@ -8,15 +8,20 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'spot_detail.dart';
 import 'setting.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/subscription_state.dart';
+import 'subscription_premium.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  ProfilePageState createState() => ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends ConsumerState<ProfilePage>
+    with SingleTickerProviderStateMixin {
   String? _username;
   String? _profileImageUrl;
   late TabController _tabController;
@@ -25,12 +30,16 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
   late Stream<QuerySnapshot> _visitedSpotsStream;
   int _reviewCount = 0;
   int _visitedSpotsCount = 0;
+  String? _xAccountUrl;
+  String? _instagramAccountUrl;
+  String? _tiktokAccountUrl;
 
   @override
   void initState() {
     super.initState();
     _initStreams();
     _tabController = TabController(length: 2, vsync: this);
+    _loadSocialAccounts();
   }
 
   void _initStreams() {
@@ -71,6 +80,199 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
     }
   }
 
+  Future<void> _loadSocialAccounts() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      setState(() {
+        _xAccountUrl = userData.data()?['xAccountUrl'];
+        _instagramAccountUrl = userData.data()?['instagramAccountUrl'];
+        _tiktokAccountUrl = userData.data()?['tiktokAccountUrl'];
+      });
+    }
+  }
+
+  void _showXAccountDialog() {
+    final TextEditingController controller =
+        TextEditingController(text: _xAccountUrl);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xアカウントの設定',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://x.com/@username',
+                prefixText: 'https://x.com/',
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '自身のアカウントのURLを入力してください',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url = 'https://x.com/$username';
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .update({'xAccountUrl': url});
+              setState(() {
+                _xAccountUrl = url;
+              });
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Xアカウントを更新しました',
+                          style: TextStyle(fontWeight: FontWeight.bold))),
+                );
+              }
+            },
+            child:
+                const Text('保存', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInstagramAccountDialog() {
+    final TextEditingController controller = TextEditingController(
+        text:
+            _instagramAccountUrl?.replaceAll('https://www.instagram.com/', ''));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Instagramアカウントの設定',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://www.instagram.com/username',
+                prefixText: 'https://www.instagram.com/',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url = username.isEmpty
+                  ? null
+                  : 'https://www.instagram.com/$username';
+
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .update({'instagramAccountUrl': url});
+
+              if (mounted) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTiktokAccountDialog() {
+    final TextEditingController controller = TextEditingController(
+        text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', ''));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('TikTokアカウントの設定',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://www.tiktok.com/@username',
+                prefixText: 'https://www.tiktok.com/@',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url =
+                  username.isEmpty ? null : 'https://www.tiktok.com/@$username';
+
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .update({'tiktokAccountUrl': url});
+
+              setState(() {
+                _tiktokAccountUrl = url;
+              });
+
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(url == null
+                        ? 'TikTokアカウントを削除しました'
+                        : 'TikTokアカウントを更新しました'),
+                  ),
+                );
+              }
+            },
+            child:
+                const Text('保存', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -101,9 +303,12 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
         final uploadTask = imageRef.putFile(File(image.path));
         final snapshot = await uploadTask.whenComplete(() {});
         final downloadUrl = await snapshot.ref.getDownloadURL();
-        
+
         // ユーザードキュメントの更新
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
           'profileImage': downloadUrl,
         });
 
@@ -135,17 +340,21 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('プロフィール', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('プロフィール',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
             icon: const Icon(Icons.more_horiz, color: Colors.white),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingPage()),
-                );
-              },
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingPage()),
+              );
+            },
           ),
         ],
       ),
@@ -169,42 +378,7 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
           return Column(
             children: [
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
-                        child: _profileImageUrl == null
-                            ? Icon(Icons.add_photo_alternate, size: 50, color: Colors.grey[700])
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _username ?? '名前: 未設定',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
-                            const SizedBox(width: 16),
-                            _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              _buildProfileHeader(),
               const SizedBox(height: 16),
               TabBar(
                 controller: _tabController,
@@ -229,6 +403,127 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
           );
         },
       ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Stack(
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundImage: _profileImageUrl != null
+                      ? NetworkImage(_profileImageUrl!)
+                      : null,
+                  child: _profileImageUrl == null
+                      ? const Icon(Icons.person, size: 40)
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _username ?? '名前未設定',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Row(
+                  children: [
+                    _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
+                    const SizedBox(width: 16),
+                    _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildSocialIcons(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialIcons() {
+    final isPremium = ref.watch(subscriptionProvider).value ?? false;
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            if (!isPremium) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+              );
+              return;
+            }
+            if (_xAccountUrl != null) {
+              launchUrl(Uri.parse(_xAccountUrl!));
+            }
+          },
+          child: Image.asset(
+            'assets/sns_icon/x_icon.png',
+            width: 24,
+            height: 24,
+            color: _xAccountUrl != null ? null : Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: () {
+            if (!isPremium) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+              );
+              return;
+            }
+            if (_instagramAccountUrl != null) {
+              launchUrl(Uri.parse(_instagramAccountUrl!));
+            }
+          },
+          child: Image.asset(
+            'assets/sns_icon/insta_icon.png',
+            width: 24,
+            height: 24,
+            color: _instagramAccountUrl != null ? null : Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: () {
+            if (!isPremium) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+              );
+              return;
+            }
+            if (_tiktokAccountUrl != null) {
+              launchUrl(Uri.parse(_tiktokAccountUrl!));
+            }
+          },
+          child: Image.asset(
+            'assets/sns_icon/tiktok_icon.png',
+            width: 24,
+            height: 24,
+            color: _tiktokAccountUrl != null ? null : Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 
@@ -283,16 +578,19 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                 children: [
                   const Icon(Icons.place, size: 24, color: Colors.blue),
                   const SizedBox(width: 8),
-                  Text(data['name'] ?? '名称不明', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(data['name'] ?? '名称不明',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
-              subtitle: Text('住所: ${data['address'] ?? '住所不明'}', maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text('住所: ${data['address'] ?? '住所不明'}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () async {
                 final spotDoc = await FirebaseFirestore.instance
                     .collection('spots')
                     .doc(data['spotId'])
                     .get();
-                
+
                 if (spotDoc.exists) {
                   Navigator.push(
                     context,
@@ -342,7 +640,8 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
               children: [
                 Icon(Icons.rate_review, size: 64, color: Colors.grey),
                 SizedBox(height: 16),
-                Text('口コミはありません', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                Text('口コミはありません',
+                    style: TextStyle(color: Colors.grey, fontSize: 16)),
               ],
             ),
           );
@@ -364,7 +663,8 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                   children: [
                     if (review['imageUrl'] != null)
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8)),
                         child: Image.network(
                           review['imageUrl'],
                           width: double.infinity,
@@ -379,7 +679,8 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage: review['userProfileImage'] != null
+                                backgroundImage: review['userProfileImage'] !=
+                                        null
                                     ? NetworkImage(review['userProfileImage'])
                                     : null,
                                 child: review['userProfileImage'] == null
@@ -393,11 +694,14 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                                   children: [
                                     Text(
                                       review['userName'] ?? '名称不明',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       '投稿日: ${review['timestamp'] != null ? DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate()) : '日付不明'}',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -411,23 +715,41 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
                                         mainAxisSize: MainAxisSize.min,
                                         children: <Widget>[
                                           ListTile(
-                                            leading: const Icon(Icons.delete, color: Colors.red),
-                                            title: const Text('削除する', style: TextStyle(color: Colors.red)),
+                                            leading: const Icon(Icons.delete,
+                                                color: Colors.red),
+                                            title: const Text('削除する',
+                                                style: TextStyle(
+                                                    color: Colors.red)),
                                             onTap: () async {
-                                              final bool? confirmDelete = await showDialog<bool>(
+                                              final bool? confirmDelete =
+                                                  await showDialog<bool>(
                                                 context: context,
-                                                builder: (BuildContext context) {
+                                                builder:
+                                                    (BuildContext context) {
                                                   return AlertDialog(
                                                     title: const Text('確認'),
-                                                    content: const Text('この口コミを削除してもよろしいですか？', style: TextStyle(fontSize: 12)),
+                                                    content: const Text(
+                                                        'この口コミを削除してもよろしいですか？',
+                                                        style: TextStyle(
+                                                            fontSize: 12)),
                                                     actions: <Widget>[
                                                       TextButton(
-                                                        child: const Text('キャンセル'),
-                                                        onPressed: () => Navigator.of(context).pop(false),
+                                                        child:
+                                                            const Text('キャンセル'),
+                                                        onPressed: () =>
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(false),
                                                       ),
                                                       TextButton(
-                                                        child: const Text('削除', style: TextStyle(color: Colors.red)),
-                                                        onPressed: () => Navigator.of(context).pop(true),
+                                                        child: const Text('削除',
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .red)),
+                                                        onPressed: () =>
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(true),
                                                       ),
                                                     ],
                                                   );
@@ -436,30 +758,41 @@ class ProfilePageState extends State<ProfilePage> with SingleTickerProviderState
 
                                               if (confirmDelete == true) {
                                                 try {
-                                                  // 画像がある場合、Storageから削除
-                                                  if (review['imageUrl'] != null) {
+                                                  if (review['imageUrl'] !=
+                                                      null) {
                                                     try {
-                                                      final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
+                                                      final storageRef =
+                                                          FirebaseStorage
+                                                              .instance
+                                                              .refFromURL(review[
+                                                                  'imageUrl']);
                                                       await storageRef.delete();
                                                     } catch (e) {
-                                                      print('画像の削除中にエラーが発生しました: $e');
+                                                      print(
+                                                          '画像の削除中にエラーが発生しました: $e');
                                                     }
                                                   }
-
-                                                  // Firestoreから口コミを削除
-                                                  await FirebaseFirestore.instance
+                                                  await FirebaseFirestore
+                                                      .instance
                                                       .collection('reviews')
                                                       .doc(review.id)
                                                       .delete();
 
                                                   Navigator.of(context).pop();
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('口コミを削除しました')),
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                        content:
+                                                            Text('口コミを削除しました')),
                                                   );
                                                 } catch (e) {
-                                                  print('口コミの削除中にエラーが発生しました: $e');
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('口コミの削除に失敗しました')),
+                                                  print(
+                                                      '口コミの削除中にエラーが発生しました: $e');
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                        content: Text(
+                                                            '口コミの削除に失敗しました')),
                                                   );
                                                 }
                                               } else {

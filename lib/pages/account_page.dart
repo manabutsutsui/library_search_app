@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/subscription_state.dart';
+import 'subscription_premium.dart';
 
-class AccountPage extends StatefulWidget {
+class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key});
 
   @override
-  AccountPageState createState() => AccountPageState();
+  ConsumerState<AccountPage> createState() => _AccountPageState();
 }
 
-class AccountPageState extends State<AccountPage> {
+class _AccountPageState extends ConsumerState<AccountPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String? _username;
   String? _email;
   String? _profileImageUrl;
+  String? _xAccountUrl;
+  String? _instagramAccountUrl;
+  String? _tiktokAccountUrl;
   final TextEditingController _usernameController = TextEditingController();
   bool _isEditing = false;
 
@@ -29,11 +36,15 @@ class AccountPageState extends State<AccountPage> {
     User? user = _auth.currentUser;
     if (user != null) {
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final userData = userDoc.data() as Map<String, dynamic>?;
       setState(() {
-        _username = userDoc['username'];
+        _username = userData?['username'];
         _email = user.email;
-        _profileImageUrl = userDoc['profileImage'];
+        _profileImageUrl = userData?['profileImage'];
         _usernameController.text = _username ?? '';
+        _xAccountUrl = userData?['xAccountUrl'];
+        _instagramAccountUrl = userData?['instagramAccountUrl'];
+        _tiktokAccountUrl = userData?['tiktokAccountUrl'];
       });
     }
   }
@@ -69,8 +80,208 @@ class AccountPageState extends State<AccountPage> {
     }
   }
 
+  void _showXAccountDialog() {
+    final TextEditingController controller = TextEditingController(
+      text: _xAccountUrl?.replaceAll('https://x.com/', '')
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xアカウントの設定'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://x.com/@username',
+                prefixText: 'https://x.com/',
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'アカウント名のみを入力してください',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url = username.isEmpty ? null : 'https://x.com/$username';
+              
+              await _firestore
+                  .collection('users')
+                  .doc(_auth.currentUser?.uid)
+                  .update({'xAccountUrl': url});
+              
+              setState(() {
+                _xAccountUrl = url;
+              });
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(url == null ? 'Xアカウントを削除しました' : 'Xアカウントを更新しました'),
+                  ),
+                );
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInstagramAccountDialog() {
+    final TextEditingController controller = TextEditingController(
+      text: _instagramAccountUrl?.replaceAll('https://www.instagram.com/', '')
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Instagramアカウントの設定'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://www.instagram.com/username',
+                prefixText: 'https://www.instagram.com/',
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'アカウント名のみを入力してください',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url = username.isEmpty ? null : 'https://www.instagram.com/$username';
+              
+              await _firestore
+                  .collection('users')
+                  .doc(_auth.currentUser?.uid)
+                  .update({'instagramAccountUrl': url});
+              
+              setState(() {
+                _instagramAccountUrl = url;
+              });
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(url == null ? 'Instagramアカウントを削除しました' : 'Instagramアカウントを更新しました'),
+                  ),
+                );
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTiktokAccountDialog() {
+    final TextEditingController controller = TextEditingController(
+      text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', '')
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('TikTokアカウントの設定'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'https://www.tiktok.com/@username',
+                prefixText: 'https://www.tiktok.com/@',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              String username = controller.text.trim();
+              if (username.startsWith('@')) {
+                username = username.substring(1);
+              }
+              final url = username.isEmpty ? null : 'https://www.tiktok.com/@$username';
+              
+              await _firestore
+                  .collection('users')
+                  .doc(_auth.currentUser?.uid)
+                  .update({'tiktokAccountUrl': url});
+              
+              setState(() {
+                _tiktokAccountUrl = url;
+              });
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(url == null ? 'TikTokアカウントを削除しました' : 'TikTokアカウントを更新しました'),
+                  ),
+                );
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isPremium = ref.watch(subscriptionProvider).value ?? false;
+
+    void handleSNSButtonPress(VoidCallback onPremium) {
+      if (!isPremium) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+        );
+        return;
+      }
+      onPremium();
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -136,6 +347,113 @@ class AccountPageState extends State<AccountPage> {
               children: [
                 const Text('メールアドレス', style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(_email ?? '未設定', style: const TextStyle(fontSize: 18)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Xアカウント', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    if (_xAccountUrl != null) ...[
+                      GestureDetector(
+                        onTap: () async {
+                          if (await canLaunch(_xAccountUrl!)) {
+                            await launch(_xAccountUrl!);
+                          }
+                        },
+                        child: Text(
+                          _xAccountUrl!.replaceAll('https://x.com/', '@'),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => handleSNSButtonPress(_showXAccountDialog),
+                      ),
+                    ] else
+                      TextButton(
+                        onPressed: () => handleSNSButtonPress(_showXAccountDialog),
+                        child: const Text('設定する'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Instagramアカウント', 
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    if (_instagramAccountUrl != null) ...[
+                      GestureDetector(
+                        onTap: () async {
+                          if (await canLaunch(_instagramAccountUrl!)) {
+                            await launch(_instagramAccountUrl!);
+                          }
+                        },
+                        child: Text(
+                          _instagramAccountUrl!.replaceAll('https://www.instagram.com/', '@'),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => handleSNSButtonPress(_showInstagramAccountDialog),
+                      ),
+                    ] else
+                      TextButton(
+                        onPressed: () => handleSNSButtonPress(_showInstagramAccountDialog),
+                        child: const Text('設定する'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('TikTokアカウント', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    if (_tiktokAccountUrl != null) ...[
+                      GestureDetector(
+                        onTap: () async {
+                          if (await canLaunch(_tiktokAccountUrl!)) {
+                            await launch(_tiktokAccountUrl!);
+                          }
+                        },
+                        child: Text(
+                          _tiktokAccountUrl!.replaceAll('https://www.tiktok.com/@', '@'),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => handleSNSButtonPress(_showTiktokAccountDialog),
+                      ),
+                    ] else
+                      TextButton(
+                        onPressed: () => handleSNSButtonPress(_showTiktokAccountDialog),
+                        child: const Text('設定する'),
+                      ),
+                  ],
+                ),
               ],
             ),
           ],

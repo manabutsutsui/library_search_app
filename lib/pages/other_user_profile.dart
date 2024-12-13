@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OtherUserProfilePage extends StatefulWidget {
   final String userId;
@@ -25,12 +26,16 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
   late Stream<QuerySnapshot> _visitedSpotsStream;
   int _reviewCount = 0;
   int _visitedSpotsCount = 0;
+  String? _xAccountUrl;
+  String? _instagramAccountUrl;
+  String? _tiktokAccountUrl;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _initStreams();
+    _loadSocialAccounts();
   }
 
   @override
@@ -69,6 +74,18 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
     });
   }
 
+  Future<void> _loadSocialAccounts() async {
+    final userData = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
+    setState(() {
+      _xAccountUrl = userData.data()?['xAccountUrl'];
+      _instagramAccountUrl = userData.data()?['instagramAccountUrl'];
+      _tiktokAccountUrl = userData.data()?['tiktokAccountUrl'];
+    });
+  }
+
   Widget _buildStatItem(IconData icon, String count, String label) {
     return Row(
       children: [
@@ -87,6 +104,54 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialIcons() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: _xAccountUrl != null ? () async {
+            if (await canLaunch(_xAccountUrl!)) {
+              await launch(_xAccountUrl!);
+            }
+          } : null,
+          child: Image.asset(
+            'assets/sns_icon/x_icon.png',
+            width: 24,
+            height: 24,
+            color: _xAccountUrl != null ? null : Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: _instagramAccountUrl != null ? () async {
+            if (await canLaunch(_instagramAccountUrl!)) {
+              await launch(_instagramAccountUrl!);
+            }
+          } : null,
+          child: Image.asset(
+            'assets/sns_icon/insta_icon.png',
+            width: 24,
+            height: 24,
+            color: _instagramAccountUrl != null ? null : Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: _tiktokAccountUrl != null ? () async {
+            if (await canLaunch(_tiktokAccountUrl!)) {
+              await launch(_tiktokAccountUrl!);
+            }
+          } : null,
+          child: Image.asset(
+            'assets/sns_icon/tiktok_icon.png',
+            width: 24,
+            height: 24,
+            color: _tiktokAccountUrl != null ? null : Colors.grey,
           ),
         ),
       ],
@@ -360,7 +425,6 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
                     Row(
                       children: [
                         _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
@@ -368,6 +432,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                         _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    _buildSocialIcons(),
                   ],
                 ),
               ],
