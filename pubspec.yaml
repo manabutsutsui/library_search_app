@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.3.7+1
+version: 1.3.9+1
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
@@ -55,7 +55,7 @@ dependencies:
   font_awesome_flutter: ^10.7.0
   firebase_messaging: ^15.1.3
   package_info_plus: ^8.0.3
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.2.2
   purchases_flutter: ^8.1.5
   uuid: ^4.5.1
   purchases_ui_flutter: ^8.1.5
@@ -89,6 +89,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -192,6 +193,6 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
 flutter_native_splash:
-  color: "#FFFFFF" 
-  image: assets/splash/seichi_splash_02.png
+  image: assets/splash/seichi_splash.png
+  background_image: assets/splash/seichi_splash_bg.png
   fullscreen: true

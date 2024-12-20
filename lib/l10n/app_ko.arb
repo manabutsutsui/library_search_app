@@ -1,0 +1,21 @@
+{
+    "appTitle": "애니메이션 성지 - Seichi",
+    "home": "홈",
+    "map": "지도",
+    "works": "작품",
+    "registration": "등록",
+    "profile": "프로필",
+    "settings": "설정",
+    "personalInfo": "개인정보",
+    "account": "계정",
+    "generalSettings": "일반설정",
+    "languageSettings": "언어설정",
+    "aboutApp": "앱에 대해",
+    "contact": "연락처",
+    "termsOfService": "이용약관",
+    "privacyPolicy": "개인정보처리방침",
+    "writeReview": "리뷰 작성",
+    "logout": "로그아웃",
+    "deleteAccount": "계정 삭제",
+    "selectLanguage": "언어 선택"
+}

@@ -1,0 +1,21 @@
+{
+    "appTitle": "Anime Pilgrimage - Seichi",
+    "home": "Home",
+    "map": "Map",
+    "works": "Works",
+    "registration": "Register",
+    "profile": "Profile",
+    "settings": "Settings",
+    "personalInfo": "Personal Information",
+    "account": "Account",
+    "generalSettings": "General Settings",
+    "languageSettings": "Language Settings",
+    "aboutApp": "About App",
+    "contact": "Contact",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "writeReview": "Write Review",
+    "logout": "Logout",
+    "deleteAccount": "Delete Account",
+    "selectLanguage": "Select Language"
+}

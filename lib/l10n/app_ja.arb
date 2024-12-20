@@ -1,0 +1,21 @@
+{
+    "appTitle": "アニメ聖地マップ - Seichi",
+    "home": "ホーム",
+    "map": "地図",
+    "works": "作品",
+    "registration": "登録",
+    "profile": "個人",
+    "settings": "設定",
+    "personalInfo": "個人情報",
+    "account": "アカウント",
+    "generalSettings": "一般設定",
+    "languageSettings": "言語設定",
+    "aboutApp": "アプリについて",
+    "contact": "お問い合わせ",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "writeReview": "レビューを書く",
+    "logout": "ログアウト",
+    "deleteAccount": "アカウント削除",
+    "selectLanguage": "言語を選択"
+} 

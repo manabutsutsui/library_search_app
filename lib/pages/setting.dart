@@ -6,15 +6,18 @@ import 'package:in_app_review/in_app_review.dart';
 import 'login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'create_account.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/locale_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class SettingPage extends StatefulWidget {
+class SettingPage extends ConsumerStatefulWidget {
   const SettingPage({super.key});
 
   @override
-  SettingPageState createState() => SettingPageState();
+  ConsumerState<SettingPage> createState() => SettingPageState();
 }
 
-class SettingPageState extends State<SettingPage> {
+class SettingPageState extends ConsumerState<SettingPage> {
   final InAppReview inAppReview = InAppReview.instance;
 
   Future<void> _logout(BuildContext context) async {
@@ -119,7 +122,10 @@ class SettingPageState extends State<SettingPage> {
         });
 
         // ユーザードキュメントを削除
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .delete();
 
         // Firebaseユーザーを削除
         await user.delete();
@@ -135,125 +141,218 @@ class SettingPageState extends State<SettingPage> {
     }
   }
 
+  Widget _buildLanguageSelector() {
+    final currentLocale = ref.watch(localeProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    return _buildListItem(
+      icon: Icons.language,
+      title: l10n.languageSettings,
+      subtitle: _getLanguageName(currentLocale.languageCode),
+      onTap: () => _showLanguageDialog(),
+    );
+  }
+
+  String _getLanguageName(String languageCode) {
+    switch (languageCode) {
+      case 'ja':
+        return '日本語';
+      case 'en':
+        return 'English';
+      case 'zh':
+        return '中文';
+      case 'ko':
+        return '한국어';
+      case 'fr':
+        return 'Français';
+      default:
+        return '日本語';
+    }
+  }
+
+  void _showLanguageDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.selectLanguage),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLanguageOption('ja', '日本語'),
+              _buildLanguageOption('en', 'English'),
+              _buildLanguageOption('zh', '中文'),
+              _buildLanguageOption('ko', '한국어'),
+              _buildLanguageOption('fr', 'Français'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(String languageCode, String languageName) {
+    final currentLocale = ref.watch(localeProvider);
+
+    return ListTile(
+      title: Text(languageName),
+      trailing: currentLocale.languageCode == languageCode
+          ? const Icon(Icons.check, color: Colors.blue)
+          : null,
+      onTap: () {
+        ref.read(localeProvider.notifier).changeLocale(languageCode);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('設定', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(l10n.settings,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('個人情報', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 4),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.personalInfo,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: _buildListItem(
+                  icon: Icons.person,
+                  title: l10n.account,
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AccountPage()));
+                  },
+                ),
               ),
-              child: _buildListItem(
-                icon: Icons.person,
-                title: 'アカウント',
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AccountPage()));
-                },
+              const SizedBox(height: 32),
+              Text(l10n.generalSettings,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: _buildLanguageSelector(),
               ),
-            ),
-            const SizedBox(height: 32),
-            const Text('アプリについて', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 4),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 32),
+              Text(l10n.aboutApp,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    _buildListItem(
+                      icon: Icons.mail,
+                      title: l10n.contact,
+                      onTap: () async {
+                        final Uri url =
+                            Uri.parse('https://tsutsunoidoblog.com/contact/');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url);
+                        } else {
+                          print('Could not launch $url');
+                        }
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListItem(
+                      icon: Icons.description,
+                      title: l10n.termsOfService,
+                      onTap: () async {
+                        final Uri url = Uri.parse(
+                            'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url);
+                        } else {
+                          print('Could not launch $url');
+                        }
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListItem(
+                      icon: Icons.shield_outlined,
+                      title: l10n.privacyPolicy,
+                      onTap: () async {
+                        final Uri url = Uri.parse(
+                            'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url);
+                        } else {
+                          print('Could not launch $url');
+                        }
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListItem(
+                      icon: Icons.star,
+                      title: l10n.writeReview,
+                      onTap: () async {
+                        if (await inAppReview.isAvailable()) {
+                          inAppReview.requestReview();
+                        } else {
+                          inAppReview.openStoreListing(
+                            appStoreId: 'あなたのApp Store ID',
+                            microsoftStoreId: 'あなたのMicrosoft Store ID',
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  _buildListItem(
-                    icon: Icons.mail,
-                    title: 'お問い合わせ',
-                    onTap: () async {
-                      final Uri url = Uri.parse('https://tsutsunoidoblog.com/contact/');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      } else {
-                        print('Could not launch $url');
-                      }
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildListItem(
-                    icon: Icons.description,
-                    title: '利用規約',
-                    onTap: () async {
-                      final Uri url = Uri.parse('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      } else {
-                        print('Could not launch $url');
-                      }
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildListItem(
-                    icon: Icons.shield_outlined,
-                    title: 'プライバシーポリシー',
-                    onTap: () async {
-                      final Uri url = Uri.parse('https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      } else {
-                        print('Could not launch $url');
-                      }
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildListItem(
-                    icon: Icons.star,
-                    title: 'レビューを書く',
-                    onTap: () async {
-                      if (await inAppReview.isAvailable()) {
-                        inAppReview.requestReview();
-                      } else {
-                        inAppReview.openStoreListing(
-                          appStoreId: 'あなたのApp Store ID',
-                          microsoftStoreId: 'あなたのMicrosoft Store ID',
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  _buildListItem(
-                    icon: Icons.logout,
-                    title: 'ログアウト',
-                    onTap: () => _logout(context),
-                    isBold: true,
-                  ),
-                  _buildDivider(),
-                  _buildListItem(
-                    icon: Icons.delete_outline,
-                    title: 'アカウント削除',
-                    onTap: () => _showDeleteAccountDialog(context),
-                    isRed: true,
-                  ),
-                ],
-              ),
-            )
-          ],
+              const SizedBox(height: 32),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    _buildListItem(
+                      icon: Icons.logout,
+                      title: l10n.logout,
+                      onTap: () => _logout(context),
+                      isBold: true,
+                    ),
+                    _buildDivider(),
+                    _buildListItem(
+                      icon: Icons.delete_outline,
+                      title: l10n.deleteAccount,
+                      onTap: () => _showDeleteAccountDialog(context),
+                      isRed: true,
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -262,6 +361,7 @@ class SettingPageState extends State<SettingPage> {
   Widget _buildListItem({
     required IconData icon,
     required String title,
+    String? subtitle,
     required VoidCallback onTap,
     bool isBold = false,
     bool isRed = false,
@@ -279,13 +379,26 @@ class SettingPageState extends State<SettingPage> {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isRed ? Colors.red : Colors.black87,
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isRed ? Colors.red : Colors.black87,
+                      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                ],
               ),
             ),
             Icon(Icons.chevron_right, color: Colors.grey[400]),

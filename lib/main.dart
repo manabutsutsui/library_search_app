@@ -19,6 +19,8 @@ import 'pages/create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/anime_more.dart';
 import 'utils/seichi_de_dekirukoto.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'providers/locale_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +86,8 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(localeProvider);
+    
     return MaterialApp(
       title: 'アニメ聖地マップ - Seichi',
       theme: ThemeData(
@@ -91,6 +95,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         useMaterial3: true,
       ),
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -98,8 +103,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       supportedLocales: const [
         Locale('ja', ''),
         Locale('en', ''),
+        Locale('zh', ''),
+        Locale('ko', ''),
+        Locale('fr', ''),
       ],
-      locale: const Locale('ja', ''),
+      locale: currentLocale,
       home: const AppWithBottomNavigation(),
       debugShowCheckedModeBanner: false,
     );
@@ -219,26 +227,26 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
               },
             ),
             BottomNavigationBar(
-              items: const <BottomNavigationBarItem>[
+              items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'ホーム',
+                  icon: const Icon(Icons.home),
+                  label: AppLocalizations.of(context)!.home,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.map),
-                  label: '地図',
+                  icon: const Icon(Icons.map),
+                  label: AppLocalizations.of(context)!.map,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.library_add_check),
-                  label: '作品',
+                  icon: const Icon(Icons.library_add_check),
+                  label: AppLocalizations.of(context)!.works,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite),
-                  label: '登録',
+                  icon: const Icon(Icons.favorite),
+                  label: AppLocalizations.of(context)!.registration,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: '個人',
+                  icon: const Icon(Icons.person),
+                  label: AppLocalizations.of(context)!.profile,
                 ),
               ],
               currentIndex: _selectedIndex,

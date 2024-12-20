@@ -1,0 +1,21 @@
+{
+    "appTitle": "动漫圣地 - Seichi",
+    "home": "主页",
+    "map": "地图",
+    "works": "作品",
+    "registration": "注册",
+    "profile": "个人",
+    "settings": "设置",
+    "personalInfo": "个人资料",
+    "account": "账户",
+    "generalSettings": "常规设置",
+    "languageSettings": "语言设置",
+    "aboutApp": "关于应用",
+    "contact": "联系",
+    "termsOfService": "使用条款",
+    "privacyPolicy": "隐私政策",
+    "writeReview": "写评论",
+    "logout": "登出",
+    "deleteAccount": "删除账户",
+    "selectLanguage": "选择语言"
+}

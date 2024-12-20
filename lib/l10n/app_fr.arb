@@ -1,0 +1,21 @@
+{
+    "appTitle": "Lieux de Pèlerinage d'Anime - Seichi",
+    "home": "Accueil",
+    "map": "Carte",
+    "works": "Œuvres",
+    "registration": "Inscription",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "personalInfo": "Informations personnelles",
+    "account": "Compte",
+    "generalSettings": "Paramètres généraux",
+    "languageSettings": "Paramètres de langue",
+    "aboutApp": "À propos de l'application",
+    "contact": "Contact",
+    "termsOfService": "Conditions d'utilisation",
+    "privacyPolicy": "Politique de confidentialité",
+    "writeReview": "Écrire une critique",
+    "logout": "Déconnexion",
+    "deleteAccount": "Supprimer le compte",
+    "selectLanguage": "Sélectionner la langue"
+}
