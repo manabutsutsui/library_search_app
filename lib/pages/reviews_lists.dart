@@ -3,15 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'review_detail.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ReviewsListPage extends StatelessWidget {
   const ReviewsListPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('口コミ一覧', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(l10n.reviewList, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -25,11 +27,11 @@ class ReviewsListPage extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+            return Center(child: Text(l10n.errorOccurred));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('口コミはありません'));
+            return Center(child: Text(l10n.noReviews));
           }
 
           return ListView.builder(

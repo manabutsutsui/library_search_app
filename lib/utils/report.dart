@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ReportDialog extends StatefulWidget {
   const ReportDialog({super.key});
@@ -8,19 +9,27 @@ class ReportDialog extends StatefulWidget {
 }
 
 class ReportDialogState extends State<ReportDialog> {
-  final List<String> _reportReasons = [
-    '不適なコンテンツ',
-    'スパムまたは広告',
-    '誤った情報',
-    'その他',
-  ];
+  late List<String> _reportReasons;
   String? _selectedReason;
 
   @override
+  void initState() {
+    super.initState();
+    final l10n = AppLocalizations.of(context)!;
+    _reportReasons = [
+      l10n.inappropriateContent,
+      l10n.spamOrAdvertisement,
+      l10n.incorrectInformation,
+      l10n.other,
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('報告理由を選択してください',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      title: Text(l10n.selectReportReason,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: List.generate(_reportReasons.length, (index) {
@@ -38,11 +47,11 @@ class ReportDialogState extends State<ReportDialog> {
       ),
       actions: <Widget>[
         TextButton(
-          child: const Text('キャンセル'),
+          child: Text(l10n.cancel),
           onPressed: () => Navigator.of(context).pop(null),
         ),
         TextButton(
-          child: const Text('報告する'),
+          child: Text(l10n.report),
           onPressed: () {
             Navigator.of(context).pop(_selectedReason);
           },

@@ -3,6 +3,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SubscriptionPremium extends ConsumerStatefulWidget {
   const SubscriptionPremium({super.key});
@@ -37,6 +38,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
   }
 
   Future<void> _handlePurchase({bool isAnnual = false}) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isLoading = true;
     });
@@ -44,7 +46,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
     try {
       final offerings = await Purchases.getOfferings();
       if (offerings.current == null) {
-        throw Exception('利用可能なプランがありません');
+        throw Exception(l10n.noAvailablePlan);
       }
 
       Package? packageToPurchase;
@@ -71,7 +73,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
       }
 
       if (packageToPurchase == null) {
-        throw Exception('利用可能なパッケージが見つかりません');
+        throw Exception(l10n.noAvailablePackage);
       }
 
       final purchaserInfo = await Purchases.purchasePackage(packageToPurchase);
@@ -82,8 +84,8 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('プレミアムプランの購入が完了しました！'),
+            SnackBar(
+              content: Text(l10n.premiumPlanPurchaseComplete),
               backgroundColor: Colors.green,
             ),
           );
@@ -93,12 +95,12 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
       debugPrint('Purchase error: $e');
       if (!mounted) return;
 
-      String errorMessage = '購入処理中にエラーが発生しました';
+      String errorMessage = l10n.purchaseError;
 
       if (e.toString().contains('PlatformException')) {
-        errorMessage = 'ストアとの通信中にエラーが発生しました';
+        errorMessage = l10n.storeCommunicationError;
       } else if (e.toString().contains('UserCancelled')) {
-        errorMessage = '購入がキャンセルされました';
+        errorMessage = l10n.purchaseCanceled;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,12 +119,13 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
   }
 
   Future<void> _launchURL(String urlString) async {
+    final l10n = AppLocalizations.of(context)!;
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('URLを開けませんでした'),
+          SnackBar(
+            content: Text(l10n.urlCannotBeOpened),
             backgroundColor: Colors.red,
           ),
         );
@@ -132,13 +135,14 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Stack(
       children: [
         Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
           appBar: AppBar(
-            title: const Text('Premium プラン',
-                style: TextStyle(
+            title: Text(l10n.premiumPlan02,
+                style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16)),
@@ -194,12 +198,12 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text(
-                          'Premiumプランで\nSeichiをもっと楽しもう!',
+                          l10n.premiumPlanEnjoy,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -220,9 +224,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              '月額プラン',
-                              style: TextStyle(
+                            Text(
+                              l10n.monthlyPlan,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
@@ -240,17 +244,19 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 24, vertical: 12),
                               ),
-                              child: const Text(
-                                '¥500/月',
-                                style: TextStyle(
+                              child: Text(
+                                '¥500/${l10n.month}',
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text('・¥500/月 お手頃価格',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                                '¥500/${l10n.month} ・${l10n.affordablePrice}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -271,9 +277,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
-                                  '年間プラン',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.annualPlan,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
@@ -293,18 +299,19 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 24, vertical: 12),
                                   ),
-                                  child: const Text(
-                                    '￥5,000/年',
-                                    style: TextStyle(
+                                  child: Text(
+                                    '¥5,000/${l10n.year}',
+                                    style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text('・年間契約でお得に利用可能',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                    '¥5,000/${l10n.year} ・${l10n.affordablePrice}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -318,9 +325,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 color: Colors.blue,
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                '２ヶ月分お得',
-                                style: TextStyle(
+                              child: Text(
+                                l10n.twoMonthDiscount,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -331,22 +338,22 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '※ 購入後に「特典（限定機能）」が反映されない場合、一度アプリを再起動してください。もしくは、数分ほど時間を空けてください。',
-                            style: TextStyle(fontSize: 12),
+                            l10n.premiumPlanNotApplied,
+                            style: const TextStyle(fontSize: 12),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            '※ 月額プラン ¥500/月 | 年割プラン ¥5,000/年',
-                            style: TextStyle(fontSize: 12),
+                            l10n.premiumPlanPrice,
+                            style: const TextStyle(fontSize: 12),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            '※ 旧料金で購入している場合、プラン料金は購入時のままで変更はありません',
-                            style: TextStyle(fontSize: 12),
+                            l10n.premiumPlanOldPrice,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
@@ -359,9 +366,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                               _launchURL(
                                   'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_terms_of_use/');
                             },
-                            child: const Text(
-                              '利用規約',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.termsOfService,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
@@ -373,9 +380,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                               _launchURL(
                                   'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/');
                             },
-                            child: const Text(
-                              'プライバシーポリシー',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.privacyPolicy,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
@@ -392,108 +399,105 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('購入するプランで特典の違いはありますか？',
-                              style: TextStyle(
+                          Text(l10n.faq1,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text(
-                              'はい、特典は全て同じ内容です。月額プランでも年額プランでも、全て同じ内容の特典をご利用いただけます。',
+                          Text(l10n.answer1,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('今後も開発は続けますか？',
-                              style: TextStyle(
+                          Text(l10n.faq2,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text(
-                              'Seichiは未完成アプリです。開発者の構想を実現するために、今も新機能を続々開発中。また、聖地スポットも日々追加しています!その様子はTwitterよりご確認ください。',
+                          Text(l10n.answer2,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL('https://x.com/gaku29189'),
-                            child: const Text(
-                              '開発者Twitter',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.developerTwitter,
+                              style: const TextStyle(
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text('購入後に特典が反映されません',
-                              style: TextStyle(
+                          Text(l10n.faq3,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text(
-                              'Premiumプランの特典が反映されるまで、少し時間がかかる場合があります。一度アプリをスワイプして終了してみてください。',
+                          Text(l10n.answer3,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('途中で解約はできますか？',
-                              style: TextStyle(
+                          Text(l10n.faq4,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text('いつでも可能です。ご解約の方法については以下のページをご覧ください。',
+                          Text(l10n.answer4,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL(
                                 'https://support.apple.com/ja-jp/118428'),
-                            child: const Text(
-                              '解約の手順',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.cancellationProcedure,
+                              style: const TextStyle(
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text('アプリを削除すると解約されますか？',
-                              style: TextStyle(
+                          Text(l10n.faq5,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text(
-                              'アプリを削除しても、Premiumプランは解約されません。上記の手順より解約手続きをお願いします。',
+                          Text(l10n.answer5,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('購入後の返金はできますか？',
-                              style: TextStyle(
+                          Text(l10n.faq6,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text('購入後の返金はお受けできません。ご了承ください。'),
-                          const SizedBox(height: 16),
-                          const Text('Premiumプランは自動更新ですか？',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          const Text(
-                              '契約期間終了の24時間以内に解約（自動更新の解除）をされない場合、自動更新されます。',
+                          Text(l10n.answer6,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('契約期間を教えて下さい',
-                              style: TextStyle(
+                          Text(l10n.faq7,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text('上記の解約方法と同じ手順でご確認できます。',
+                          Text(l10n.answer7,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('プランの変更はできますか？',
-                              style: TextStyle(
+                          Text(l10n.faq8,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text('途中でプランを変更したい場合、現在のプランの解約が必要になります。',
+                          Text(l10n.answer8,
                               textAlign: TextAlign.left),
                           const SizedBox(height: 16),
-                          const Text('お問い合わせ先を教えて下さい',
-                              style: TextStyle(
+                          Text(l10n.faq9,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text('以下のフォームまでご連絡ください。'),
+                          Text(l10n.answer9,
+                              textAlign: TextAlign.left),
+                          const SizedBox(height: 16),
+                          Text(l10n.faq10,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Text(l10n.answer10,
+                              textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL(
                                 'https://tsutsunoidoblog.com/contact/'),
-                            child: const Text(
-                              'お問い合わせフォーム',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.contactForm,
+                              style: const TextStyle(
                                 color: Colors.blue,
                                 decoration: TextDecoration.underline,
                               ),

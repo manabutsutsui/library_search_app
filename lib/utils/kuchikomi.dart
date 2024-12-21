@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ReviewForm extends StatefulWidget {
   final DocumentSnapshot spot;
@@ -37,7 +38,7 @@ class ReviewFormState extends State<ReviewForm> {
         _image = image;
       });
     } catch (e) {
-      print('画像選択中にエラーが発生しました: $e');
+      // print('画像選択中にエラーが発生しました: $e');
     } finally {
       setState(() {
         _isPickingImage = false;
@@ -54,7 +55,6 @@ class ReviewFormState extends State<ReviewForm> {
       final snapshot = await uploadTask.whenComplete(() {});
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
-      print('画像のアップロード中にエラーが発生しました: $e');
       return null;
     }
   }
@@ -96,11 +96,12 @@ class ReviewFormState extends State<ReviewForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('口コミを投稿',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(l10n.reviewPost,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -116,8 +117,8 @@ class ReviewFormState extends State<ReviewForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('写真を追加（任意）',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(l10n.addPhoto,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: _pickImage,
@@ -129,14 +130,14 @@ class ReviewFormState extends State<ReviewForm> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: _image == null
-                          ? const Column(
+                          ? Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_a_photo,
+                                const Icon(Icons.add_a_photo,
                                     size: 64, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text('タップして写真を追加',
-                                    style: TextStyle(color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                Text(l10n.tapToAddPhoto,
+                                    style: const TextStyle(color: Colors.grey)),
                               ],
                             )
                           : Image.file(
@@ -148,8 +149,8 @@ class ReviewFormState extends State<ReviewForm> {
                   if (_showImageError)
                     const SizedBox.shrink(),
                   const SizedBox(height: 16),
-                  const Text('聖地の評価',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(l10n.evaluationOfHolyPlace,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   RatingBar.builder(
                     initialRating: _rating.toDouble(),
@@ -169,19 +170,19 @@ class ReviewFormState extends State<ReviewForm> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  const Text('口コミの内容',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(l10n.reviewContent,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _reviewController,
-                    decoration: const InputDecoration(
-                      hintText: '聖地の感想を書いてください',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: l10n.writeReview,
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 5,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return '口コミの内容を入力してください';
+                        return l10n.reviewContentError;
                       }
                       return null;
                     },
@@ -193,8 +194,8 @@ class ReviewFormState extends State<ReviewForm> {
                       backgroundColor: Colors.blue,
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: const Text('投稿する',
-                        style: TextStyle(
+                    child: Text(l10n.submitReview,
+                        style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold)),

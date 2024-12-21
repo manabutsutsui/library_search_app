@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SeichiNote extends StatefulWidget {
   final String spotId;
@@ -54,6 +55,7 @@ class _SeichiNoteState extends State<SeichiNote> {
   }
 
   Future<void> _saveNote() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -73,11 +75,11 @@ class _SeichiNoteState extends State<SeichiNote> {
       }, SetOptions(merge: true));
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('保存に成功しました')),
+        SnackBar(content: Text(l10n.saveSuccess)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('保存に失敗しました')),
+        SnackBar(content: Text(l10n.saveError)),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -85,6 +87,7 @@ class _SeichiNoteState extends State<SeichiNote> {
   }
 
   Future<void> _addImage() async {
+    final l10n = AppLocalizations.of(context)!;
     final ImagePicker picker = ImagePicker();
     final List<XFile> images = await picker.pickMultiImage();
 
@@ -114,7 +117,7 @@ class _SeichiNoteState extends State<SeichiNote> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('画像のアップロードに失敗しました')),
+        SnackBar(content: Text(l10n.saveError)),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -122,6 +125,7 @@ class _SeichiNoteState extends State<SeichiNote> {
   }
 
   Future<void> _removeImage(int index) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final String imageUrl = _imageUrls[index];
       // Delete from Storage
@@ -134,13 +138,14 @@ class _SeichiNoteState extends State<SeichiNote> {
       await _saveNote();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('画像の削除に失敗しました')),
+        SnackBar(content: Text(l10n.saveError)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -151,9 +156,9 @@ class _SeichiNoteState extends State<SeichiNote> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'メモ',
-              style: TextStyle(
+            Text(
+              l10n.note,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -162,13 +167,13 @@ class _SeichiNoteState extends State<SeichiNote> {
             TextFormField(
               controller: _noteController,
               maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'ここに聖地巡礼に関するメモを残すことができます',
+              decoration: InputDecoration(
+                hintText: l10n.noteDescription,
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'メモを入力してください';
+                  return l10n.noteInputError;
                 }
                 return null;
               },
@@ -177,9 +182,9 @@ class _SeichiNoteState extends State<SeichiNote> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '写真',
-                  style: TextStyle(
+                Text(
+                  l10n.photo,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -187,7 +192,7 @@ class _SeichiNoteState extends State<SeichiNote> {
                 ElevatedButton.icon(
                   onPressed: _addImage,
                   icon: const Icon(Icons.add_photo_alternate),
-                  label: const Text('写真を追加'),
+                  label: Text(l10n.addPhoto),
                 ),
               ],
             ),
@@ -226,21 +231,21 @@ class _SeichiNoteState extends State<SeichiNote> {
                                   children: <Widget>[
                                     ListTile(
                                       leading: const Icon(Icons.delete, color: Colors.red),
-                                      title: const Text('削除する', style: TextStyle(color: Colors.red)),
+                                      title: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
                                       onTap: () async {
                                         final bool? confirmDelete = await showDialog<bool>(
                                           context: context,
                                           builder: (BuildContext context) {
                                             return AlertDialog(
-                                              title: const Text('確認'),
-                                              content: const Text('この写真を削除してもよろしいですか？', style: TextStyle(fontSize: 12)),
+                                              title: Text(l10n.confirm),
+                                              content: Text(l10n.deleteConfirmation, style: const TextStyle(fontSize: 12)),
                                               actions: <Widget>[
                                                 TextButton(
-                                                  child: const Text('キャンセル'),
+                                                  child: Text(l10n.cancel),
                                                   onPressed: () => Navigator.of(context).pop(false),
                                                 ),
                                                 TextButton(
-                                                  child: const Text('削除', style: TextStyle(color: Colors.red)),
+                                                  child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
                                                   onPressed: () => Navigator.of(context).pop(true),
                                                 ),
                                               ],
@@ -252,7 +257,7 @@ class _SeichiNoteState extends State<SeichiNote> {
                                           await _removeImage(index);
                                           Navigator.of(context).pop();
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('写真を削除しました')),
+                                            SnackBar(content: Text(l10n.deleteSuccess)),
                                           );
                                         } else {
                                           Navigator.of(context).pop();
@@ -261,7 +266,7 @@ class _SeichiNoteState extends State<SeichiNote> {
                                     ),
                                     ListTile(
                                       leading: const Icon(Icons.cancel),
-                                      title: const Text('キャンセル'),
+                                      title: Text(l10n.cancel),
                                       onTap: () {
                                         Navigator.pop(context);
                                       },
@@ -285,11 +290,11 @@ class _SeichiNoteState extends State<SeichiNote> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'ノートを保存',
-                    style: TextStyle(
+                    l10n.saveNote,
+                    style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white),

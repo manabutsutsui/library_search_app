@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
 import 'subscription_premium.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -96,14 +97,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   }
 
   void _showXAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller =
         TextEditingController(text: _xAccountUrl);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xアカウントの設定',
+        title: Text(l10n.xAccountSetting,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -115,16 +117,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '自身のアカウントのURLを入力してください',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+            Text(
+              l10n.enterXAccountUrl,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -143,14 +145,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Xアカウントを更新しました',
-                          style: TextStyle(fontWeight: FontWeight.bold))),
+                  SnackBar(
+                      content: Text(l10n.xAccountUpdated,
+                          style: const TextStyle(fontWeight: FontWeight.bold))),
                 );
               }
             },
-            child:
-                const Text('保存', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -158,6 +159,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   }
 
   void _showInstagramAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
         text:
             _instagramAccountUrl?.replaceAll('https://www.instagram.com/', ''));
@@ -165,8 +167,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Instagramアカウントの設定',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text(l10n.instagramAccountSetting,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -182,7 +184,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -203,7 +205,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 Navigator.pop(context);
               }
             },
-            child: const Text('保存'),
+            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -211,14 +213,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   }
 
   void _showTiktokAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
         text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', ''));
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('TikTokアカウントの設定',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l10n.tiktokAccountSetting,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -234,7 +237,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -259,14 +262,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(url == null
-                        ? 'TikTokアカウントを削除しました'
-                        : 'TikTokアカウントを更新しました'),
+                        ? l10n.tiktokAccountDeleted
+                        : l10n.tiktokAccountUpdated),
                   ),
                 );
               }
             },
-            child:
-                const Text('保存', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -297,7 +299,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         try {
           await imageRef.delete();
         } catch (e) {
-          print('古い画像の削除中にエラーが発生しました（初回または存在しない場合）: $e');
+          // print('古い画像の削除中にエラーが発生しました（初回または存在しない場合）: $e');
         }
 
         final uploadTask = imageRef.putFile(File(image.path));
@@ -331,17 +333,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         });
       }
     } catch (e) {
-      print('画像のアップロード中にエラーが発生しました: $e');
+      // print('画像のアップロード中にエラーが発生しました: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('プロフィール',
-            style: TextStyle(
+        title: Text(l10n.profile,
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
@@ -366,7 +370,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+            return Center(child: Text(l10n.errorOccurred));
           }
 
           if (snapshot.hasData && snapshot.data != null) {
@@ -378,13 +382,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           return Column(
             children: [
               const SizedBox(height: 16),
-              _buildProfileHeader(),
+              _buildProfileHeader(context),
               const SizedBox(height: 16),
               TabBar(
                 controller: _tabController,
-                tabs: const [
-                  Tab(text: '口コミ'),
-                  Tab(text: 'ブックマーク'),
+                tabs: [
+                  Tab(text: l10n.kuchikomi),
+                  Tab(text: l10n.bookmarks),
                 ],
               ),
               Expanded(
@@ -406,7 +410,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     );
   }
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -433,7 +438,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _username ?? '名前未設定',
+                  _username ?? l10n.unknown,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -441,9 +446,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ),
                 Row(
                   children: [
-                    _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
+                    _buildStatItem(
+                        Icons.rate_review, '$_reviewCount', l10n.kuchikomi),
                     const SizedBox(width: 16),
-                    _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
+                    _buildStatItem(
+                        Icons.place, '$_visitedSpotsCount', l10n.seichitouroku),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -466,7 +473,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             if (!isPremium) {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+                MaterialPageRoute(
+                    builder: (context) => const SubscriptionPremium()),
               );
               return;
             }
@@ -487,7 +495,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             if (!isPremium) {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+                MaterialPageRoute(
+                    builder: (context) => const SubscriptionPremium()),
               );
               return;
             }
@@ -508,7 +517,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             if (!isPremium) {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SubscriptionPremium()),
+                MaterialPageRoute(
+                    builder: (context) => const SubscriptionPremium()),
               );
               return;
             }
@@ -528,6 +538,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   }
 
   Widget _buildBookmarksTab() {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -541,23 +552,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+          return Center(child: Text(l10n.errorOccurred));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.bookmark_border,
                   size: 64,
                   color: Colors.grey,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
-                  'ブックマークはありません',
-                  style: TextStyle(
+                  l10n.noBookmarks,
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 16,
                   ),
@@ -578,12 +589,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 children: [
                   const Icon(Icons.place, size: 24, color: Colors.blue),
                   const SizedBox(width: 8),
-                  Text(data['name'] ?? '名称不明',
+                  Text(data['name'] ?? l10n.unknown,
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
-              subtitle: Text('住所: ${data['address'] ?? '住所不明'}',
+              subtitle: Text('${l10n.address}: ${data['address'] ?? l10n.unknownAddress}',
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () async {
                 final spotDoc = await FirebaseFirestore.instance
@@ -600,7 +611,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('スポット情報が見つかりません')),
+                    SnackBar(content: Text(l10n.spotNotFound)),
                   );
                 }
               },
@@ -613,9 +624,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   }
 
   Widget _buildReviewsTab() {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return const Center(child: Text('ログインが必要です'));
+      return Center(child: Text(l10n.loginRequired));
     }
 
     return StreamBuilder<QuerySnapshot>(
@@ -630,18 +642,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+          return Center(child: Text(l10n.errorOccurred));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.rate_review, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text('口コミはありません',
-                    style: TextStyle(color: Colors.grey, fontSize: 16)),
+                const Icon(Icons.rate_review, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(l10n.noReviews,
+                    style: const TextStyle(color: Colors.grey, fontSize: 16)),
               ],
             ),
           );
@@ -693,12 +705,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      review['userName'] ?? '名称不明',
+                                      review['userName'] ?? l10n.unknown,
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      '投稿日: ${review['timestamp'] != null ? DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate()) : '日付不明'}',
+                                      '${l10n.postedDate}: ${review['timestamp'] != null ? DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate()) : l10n.unknownDate}',
                                       style: TextStyle(
                                           color: Colors.grey[600],
                                           fontSize: 12),
@@ -717,8 +729,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                           ListTile(
                                             leading: const Icon(Icons.delete,
                                                 color: Colors.red),
-                                            title: const Text('削除する',
-                                                style: TextStyle(
+                                            title: Text(l10n.delete,
+                                                style: const TextStyle(
                                                     color: Colors.red)),
                                             onTap: () async {
                                               final bool? confirmDelete =
@@ -727,23 +739,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                                 builder:
                                                     (BuildContext context) {
                                                   return AlertDialog(
-                                                    title: const Text('確認'),
-                                                    content: const Text(
-                                                        'この口コミを削除してもよろしいですか？',
-                                                        style: TextStyle(
+                                                    title: Text(l10n.confirm),
+                                                    content: Text(
+                                                        l10n.deleteReviewConfirm,
+                                                        style: const TextStyle(
                                                             fontSize: 12)),
                                                     actions: <Widget>[
                                                       TextButton(
-                                                        child:
-                                                            const Text('キャンセル'),
+                                                        child: Text(l10n.cancel),
                                                         onPressed: () =>
                                                             Navigator.of(
                                                                     context)
                                                                 .pop(false),
                                                       ),
                                                       TextButton(
-                                                        child: const Text('削除',
-                                                            style: TextStyle(
+                                                        child: Text(l10n.delete,
+                                                            style: const TextStyle(
                                                                 color: Colors
                                                                     .red)),
                                                         onPressed: () =>
@@ -768,8 +779,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                                                   'imageUrl']);
                                                       await storageRef.delete();
                                                     } catch (e) {
-                                                      print(
-                                                          '画像の削除中にエラーが発生しました: $e');
+                                                      // print(
+                                                          // '画像の削除中にエラーが発生しました: $e');
                                                     }
                                                   }
                                                   await FirebaseFirestore
@@ -781,18 +792,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                                   Navigator.of(context).pop();
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
-                                                    const SnackBar(
+                                                    SnackBar(
                                                         content:
-                                                            Text('口コミを削除しました')),
+                                                            Text(l10n.reviewDeleted)),
                                                   );
                                                 } catch (e) {
-                                                  print(
-                                                      '口コミの削除中にエラーが発生しました: $e');
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
-                                                    const SnackBar(
+                                                    SnackBar(
                                                         content: Text(
-                                                            '口コミの削除に失敗しました')),
+                                                            l10n.reviewDeleteError)),
                                                   );
                                                 }
                                               } else {
@@ -802,7 +811,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                           ),
                                           ListTile(
                                             leading: const Icon(Icons.cancel),
-                                            title: const Text('キャンセル'),
+                                            title: Text(l10n.cancel),
                                             onTap: () {
                                               Navigator.pop(context);
                                             },
@@ -830,7 +839,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                 direction: Axis.horizontal,
                               ),
                               const SizedBox(width: 8),
-                              const Text(': 聖地の満足度'),
+                              Text(': ${l10n.seichitourokuSatisfaction}'),
                             ],
                           ),
                           const SizedBox(height: 8),

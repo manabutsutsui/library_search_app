@@ -7,33 +7,35 @@ import 'package:url_launcher/url_launcher.dart';
 import '../utils/seichi_registration.dart';
 import 'registration_detail.dart';
 import '../utils/seichi_de_dekirukoto.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RegistrationPage extends ConsumerWidget {
   const RegistrationPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           backgroundColor: Colors.blue,
-          title: const TabBar(
+          title: TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             tabs: [
               Tab(
                 child: Text(
-                  '聖地登録',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  l10n.registrationSpot,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               Tab(
                 child: Text(
-                  'ユーザーランキング',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  l10n.userRanking,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -57,7 +59,7 @@ class RegistrationPage extends ConsumerWidget {
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ログインが必要です')),
+                SnackBar(content: Text(l10n.loginRequired)),
               );
             }
           },
@@ -71,6 +73,7 @@ class RegistrationPage extends ConsumerWidget {
 class _VisitedSpotsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -90,7 +93,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+          return Center(child: Text('${l10n.errorOccurred}: ${snapshot.error}'));
         }
 
         final spots = snapshot.data?.docs ?? [];
@@ -153,7 +156,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
                             ],
                           ),
                           Text(
-                            '訪問日: ${visitDate.year}年${visitDate.month}月${visitDate.day}日',
+                            '${l10n.visitDate}: ${visitDate.year}年${visitDate.month}月${visitDate.day}日',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -182,15 +185,16 @@ class _VisitedSpotsTab extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const Text(
-            'ここにあなたの「聖地記録」の一覧が\n表示されます。',
+          Text(
+            l10n.emptyState,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               color: Colors.grey,
             ),
@@ -212,34 +216,34 @@ class _VisitedSpotsTab extends ConsumerWidget {
                   if (!await launchUrl(url)) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('URLを開けませんでした')),
+                        SnackBar(content: Text(l10n.urlNotOpen)),
                       );
                     }
                   }
                 },
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.videocam,
                       color: Colors.white,
                       size: 32,
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Seichiの使い方',
-                            style: TextStyle(
+                            l10n.seichiUsage,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            'TikTokで紹介',
-                            style: TextStyle(
+                            l10n.seichiUsageTikTok,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                             ),
@@ -247,7 +251,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.chevron_right,
                       color: Colors.white,
                       size: 32,
@@ -281,6 +285,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
 class _UserRankingTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('users').get().asStream(),
       builder: (context, usersSnapshot) {
@@ -289,7 +294,7 @@ class _UserRankingTab extends ConsumerWidget {
         }
 
         if (usersSnapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${usersSnapshot.error}'));
+          return Center(child: Text('${l10n.errorOccurred}: ${usersSnapshot.error}'));
         }
 
         final users = usersSnapshot.data!.docs;
@@ -320,7 +325,7 @@ class _UserRankingTab extends ConsumerWidget {
 
             if (rankingSnapshot.hasError) {
               return Center(
-                  child: Text('エラーが発生しました: ${rankingSnapshot.error}'));
+                  child: Text('${l10n.errorOccurred}: ${rankingSnapshot.error}'));
             }
 
             final rankings = rankingSnapshot.data!;
@@ -390,7 +395,7 @@ class _UserRankingTab extends ConsumerWidget {
                                   ),
                                 ),
                                 Text(
-                                  '訪問した聖地: ${ranking['visitedCount']}件',
+                                  '${l10n.visitedHolyPlace}: ${ranking['visitedCount']}${l10n.reviews}',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 14,

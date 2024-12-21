@@ -13,6 +13,7 @@ import 'subscription_premium.dart';
 import '../providers/subscription_state.dart';
 import '../utils/seichi_note.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -50,7 +51,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         ));
       });
     } catch (e) {
-      print('エラーが発生しました: $e');
+      // print('${l10n.errorOccurred}: $e');
     }
   }
 
@@ -163,18 +164,18 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               },
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
               Tab(
                 child: Text(
-                  '情報',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context)!.information,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               Tab(
                 child: Text(
-                  'ノート',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context)!.note,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -222,13 +223,13 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 32),
-                        const Text('・基本情報',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(AppLocalizations.of(context)!.basicInformation,
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
                         const Divider(color: Colors.grey),
-                        _buildInfoRow('住所', widget.spot['address']),
+                        _buildInfoRow(AppLocalizations.of(context)!.address, widget.spot['address']),
                         const SizedBox(height: 8),
                         const Divider(color: Colors.grey),
-                        _buildInfoRow('地図', 'Google Mapsを開く'),
+                        _buildInfoRow(AppLocalizations.of(context)!.map, 'Google Mapsを開く'),
                         const SizedBox(height: 8),
                         const Divider(color: Colors.grey),
                         const SizedBox(height: 8),
@@ -250,8 +251,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        const Text('・聖地メモ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(AppLocalizations.of(context)!.spotMemo,
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Consumer(
                           builder: (context, ref, child) {
@@ -302,9 +303,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                               ),
                                             ),
                                             const SizedBox(height: 8),
-                                            const Text(
-                                              '※このメモはあなただけに表示されています',
-                                              style: TextStyle(
+                                            Text(
+                                              AppLocalizations.of(context)!.yourMemo,
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey,
                                               ),
@@ -343,10 +344,10 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    const Center(
+                                   Center(
                                       child: Text(
-                                        '🔐あなたにだけ表示されます。',
-                                        style: TextStyle(
+                                        AppLocalizations.of(context)!.yourMemo2,
+                                        style: const TextStyle(
                                           fontSize: 12,
                                           color: Color.fromARGB(255, 119, 119, 119),
                                         ),
@@ -361,8 +362,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           },
                         ),
                         const SizedBox(height: 32),
-                        const Text('・作品名',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('・${AppLocalizations.of(context)!.workName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(widget.spot['work'],
                             style: const TextStyle(
@@ -388,7 +389,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                   InkWell(
                                     onTap: () => _launchURL(animeInfo.imageUrl),
                                     child: Text(
-                                      '出典元: ${animeInfo.imageUrl}',
+                                      '${AppLocalizations.of(context)!.sourceImage}: ${animeInfo.imageUrl}',
                                       style: const TextStyle(
                                         fontSize: 8,
                                         color: Colors.blue,
@@ -433,7 +434,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                           return InkWell(
                                             onTap: () => _launchURL(widget.spot['source']),
                                             child: Text(
-                                              '出典元: ${widget.spot['source'] ?? ''}',
+                                              '${AppLocalizations.of(context)!.sourceImage}: ${widget.spot['source'] ?? ''}',
                                               style: const TextStyle(
                                                 fontSize: 8,
                                                 color: Colors.blue,
@@ -480,9 +481,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                   color: Colors.blue,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '登場シーン',
-                                  style: TextStyle(
+                                child: Text(
+                                  AppLocalizations.of(context)!.scene,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -494,16 +495,16 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         ),
                         const SizedBox(height: 32),
                         Center(
-                            child: Text('口コミ ${_reviews.length}件',
+                            child: Text('${AppLocalizations.of(context)!.kuchikomi} ${_reviews.length}${AppLocalizations.of(context)!.reviews}',
                                 style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold))),
                         const SizedBox(height: 32),
                         _reviews.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16.0),
-                                child: Text('口コミはありません'),
+                                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(AppLocalizations.of(context)!.noReviews),
                               ))
                             : ListView.builder(
                                 shrinkWrap: true,
@@ -571,7 +572,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                         .bold),
                                                           ),
                                                           Text(
-                                                            '投稿日: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
+                                                            '${AppLocalizations.of(context)!.postedDate}: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
                                                             style: TextStyle(
                                                                 color: Colors
                                                                     .grey[600],
@@ -603,9 +604,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                             .delete,
                                                                         color: Colors
                                                                             .red),
-                                                                    title: const Text(
-                                                                        '削除する',
-                                                                        style: TextStyle(
+                                                                    title: Text(
+                                                                        AppLocalizations.of(context)!.delete,
+                                                                        style: const TextStyle(
                                                                             color:
                                                                                 Colors.red)),
                                                                     onTap:
@@ -621,16 +622,16 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                                 context) {
                                                                           return AlertDialog(
                                                                             title:
-                                                                                const Text('確認'),
+                                                                                Text(AppLocalizations.of(context)!.confirm),
                                                                             content:
-                                                                                const Text('この口コミを削除してもよろしいですか？', style: TextStyle(fontSize: 12)),
+                                                                                Text(AppLocalizations.of(context)!.deleteReviewConfirm, style: const TextStyle(fontSize: 12)),
                                                                             actions: <Widget>[
                                                                               TextButton(
-                                                                                child: const Text('キャンセル'),
+                                                                                child: Text(AppLocalizations.of(context)!.cancel),
                                                                                 onPressed: () => Navigator.of(context).pop(false),
                                                                               ),
                                                                               TextButton(
-                                                                                child: const Text('削除', style: TextStyle(color: Colors.red)),
+                                                                                child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
                                                                                 onPressed: () => Navigator.of(context).pop(true),
                                                                               ),
                                                                             ],
@@ -647,7 +648,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                               final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
                                                                               await storageRef.delete();
                                                                             } catch (e) {
-                                                                              print('画像の削除中にエラーが発生しました: $e');
+                                                                              // print('画像の削除中にエラーが発生しました: $e');
                                                                             }
                                                                           }
 
@@ -659,13 +660,13 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 
                                                                           Navigator.of(context).pop();
                                                                           ScaffoldMessenger.of(context).showSnackBar(
-                                                                            const SnackBar(content: Text('口コミを削除しました')),
+                                                                            SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleted)),
                                                                           );
                                                                           _fetchReviews();
                                                                         } catch (e) {
-                                                                          print('口コミの削除中にエラーが発生しました: $e');
+                                                                          // print('口コミの削除中にエラーが発生しました: $e');
                                                                           ScaffoldMessenger.of(context).showSnackBar(
-                                                                            const SnackBar(content: Text('口コミの削除に失敗しました')),
+                                                                            SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleteError)),
                                                                           );
                                                                         }
                                                                       } else {
@@ -680,9 +681,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                             .flag,
                                                                         color: Colors
                                                                             .red),
-                                                                    title: const Text(
-                                                                        '報告する',
-                                                                        style: TextStyle(
+                                                                    title: Text(
+                                                                        AppLocalizations.of(context)!.report,
+                                                                        style: const TextStyle(
                                                                             color:
                                                                                 Colors.red)),
                                                                     onTap:
@@ -719,14 +720,14 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 
                                                                           ScaffoldMessenger.of(context)
                                                                               .showSnackBar(
-                                                                            const SnackBar(content: Text('報告を受け付けました。')),
+                                                                            SnackBar(content: Text(AppLocalizations.of(context)!.reportReceived)),
                                                                           );
                                                                         } catch (e) {
-                                                                          print(
-                                                                              '報告の送信中にエラーが発生しました: $e');
+                                                                          // print(
+                                                                          //     '報告の送信中にエラーが発生しました: $e');
                                                                           ScaffoldMessenger.of(context)
                                                                               .showSnackBar(
-                                                                            const SnackBar(content: Text('報告の送信失敗しました。')),
+                                                                            SnackBar(content: Text(AppLocalizations.of(context)!.reportFailed)),
                                                                           );
                                                                         }
                                                                       }
@@ -740,8 +741,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                       const Icon(
                                                                           Icons
                                                                               .cancel),
-                                                                  title: const Text(
-                                                                      'キャンセル'),
+                                                                  title: Text(
+                                                                      AppLocalizations.of(context)!.cancel),
                                                                   onTap: () {
                                                                     Navigator.pop(
                                                                         context);
@@ -775,7 +776,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                           Axis.horizontal,
                                                     ),
                                                     const SizedBox(width: 8),
-                                                    const Text(': 聖地の満足度'),
+                                                    Text(': ${AppLocalizations.of(context)!.seichitourokuSatisfaction}'),
                                                   ],
                                                 ),
                                                 const SizedBox(height: 8),
@@ -829,9 +830,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blue,
                                     ),
-                                    child: const Text(
-                                      'PREMIUMプラン 限定機能',
-                                      style: TextStyle(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.premiumPlanLimitedFunction,
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14
@@ -855,14 +856,14 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       color: Colors.black,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Column(
+                                    child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
                                             Text(
-                                              '👑 PREMIUMプラン限定機能 👑',
-                                              style: TextStyle(
+                                              '👑 ${AppLocalizations.of(context)!.premiumPlanLimitedFunction} 👑',
+                                              style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 20,
                                                 fontWeight: FontWeight.bold,
@@ -870,26 +871,26 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 20),
+                                        const SizedBox(height: 20),
                                         Text(
-                                          'PREMIUMプランに加入すると、\n「ノート機能」が使えるようになります❗',
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription,
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
                                           ),
                                         ),
-                                        SizedBox(height: 20),
+                                        const SizedBox(height: 20),
                                         Text(
-                                          '◆ あなただけに表示されるメモ\n◆ 写真を何枚でも保存できる',
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription2,
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
                                           ),
                                         ),
-                                        SizedBox(height: 20),
+                                        const SizedBox(height: 20),
                                         Text(
-                                          '<<詳細はこのメモをタップ👆>>',
-                                          style: TextStyle(
+                                          '<<${AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription3}>>',
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
                                           ),
@@ -958,7 +959,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               }
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ログインが必要です')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.loginRequired)),
               );
             }
           },
@@ -978,7 +979,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
         Expanded(
-          child: label == '地図'
+          child: label == AppLocalizations.of(context)!.map
               ? GestureDetector(
                   onTap: () => _launchMaps(widget.spot['address']),
                   child: Text(

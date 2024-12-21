@@ -12,12 +12,37 @@ class AnimeMorePage extends StatefulWidget {
 
 class _AnimeMorePageState extends State<AnimeMorePage> {
   String? selectedGenre;
+  late List<String> genres;
 
-  final List<String> genres = animeList
-      .map((anime) => anime.genre)
-      .toSet()
-      .toList()
-    ..sort();
+  @override
+  void initState() {
+    super.initState();
+    genres = animeList.map((anime) => anime.genre).toSet().toList()..sort();
+  }
+
+  String _translateGenre(BuildContext context, String genre) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (genre) {
+      case '映画':
+        return l10n.movie;
+      case 'スポーツ/競技':
+        return l10n.sports;
+      case '恋愛/ラブコメ':
+        return l10n.romance;
+      case 'アクション/バトル':
+        return l10n.action;
+      case 'ホラー/サスペンス/推理':
+        return l10n.horror;
+      case '日常/ほのぼの':
+        return l10n.daily;
+      case 'ドラマ/青春':
+        return l10n.drama;
+      case 'SF/ファンタジー':
+        return l10n.sf;
+      default:
+        return genre;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +79,7 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     selected: isSelected,
-                    label: Text(genre),
+                    label: Text(_translateGenre(context, genre)),
                     onSelected: (selected) {
                       setState(() {
                         selectedGenre = selected ? genre : null;

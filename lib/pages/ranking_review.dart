@@ -4,6 +4,7 @@ import 'spot_detail.dart';
 import 'subscription_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RankingReviewPage extends ConsumerStatefulWidget {
   const RankingReviewPage({super.key});
@@ -156,14 +157,15 @@ class RankingReviewPageState extends ConsumerState<RankingReviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subscriptionState = ref.watch(subscriptionProvider);
     
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text('レビューランキング',
-            style: TextStyle(
+        title: Text(l10n.rankingReview,
+            style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
@@ -203,9 +205,9 @@ class RankingReviewPageState extends ConsumerState<RankingReviewPage> {
                   subscriptionState.when(
                     data: (isPro) => isPro 
                         ? const SizedBox.shrink()
-                        : const Text(
-                            'Premiumプランなら、閲覧できるランキング数が増えます!',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        : Text(
+                            l10n.premiumPlan,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             textAlign: TextAlign.center,
                           ),
                     loading: () => const SizedBox.shrink(),

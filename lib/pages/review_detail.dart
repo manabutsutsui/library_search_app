@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ReviewDetailPage extends StatelessWidget {
   final DocumentSnapshot review;
@@ -15,6 +16,7 @@ class ReviewDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(spot['name'],
@@ -74,7 +76,7 @@ class ReviewDetailPage extends StatelessWidget {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      '投稿日: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
+                                      '${l10n.postedDate}: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
                                       style: TextStyle(
                                           color: Colors.grey[600],
                                           fontSize: 12),
@@ -96,8 +98,8 @@ class ReviewDetailPage extends StatelessWidget {
                                             ListTile(
                                               leading: const Icon(Icons.delete,
                                                   color: Colors.red),
-                                              title: const Text('削除する',
-                                                  style: TextStyle(
+                                              title: Text(l10n.delete,
+                                                  style: const TextStyle(
                                                       color: Colors.red)),
                                               onTap: () async {
                                                 final bool? confirmDelete =
@@ -106,22 +108,20 @@ class ReviewDetailPage extends StatelessWidget {
                                                   builder:
                                                       (BuildContext context) {
                                                     return AlertDialog(
-                                                      title: const Text('確認'),
-                                                      content: const Text(
-                                                          'この口コミを削除してもよろしいですか？'),
+                                                      title: Text(l10n.confirm),
+                                                      content: Text(
+                                                          l10n.deleteReviewConfirm),
                                                       actions: <Widget>[
                                                         TextButton(
-                                                          child: const Text(
-                                                              'キャンセル'),
+                                                          child: Text(l10n.cancel),
                                                           onPressed: () =>
                                                               Navigator.of(
                                                                       context)
                                                                   .pop(false),
                                                         ),
                                                         TextButton(
-                                                          child: const Text(
-                                                              '削除',
-                                                              style: TextStyle(
+                                                          child: Text(l10n.delete,
+                                                              style: const TextStyle(
                                                                   color: Colors
                                                                       .red)),
                                                           onPressed: () =>
@@ -142,7 +142,7 @@ class ReviewDetailPage extends StatelessWidget {
                                                         final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
                                                         await storageRef.delete();
                                                       } catch (e) {
-                                                        print('画像の削除中にエラーが発生しました: $e');
+                                                        // print('画像の削除中にエラーが発生しました: $e');
                                                       }
                                                     }
 
@@ -155,12 +155,12 @@ class ReviewDetailPage extends StatelessWidget {
                                                     Navigator.of(context).pop();
                                                     Navigator.of(context).pop(); // 詳細画面を閉じる
                                                     ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(content: Text('口コミを削除しました')),
+                                                      SnackBar(content: Text(l10n.reviewDeleted)),
                                                     );
                                                   } catch (e) {
-                                                    print('口コミの削除中にエラーが発生しました: $e');
+                                                    // print('口コミの削除中にエラーが発生しました: $e');
                                                     ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(content: Text('口コミの削除に失敗しました')),
+                                                      SnackBar(content: Text(l10n.reviewDeleteError)),
                                                     );
                                                   }
                                                 } else {
@@ -172,8 +172,8 @@ class ReviewDetailPage extends StatelessWidget {
                                             ListTile(
                                               leading: const Icon(Icons.flag,
                                                   color: Colors.red),
-                                              title: const Text('報告する',
-                                                  style: TextStyle(
+                                              title: Text(l10n.report,
+                                                  style: const TextStyle(
                                                       color: Colors.red)),
                                               onTap: () async {
                                                 final String? reportReason =
@@ -204,19 +204,17 @@ class ReviewDetailPage extends StatelessWidget {
                                                     ScaffoldMessenger.of(
                                                             context)
                                                         .showSnackBar(
-                                                      const SnackBar(
+                                                      SnackBar(
                                                           content: Text(
-                                                              '報告を受け付けました。')),
+                                                              l10n.reportReceived)),
                                                     );
                                                   } catch (e) {
-                                                    print(
-                                                        '報告の送信中にエラーが発生しました: $e');
                                                     ScaffoldMessenger.of(
                                                             context)
                                                         .showSnackBar(
-                                                      const SnackBar(
+                                                      SnackBar(
                                                           content: Text(
-                                                              '報告の送信に失敗しました。')),
+                                                              l10n.reportFailed)),
                                                     );
                                                   }
                                                 }
@@ -226,7 +224,7 @@ class ReviewDetailPage extends StatelessWidget {
                                           ],
                                           ListTile(
                                             leading: const Icon(Icons.cancel),
-                                            title: const Text('キャンセル'),
+                                            title: Text(l10n.cancel),
                                             onTap: () {
                                               Navigator.pop(context);
                                             },
@@ -254,7 +252,7 @@ class ReviewDetailPage extends StatelessWidget {
                                 direction: Axis.horizontal,
                               ),
                               const SizedBox(width: 8),
-                              const Text(': 聖地の満足度'),
+                              Text(': ${l10n.seichitourokuSatisfaction}'),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -281,8 +279,8 @@ class ReviewDetailPage extends StatelessWidget {
                   backgroundColor: Colors.blue,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text('聖地の詳細を見る',
-                    style: TextStyle(
+                child: Text(l10n.seeSpotDetail,
+                    style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -299,19 +297,27 @@ class _ReportDialog extends StatefulWidget {
 }
 
 class _ReportDialogState extends State<_ReportDialog> {
-  final List<String> _reportReasons = [
-    '不適切なコンテンツ',
-    'スパムまたは広告',
-    '誤った情報',
-    'その他',
-  ];
+  late List<String> _reportReasons;
   String? _selectedReason;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _reportReasons = [
+      l10n.inappropriateContent,
+      l10n.spamOrAdvertisement,
+      l10n.incorrectInformation,
+      l10n.other,
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('報告理由を選択してください',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      title: Text(l10n.selectReportReason,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: List.generate(_reportReasons.length, (index) {
@@ -329,11 +335,11 @@ class _ReportDialogState extends State<_ReportDialog> {
       ),
       actions: <Widget>[
         TextButton(
-          child: const Text('キャンセル'),
+          child: Text(l10n.cancel),
           onPressed: () => Navigator.of(context).pop(null),
         ),
         TextButton(
-          child: const Text('報告する'),
+          child: Text(l10n.report),
           onPressed: () {
             Navigator.of(context).pop(_selectedReason);
           },

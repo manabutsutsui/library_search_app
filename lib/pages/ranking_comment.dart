@@ -4,7 +4,7 @@ import 'spot_detail.dart';
 import 'subscription_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class RankingCommentPage extends ConsumerStatefulWidget {
   const RankingCommentPage({Key? key}) : super(key: key);
 
@@ -65,7 +65,6 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('ランキングデータの取得中にエラーが発生しました: $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -73,8 +72,8 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
     }
   }
 
-  Widget _buildList() {
-    // サブスクリプション状態を取得
+  Widget _buildList(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subscriptionState = ref.watch(subscriptionProvider);
     
     int displayCount = subscriptionState.when(
@@ -107,7 +106,7 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
               spot['work'] ?? '作品不明',
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: Text('${spot['reviewCount']}件の口コミ', style: const TextStyle(fontSize: 12)),
+            trailing: Text('${spot['reviewCount']} ${l10n.reviewsCount}', style: const TextStyle(fontSize: 12)),
             onTap: () async {
               final spotDoc = await FirebaseFirestore.instance.collection('spots').doc(spot['id']).get();
               Navigator.push(
@@ -138,13 +137,15 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subscriptionState = ref.watch(subscriptionProvider);
     
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text('口コミ数ランキング', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(l10n.rankingComment, 
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -181,15 +182,15 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
                   subscriptionState.when(
                     data: (isPro) => isPro 
                         ? const SizedBox.shrink()
-                        : const Text(
-                            'Premiumプランなら、閲覧できるランキング数が増えます!',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        : Text(
+                            l10n.premiumPlan,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             textAlign: TextAlign.center,
                           ),
                     loading: () => const SizedBox.shrink(),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
-                  _buildList(),
+                  _buildList(context),
                 ],
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SpotRequestDialog extends StatefulWidget {
   const SpotRequestDialog({super.key});
@@ -17,6 +18,7 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Dialog(
       insetPadding: EdgeInsets.zero,
       child: Container(
@@ -32,9 +34,9 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              title: const Text(
-                '聖地をリクエスト',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              title: Text(
+                l10n.requestHolyPlace,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -49,36 +51,36 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                       color: Colors.white,
                     ),
                     const SizedBox(height: 16),
-                    const Text('あなたが追加したい聖地をリクエストできます。',
-                        style: TextStyle(color: Colors.white, fontSize: 16)),
+                    Text(l10n.requestHolyPlaceDescription,
+                        style: const TextStyle(color: Colors.white, fontSize: 16)),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _spotNameController,
-                      decoration: const InputDecoration(
-                        hintText: '聖地名',
+                      decoration: InputDecoration(
+                        hintText: l10n.holyPlaceName,
                         filled: true,
                         fillColor: Colors.white,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _addressController,
-                      decoration: const InputDecoration(
-                        hintText: '住所',
+                      decoration: InputDecoration(
+                        hintText: l10n.address,
                         filled: true,
                         fillColor: Colors.white,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _workNameController,
-                      decoration: const InputDecoration(
-                        hintText: '作品名',
+                      decoration: InputDecoration(
+                        hintText: l10n.workName,
                         filled: true,
                         fillColor: Colors.white,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -113,20 +115,20 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                             });
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('リクエストが送信されました')),
+                              SnackBar(content: Text(l10n.requestSent)),
                             );
                           } catch (e) {
                             setState(() {
-                              _errorMessage = 'エラーが発生しました: $e';
+                              _errorMessage = l10n.errorOccurred + ': $e';
                             });
                           }
                         } else {
                           setState(() {
-                            _errorMessage = 'すべてのフィールドを入力してください';
+                            _errorMessage = l10n.allFieldsRequired;
                           });
                         }
                       },
-                      child: const Text('リクエストを送信'),
+                      child: Text(l10n.sendRequest),
                     ),
                   ],
                 ),

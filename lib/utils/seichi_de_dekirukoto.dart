@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SeichiDeDekirukoto extends StatefulWidget {
   const SeichiDeDekirukoto({super.key});
@@ -20,43 +21,49 @@ class SeichiDeDekirukoto extends StatefulWidget {
 
 class _SeichiDeDekirukotoState extends State<SeichiDeDekirukoto> {
   int _currentIndex = 0;
+  late List<Map<String, String>> _features;
 
-  final List<Map<String, String>> _features = [
-    {
-      'title': '「Seichi」とは?',
-      'description': '当アプリ「Seichi」をダウンロードしていただき、誠にありがとうございます! 「Seichi」は、聖地巡礼をより楽しく、より便利にするアプリです。',
-      'image': 'assets/registration_page/dekiru_00.png',
-    },
-    {
-      'title': '作品から聖地を探そう',
-      'description':
-          '数多くの「作品」から、あなたの理想の聖地を見つけることができます。 「Seichi」は現在もアップデートを続けていて、日々新しい聖地が登録されています。',
-      'image': 'assets/registration_page/dekiru_01.png',
-    },
-    {
-      'title': '地図で聖地を探そう',
-      'description': '聖地を地図で探すことができます。 あなたの周辺の聖地を見つけられるかもしれません!',
-      'image': 'assets/registration_page/dekiru_02.png',
-    },
-    {
-      'title': '口コミを見て聖地を探そう',
-      'description': '口コミを見て、聖地を探すことができます。 他のユーザーの投稿を参考に、あなたの理想の聖地を見つけましょう!',
-      'image': 'assets/registration_page/dekiru_03.png',
-    },
-    {
-      'title': '訪れた聖地を登録しよう',
-      'description': '訪れた聖地を写真と共に登録できます。思い出と共に保存しましょう!',
-      'image': 'assets/registration_page/dekiru_04.png',
-    },
-    {
-      'title': 'Premiumに登録して、\n「Seichi」をもっと楽しもう',
-      'description': 'Premiumに登録すると、より多くの限定機能を利用することができます! 「Seichi」であなたの聖地巡礼ライフをもっと楽しんでください!',
-      'image': 'assets/registration_page/dekiru_05.png',
-    },
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _features = [
+      {
+        'title': l10n.whatIsSeichi,
+        'description': l10n.whatIsSeichiDescription,
+        'image': 'assets/registration_page/dekiru_00.png',
+      },
+      {
+        'title': l10n.whatIsSeichiDescription2,
+        'description': l10n.whatIsSeichiDescription3,
+        'image': 'assets/registration_page/dekiru_01.png',
+      },
+      {
+        'title': l10n.whatIsSeichiDescription4,
+        'description': l10n.whatIsSeichiDescription5,
+        'image': 'assets/registration_page/dekiru_02.png',
+      },
+      {
+        'title': l10n.whatIsSeichiDescription6,
+        'description': l10n.whatIsSeichiDescription7,
+        'image': 'assets/registration_page/dekiru_03.png',
+      },
+      {
+        'title': l10n.whatIsSeichiDescription8,
+        'description': l10n.whatIsSeichiDescription9,
+        'image': 'assets/registration_page/dekiru_04.png',
+      },
+      {
+        'title': l10n.whatIsSeichiDescription10,
+        'description': l10n.whatIsSeichiDescription10,
+        'image': 'assets/registration_page/dekiru_05.png',
+      },
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
       maxChildSize: 0.9,
@@ -76,7 +83,7 @@ class _SeichiDeDekirukotoState extends State<SeichiDeDekirukoto> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text('閉じる'),
+                    child: Text(l10n.close),
                   ),
                 ],
               ),

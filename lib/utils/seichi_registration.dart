@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/visited_spots_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SeichiRegistrationPage extends ConsumerStatefulWidget {
   const SeichiRegistrationPage({super.key});
@@ -29,6 +30,7 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
   }
 
   Future<void> _submitForm() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _selectedSpot != null) {
       try {
         final user = FirebaseAuth.instance.currentUser;
@@ -63,25 +65,26 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
           visitedSpotsNotifier.addVisitedSpot(_selectedSpot!.id, _selectedSpot!['name']);
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('聖地を登録しました')),
+            SnackBar(content: Text(l10n.saveSuccess)),
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('エラーが発生しました: $e')),
+            SnackBar(content: Text('${l10n.saveError}: $e')),
           );
         }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('必須項目を入力してください')),
+        SnackBar(content: Text(l10n.requiredInput)),
       );
     }
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
     final ImagePicker picker = ImagePicker();
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -93,7 +96,7 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('画像の選択中にエラーが発生しました: $e')),
+          SnackBar(content: Text('${l10n.imageSelectionError}: $e')),
         );
       }
     }
@@ -101,11 +104,12 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('聖地を登録',
-            style: TextStyle(
+        title: Text(l10n.seichitouroku,
+            style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
@@ -119,9 +123,9 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                decoration: const InputDecoration(
-                  labelText: '訪問日',
-                  suffixIcon: Icon(Icons.calendar_today),
+                decoration: InputDecoration(
+                  labelText: l10n.visitDate,
+                  suffixIcon: const Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
                 controller: TextEditingController(
@@ -143,7 +147,7 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                 },
               ),
               const SizedBox(height: 16),
-              const Text('聖地を選択', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(l10n.selectHolyPlace, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               GestureDetector(
                 onTap: () {
@@ -173,7 +177,7 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                       Text(
                         _selectedSpot != null
                             ? _selectedSpot!['name']
-                            : '聖地を選択してください',
+                            : l10n.selectHolyPlace,
                         style: TextStyle(
                           color: _selectedSpot != null ? Colors.black : Colors.grey,
                         ),
@@ -184,7 +188,7 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('写真を追加', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(l10n.addPhoto, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               GestureDetector(
                 onTap: _pickImage,
@@ -196,13 +200,13 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: _selectedImage == null
-                      ? const Column(
+                      ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, size: 64, color: Colors.grey),
-                            SizedBox(height: 8),
-                            Text('タップして写真を追加',
-                                style: TextStyle(color: Colors.grey)),
+                            const Icon(Icons.add_a_photo, size: 64, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(l10n.tapToAddPhoto,
+                                style: const TextStyle(color: Colors.grey)),
                           ],
                         )
                       : Stack(
@@ -235,18 +239,18 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('メモ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(l10n.memo, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               TextFormField(
                 controller: _memoController,
-                decoration: const InputDecoration(
-                  labelText: 'メモ',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.memo,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 5,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'メモを入力してください';
+                    return l10n.memoInputError;
                   }
                   return null;
                 },
@@ -258,9 +262,9 @@ class _SeichiRegistrationPageState extends ConsumerState<SeichiRegistrationPage>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue,
                 ),
-                child: const Text(
-                  '登録する',
-                  style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                child: Text(
+                  l10n.register,
+                  style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ],

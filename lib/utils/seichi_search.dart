@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SeichiSearchBottomSheet extends StatefulWidget {
   final Function(DocumentSnapshot) onSpotSelected;
@@ -73,12 +74,12 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
       setState(() {
         _isLoading = false;
       });
-      print('検索エラー: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -86,8 +87,8 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('聖地を選択',
-            style: TextStyle(
+        title: Text(l10n.selectHolyPlace,
+            style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
@@ -100,7 +101,7 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '聖地名・作品名で検索',
+                hintText: l10n.searchHolyPlace,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -124,7 +125,7 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
                         
                         return ListTile(
                           title: Text(data['name'] ?? ''),
-                          subtitle: Text('作品名: ${data['work'] ?? ''}'),
+                          subtitle: Text('${l10n.workName}: ${data['work'] ?? ''}'),
                           onTap: () {
                             widget.onSpotSelected(spot);
                           },

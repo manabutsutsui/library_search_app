@@ -4,6 +4,7 @@ import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/visited_spots_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SeichiRegistrationDetail extends ConsumerWidget {
   final Map<String, dynamic> spot;
@@ -15,6 +16,7 @@ class SeichiRegistrationDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final visitDate = spot['visitDate'] as Timestamp;
     final formattedDate =
         '${visitDate.toDate().year}年${visitDate.toDate().month}月${visitDate.toDate().day}日';
@@ -22,9 +24,8 @@ class SeichiRegistrationDetail extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text(
-          '登録した聖地',
-          style: TextStyle(
+        title: Text(l10n.registrationSpot,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -46,9 +47,9 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                           Icons.delete,
                           color: Colors.red,
                         ),
-                        title: const Text(
-                          '削除する',
-                          style: TextStyle(color: Colors.red),
+                        title: Text(
+                          l10n.delete,
+                          style: const TextStyle(color: Colors.red),
                         ),
                         onTap: () async {
                           try {
@@ -68,14 +69,14 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                                 Navigator.of(context).pop(); // モーダルを閉じる
                                 Navigator.of(context).pop(); // 詳細画面を閉じる
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('聖地の登録を削除しました')),
+                                  SnackBar(content: Text(l10n.spotDeleted)),
                                 );
                               }
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('削除中にエラーが発生しました')),
+                                SnackBar(content: Text(l10n.spotDeleteError)),
                               );
                             }
                           }
@@ -83,7 +84,7 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                       ),
                       ListTile(
                         leading: const Icon(Icons.close),
-                        title: const Text('キャンセル'),
+                        title: Text(l10n.cancel),
                         onTap: () => Navigator.pop(context),
                       ),
                     ],
@@ -105,7 +106,7 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    spot['spotName'] ?? '不明な聖地',
+                    spot['spotName'] ?? l10n.unknown,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -126,12 +127,12 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 8),
-            _buildInfoRow('訪問日', formattedDate),
+            _buildInfoRow(l10n.visitDate, formattedDate),
             const SizedBox(height: 16),
             if (spot['memo'] != null && spot['memo'].isNotEmpty) ...[
-              const Text(
-                'メモ',
-                style: TextStyle(
+              Text(
+                l10n.memo,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -172,9 +173,9 @@ class SeichiRegistrationDetail extends ConsumerWidget {
                 backgroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text(
-                '聖地の詳細を見る',
-                style: TextStyle(
+              child: Text(
+                l10n.seeSpotDetail,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
