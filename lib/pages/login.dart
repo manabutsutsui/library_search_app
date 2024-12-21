@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'create_account_mailaddress.dart';
 import 'password_reset.dart';
 import 'profile.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +19,7 @@ class LoginPageState extends State<LoginPage> {
   bool _showVerificationMessage = false;
 
   Future<void> _login() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -28,8 +30,7 @@ class LoginPageState extends State<LoginPage> {
       if (userCredential.user != null && !userCredential.user!.emailVerified) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('メールアドレスの認証が完了していません。認証メールのリンクをクリックしてください。')),
+          SnackBar(content: Text(l10n.emailNotVerified)),
         );
         await FirebaseAuth.instance.signOut();
         return;
@@ -37,7 +38,7 @@ class LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ログインに成功しました')),
+        SnackBar(content: Text(l10n.loginSuccess)),
       );
 
       Navigator.of(context).pushAndRemoveUntil(
@@ -49,18 +50,20 @@ class LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ログインに失敗しました: ${e.message}')),
+        SnackBar(content: Text('${l10n.loginFailed}: ${e.message}')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('ログイン',
-            style: TextStyle(
+        title: Text(l10n.login,
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
@@ -72,18 +75,18 @@ class LoginPageState extends State<LoginPage> {
           children: [
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'メールアドレス',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.emailAddress,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'パスワード',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.password,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -93,33 +96,18 @@ class LoginPageState extends State<LoginPage> {
                 backgroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text('ログイン',
-                  style: TextStyle(
+              child: Text(l10n.login,
+                  style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
             ),
-            if (_showVerificationMessage)
-              Container(
-                margin: const EdgeInsets.only(top: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[100],
-                  border: Border.all(color: Colors.red),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  '認証メールを送信しています。メール内に記載されたURLをクリックし、認証を完了してください。\n※ 「迷惑メールボックス」に入っている場合もあります。',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            const SizedBox(height: 16),
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: 'アカウント未登録の方は'),
+                  TextSpan(text: l10n.noAccount),
                   TextSpan(
-                    text: 'こちら',
+                    text: l10n.here,
                     style: const TextStyle(
                       color: Colors.blue,
                       decoration: TextDecoration.underline,
@@ -142,13 +130,27 @@ class LoginPageState extends State<LoginPage> {
                 ],
               ),
             ),
+            if (_showVerificationMessage)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[100],
+                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l10n.verificationEmailSent,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             const SizedBox(height: 8),
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: 'パスワードを忘れた方は'),
+                  TextSpan(text: l10n.forgotPassword),
                   TextSpan(
-                    text: 'こちら',
+                    text: l10n.here,
                     style: const TextStyle(
                       color: Colors.blue,
                       decoration: TextDecoration.underline,

@@ -5,6 +5,7 @@ import 'login.dart';
 import 'create_account_mailaddress.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'create_username.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -16,6 +17,8 @@ class CreateAccountPage extends StatefulWidget {
 class _CreateAccountPageState extends State<CreateAccountPage> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -31,29 +34,26 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildButton(
-                  'メールアドレスで登録',
+                  l10n.registerWithEmail,
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const CreateAccountMailaddressPage(),
+                        builder: (context) => const CreateAccountMailaddressPage(),
                       ),
                     );
                   },
                 ),
                 const SizedBox(height: 16),
                 _buildButton(
-                  'Googleで登録',
+                  l10n.registerWithGoogle,
                   onPressed: () async {
                     try {
-                      // Googleサインインの初期化
                       final GoogleSignIn googleSignIn = GoogleSignIn();
                       final GoogleSignInAccount? googleUser =
                           await googleSignIn.signIn();
 
                       if (googleUser == null) return;
 
-                      // Google認証情報の取得
                       final GoogleSignInAuthentication googleAuth =
                           await googleUser.authentication;
                       final credential = GoogleAuthProvider.credential(
@@ -61,7 +61,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         idToken: googleAuth.idToken,
                       );
 
-                      // Firebase認証
                       final UserCredential userCredential = await FirebaseAuth
                           .instance
                           .signInWithCredential(credential);
@@ -69,8 +68,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       if (userCredential.user != null) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Googleアカウントでの登録が完了しました')),
+                          SnackBar(content: Text(l10n.googleRegistrationComplete)),
                         );
 
                         Navigator.of(context).pushAndRemoveUntil(
@@ -82,14 +80,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       }
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('登録に失敗しました: $e')),
+                        SnackBar(content: Text('${l10n.registrationFailed}: $e')),
                       );
                     }
                   },
                 ),
                 const SizedBox(height: 16),
                 _buildButton(
-                  'Appleで登録',
+                  l10n.registerWithApple,
                   onPressed: () async {
                     try {
                       final appleCredential =
@@ -110,8 +108,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           .signInWithCredential(oauthCredential);
                       if (mounted && userCredential.user != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Appleアカウントでの登録が完了しました')),
+                          SnackBar(content: Text(l10n.appleRegistrationComplete)),
                         );
                       }
 
@@ -126,39 +123,37 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         switch (e.code) {
                           case AuthorizationErrorCode.canceled:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Appleアカウントでログインがキャンセルされました。')),
+                              SnackBar(content: Text(l10n.loginCanceled)),
                             );
                             break;
                           case AuthorizationErrorCode.failed:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('サインインに失敗しました。')),
+                              SnackBar(content: Text(l10n.signInFailed)),
                             );
                             break;
                           case AuthorizationErrorCode.invalidResponse:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('無効なレスポンスが返されました。')),
+                              SnackBar(content: Text(l10n.invalidResponse)),
                             );
                             break;
                           case AuthorizationErrorCode.notHandled:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('サインインが処理されませんでした。')),
+                              SnackBar(content: Text(l10n.signInNotHandled)),
                             );
                             break;
                           case AuthorizationErrorCode.unknown:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('不明なエラーが発生しました。')),
+                              SnackBar(content: Text(l10n.unknownError)),
                             );
                             break;
                           case AuthorizationErrorCode.notInteractive:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('インタラクティブではありません。')),
+                              SnackBar(content: Text(l10n.notInteractive)),
                             );
                             break;
                           default:
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('未処理のエラーが発生しました。')),
+                              SnackBar(content: Text(l10n.unhandledError)),
                             );
                             break;
                         }
@@ -175,9 +170,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       ),
                     );
                   },
-                  child: const Text(
-                    'ログインはこちら',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.loginHere,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

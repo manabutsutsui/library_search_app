@@ -9,6 +9,7 @@ import '../providers/visited_spots_provider.dart';
 import '../utils/seichi_request.dart';
 import '../utils/search_anime.dart';
 import '../utils/cluster.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -32,23 +33,26 @@ class _MapPageState extends ConsumerState<MapPage> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _initializeLocation();
     _fetchVisitedSpots();
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> _initializeLocation() async {
     try {
       Position position = await _determinePosition();
-      setState(() {
-        _center = LatLng(position.latitude, position.longitude);
-        _isLoading = false;
-      });
-      _fetchSpots();
+      if (mounted) {
+        setState(() {
+          _center = LatLng(position.latitude, position.longitude);
+          _isLoading = false;
+        });
+        _fetchSpots();
+      }
     } catch (e) {
-      print('エラーが発生しました: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -58,7 +62,7 @@ class _MapPageState extends ConsumerState<MapPage> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('位置情報サービスが無効です。');
+      return Future.error('location_service_disabled');
     }
 
     permission = await Geolocator.checkPermission();
@@ -67,7 +71,7 @@ class _MapPageState extends ConsumerState<MapPage> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return Future.error('位置情報の権限が永久に拒否されました。設定から変更してください。');
+      return Future.error('location_permission_denied');
     }
 
     return await Geolocator.getCurrentPosition();
@@ -98,28 +102,31 @@ class _MapPageState extends ConsumerState<MapPage> {
     final visitedSpots = ref.read(visitedSpotsProvider);
 
     _allSpots = snapshot.docs
-        .map((doc) => SpotData.fromFirestore(doc, visitedSpots.containsKey(doc.id)))
+        .map((doc) =>
+            SpotData.fromFirestore(doc, visitedSpots.containsKey(doc.id)))
         .toList();
 
     _updateMarkers();
   }
 
   void _updateMarkers() {
+    final l10n = AppLocalizations.of(context)!;
     Set<Marker> newMarkers = {};
-    
+
     if (_currentZoom <= ClusterManager.clusterZoomThreshold) {
       final clusters = ClusterManager.createClusters(_allSpots, _currentZoom);
-      
+
       clusters.forEach((prefecture, spots) {
         final center = _calculateClusterCenter(spots);
         newMarkers.add(
           Marker(
             markerId: MarkerId('cluster_$prefecture'),
             position: center,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueViolet),
             infoWindow: InfoWindow(
               title: prefecture,
-              snippet: '${spots.length}件の聖地',
+              snippet: '${spots.length}${l10n.holyPlaces}',
             ),
             onTap: () => _showClusterSpots(spots),
           ),
@@ -132,14 +139,18 @@ class _MapPageState extends ConsumerState<MapPage> {
             markerId: MarkerId(spot.id),
             position: spot.location,
             icon: spot.isVisited
-                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+                ? BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueBlue)
                 : BitmapDescriptor.defaultMarker,
             infoWindow: InfoWindow(
               title: spot.name,
               snippet: spot.work,
             ),
             onTap: () async => _showSpotDetails(
-              await FirebaseFirestore.instance.collection('spots').doc(spot.id).get(),
+              await FirebaseFirestore.instance
+                  .collection('spots')
+                  .doc(spot.id)
+                  .get(),
             ),
           ));
         }
@@ -154,16 +165,17 @@ class _MapPageState extends ConsumerState<MapPage> {
   LatLng _calculateClusterCenter(List<SpotData> spots) {
     double sumLat = 0;
     double sumLng = 0;
-    
+
     for (var spot in spots) {
       sumLat += spot.location.latitude;
       sumLng += spot.location.longitude;
     }
-    
+
     return LatLng(sumLat / spots.length, sumLng / spots.length);
   }
 
   void _showClusterSpots(List<SpotData> spots) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -171,7 +183,7 @@ class _MapPageState extends ConsumerState<MapPage> {
         child: Column(
           children: [
             Text(
-              '${spots.first.prefecture}の聖地一覧',
+              '${spots.first.prefecture}${l10n.holyPlacesList}',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -182,8 +194,10 @@ class _MapPageState extends ConsumerState<MapPage> {
                 itemBuilder: (context, index) {
                   final spot = spots[index];
                   return ListTile(
-                    title: Text(spot.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    subtitle: Text('作品名: ${spot.work}'),
+                    title: Text(spot.name,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    subtitle: Text('${l10n.workName}: ${spot.work}'),
                     leading: Icon(
                       Icons.location_on,
                       color: spot.isVisited ? Colors.blue : Colors.red,
@@ -205,6 +219,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   void _showSpotDetails(DocumentSnapshot spot) async {
+    final l10n = AppLocalizations.of(context)!;
     _removeOverlay();
     int reviewCount = await _getReviewCount(spot.id);
     _overlayEntry = OverlayEntry(
@@ -236,12 +251,12 @@ class _MapPageState extends ConsumerState<MapPage> {
                   children: [
                     const Icon(Icons.chat_bubble_outline, color: Colors.blue),
                     const SizedBox(width: 5),
-                    Text('$reviewCount件',
+                    Text('$reviewCount${l10n.reviews}',
                         style: const TextStyle(color: Colors.blue)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '作品名: ${spot['work']}',
+                        '${l10n.workName}: ${spot['work']}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -263,9 +278,13 @@ class _MapPageState extends ConsumerState<MapPage> {
                     backgroundColor: Colors.blue,
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('聖地ページへ',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    l10n.toHolyPlacePage,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -312,6 +331,7 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     ref.listen(visitedSpotsProvider, (previous, next) {
       _fetchSpots();
     });
@@ -347,7 +367,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     controller: _searchController,
                     readOnly: true,
                     decoration: InputDecoration(
-                      hintText: '聖地名、作品名で検索',
+                      hintText: l10n.searchSpot,
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -374,7 +394,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                             onSpotSelected: (spot) {
                               final data = spot.data() as Map<String, dynamic>;
                               final location = data['location'] as GeoPoint;
-                              
+
                               setState(() {
                                 _searchController.text = data['name'] ?? '';
                               });
@@ -436,17 +456,17 @@ class _MapPageState extends ConsumerState<MapPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.check_circle,
                     color: Colors.white,
                     size: 20,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    '登録済み',
-                    style: TextStyle(
+                    l10n.registered,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),

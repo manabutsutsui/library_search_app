@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PasswordResetPage extends StatefulWidget {
   const PasswordResetPage({Key? key}) : super(key: key);
@@ -12,25 +13,37 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   final TextEditingController _emailController = TextEditingController();
 
   Future<void> _resetPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(
         email: _emailController.text.trim(),
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('パスワードリセットメールを送信しました')),
+        SnackBar(content: Text(l10n.verificationEmailSent)),
       );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('エラー: ${e.message}')),
+        SnackBar(content: Text('${l10n.errorOccurred}: ${e.message}')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('パスワードリセット', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.forgotPassword, 
+          style: const TextStyle(
+            color: Colors.white, 
+            fontSize: 16, 
+            fontWeight: FontWeight.bold
+          )
+        ),
         backgroundColor: Colors.blue,
       ),
       body: Padding(
@@ -40,9 +53,9 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
           children: [
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: '登録メールアドレス',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.emailAddress,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
             ),
@@ -53,13 +66,23 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                 backgroundColor: Colors.blue,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('パスワードをリセット', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                l10n.forgotPassword, 
+                style: const TextStyle(
+                  color: Colors.white, 
+                  fontSize: 16, 
+                  fontWeight: FontWeight.bold
+                )
+              ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              '登録されたメールアドレスにメールが届きます',
+            Text(
+              l10n.verificationEmailSent,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.grey, 
+                fontWeight: FontWeight.bold
+              ),
             ),
           ],
         ),

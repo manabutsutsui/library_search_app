@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class NewSeichiPage extends StatelessWidget {
   const NewSeichiPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text(
-          '新着聖地',
-          style: TextStyle(
+        title: Text(
+          l10n.newHolyPlaces,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -32,11 +35,11 @@ class NewSeichiPage extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+            return Center(child: Text('${l10n.loadingError}: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('聖地はまだありません'));
+            return Center(child: Text(l10n.noHolyPlacesYet));
           }
 
           return GridView.builder(

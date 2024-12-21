@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class OtherUserProfilePage extends StatefulWidget {
   final String userId;
@@ -20,7 +21,8 @@ class OtherUserProfilePage extends StatefulWidget {
   State<OtherUserProfilePage> createState() => _OtherUserProfilePageState();
 }
 
-class _OtherUserProfilePageState extends State<OtherUserProfilePage> with SingleTickerProviderStateMixin {
+class _OtherUserProfilePageState extends State<OtherUserProfilePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late Stream<QuerySnapshot> _reviewsStream;
   late Stream<QuerySnapshot> _visitedSpotsStream;
@@ -114,11 +116,13 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
     return Row(
       children: [
         GestureDetector(
-          onTap: _xAccountUrl != null ? () async {
-            if (await canLaunch(_xAccountUrl!)) {
-              await launch(_xAccountUrl!);
-            }
-          } : null,
+          onTap: _xAccountUrl != null
+              ? () async {
+                  if (await canLaunch(_xAccountUrl!)) {
+                    await launch(_xAccountUrl!);
+                  }
+                }
+              : null,
           child: Image.asset(
             'assets/sns_icon/x_icon.png',
             width: 24,
@@ -128,11 +132,13 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
         ),
         const SizedBox(width: 16),
         GestureDetector(
-          onTap: _instagramAccountUrl != null ? () async {
-            if (await canLaunch(_instagramAccountUrl!)) {
-              await launch(_instagramAccountUrl!);
-            }
-          } : null,
+          onTap: _instagramAccountUrl != null
+              ? () async {
+                  if (await canLaunch(_instagramAccountUrl!)) {
+                    await launch(_instagramAccountUrl!);
+                  }
+                }
+              : null,
           child: Image.asset(
             'assets/sns_icon/insta_icon.png',
             width: 24,
@@ -142,11 +148,13 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
         ),
         const SizedBox(width: 16),
         GestureDetector(
-          onTap: _tiktokAccountUrl != null ? () async {
-            if (await canLaunch(_tiktokAccountUrl!)) {
-              await launch(_tiktokAccountUrl!);
-            }
-          } : null,
+          onTap: _tiktokAccountUrl != null
+              ? () async {
+                  if (await canLaunch(_tiktokAccountUrl!)) {
+                    await launch(_tiktokAccountUrl!);
+                  }
+                }
+              : null,
           child: Image.asset(
             'assets/sns_icon/tiktok_icon.png',
             width: 24,
@@ -171,17 +179,18 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+          return Center(child: Text('${AppLocalizations.of(context)!.errorOccurred}: ${snapshot.error}'));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.rate_review, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text('口コミはありません', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                const Icon(Icons.rate_review, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(AppLocalizations.of(context)!.noReviews,
+                    style: const TextStyle(color: Colors.grey, fontSize: 16)),
               ],
             ),
           );
@@ -203,7 +212,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                   children: [
                     if (review['imageUrl'] != null)
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8)),
                         child: Image.network(
                           review['imageUrl'],
                           width: double.infinity,
@@ -218,7 +228,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage: review['userProfileImage'] != null
+                                backgroundImage: review['userProfileImage'] !=
+                                        null
                                     ? NetworkImage(review['userProfileImage'])
                                     : null,
                                 child: review['userProfileImage'] == null
@@ -231,12 +242,18 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      review['userName'] ?? '名称不明',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      review['userName'] ?? AppLocalizations.of(context)!.unknownUser,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      '投稿日: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      AppLocalizations.of(context)!.reviewDate(
+                                        DateFormat('yyyy年MM月dd日 HH時mm分')
+                                            .format(review['timestamp'].toDate()),
+                                      ),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -257,7 +274,7 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                                 direction: Axis.horizontal,
                               ),
                               const SizedBox(width: 8),
-                              const Text(': 聖地の満足度'),
+                              Text(AppLocalizations.of(context)!.satisfactionLevel),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -290,13 +307,14 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
         if (snapshot.hasData) {
           final spots = snapshot.data!.docs;
           if (spots.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.place, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('聖地登録はありません', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  const Icon(Icons.place, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.noVisitedSpots,
+                      style: const TextStyle(color: Colors.grey, fontSize: 16)),
                 ],
               ),
             );
@@ -315,7 +333,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                     children: [
                       if (spot['imageUrl'] != null)
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(8)),
                           child: Image.network(
                             spot['imageUrl'],
                             width: double.infinity,
@@ -339,7 +358,7 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                               children: [
                                 const Icon(Icons.location_on),
                                 Text(
-                                  spot['spotName'] ?? '不明な聖地',
+                                  spot['spotName'] ?? AppLocalizations.of(context)!.unknownHolyPlace,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -350,7 +369,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                             const SizedBox(height: 4),
                             if (spot['visitDate'] != null)
                               Text(
-                                '訪問日: ${(spot['visitDate'] as Timestamp).toDate().year}年'
+                                '${AppLocalizations.of(context)!.visitDate}: '
+                                '${(spot['visitDate'] as Timestamp).toDate().year}年'
                                 '${(spot['visitDate'] as Timestamp).toDate().month}月'
                                 '${(spot['visitDate'] as Timestamp).toDate().day}日',
                                 style: TextStyle(
@@ -361,7 +381,8 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                             const SizedBox(height: 4),
                             Text(
                               spot['memo'] ?? '',
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -385,11 +406,13 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: Text(
-          '${widget.userName}のプロフィール',
+          '${widget.userName} ${l10n.sProfile}',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -427,9 +450,17 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
                     ),
                     Row(
                       children: [
-                        _buildStatItem(Icons.rate_review, '$_reviewCount', '口コミ'),
+                        _buildStatItem(
+                          Icons.rate_review,
+                          _reviewCount.toString(),
+                          l10n.kuchikomi,
+                        ),
                         const SizedBox(width: 16),
-                        _buildStatItem(Icons.place, '$_visitedSpotsCount', '聖地登録'),
+                        _buildStatItem(
+                          Icons.place,
+                          _visitedSpotsCount.toString(),
+                          l10n.seichitouroku,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -444,9 +475,9 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage> with Single
             controller: _tabController,
             labelColor: Colors.blue,
             unselectedLabelColor: Colors.grey,
-            tabs: const [
-              Tab(text: '口コミ'),
-              Tab(text: '聖地登録'),
+            tabs: [
+              Tab(text: l10n.kuchikomi),
+              Tab(text: l10n.seichitouroku),
             ],
           ),
           Expanded(

@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CreateAccountMailaddressPage extends StatefulWidget {
   const CreateAccountMailaddressPage({super.key});
@@ -20,16 +21,18 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
   bool _agreeToTerms = false;
 
   Future<void> _createAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('パスワードが一致しません')),
+        SnackBar(content: Text(l10n.passwordMismatch)),
       );
       return;
     }
 
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('利用規約に同意してください')),
+        SnackBar(content: Text(l10n.pleaseAgreeToTerms)),
       );
       return;
     }
@@ -57,21 +60,23 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
       Navigator.pop(context, true);
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('アカウント作成に失敗しました: ${e.message}')),
+        SnackBar(content: Text('${l10n.failedToCreateAccount}: ${e.message}')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('予期せぬエラーが発生しました: $e')),
+        SnackBar(content: Text('${l10n.unexpectedError}: $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('アカウント作成',
-            style: TextStyle(
+        title: Text(l10n.createAccount,
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
@@ -83,35 +88,35 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
           children: [
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'メールアドレス',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.email,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'パスワード（英数字6文字以上）',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.password,
+                border: const OutlineInputBorder(),
               ),
               obscureText: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _confirmPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'パスワード（確認用）',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.confirmPassword,
+                border: const OutlineInputBorder(),
               ),
               obscureText: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'ユーザー名',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.username,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -135,7 +140,7 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: '利用規約',
+                          text: l10n.termsOfService,
                           style: const TextStyle(
                             color: Colors.blue,
                             decoration: TextDecoration.underline,
@@ -147,12 +152,12 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
                                 await launch(url);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('URLを開けませんでした')),
+                                  SnackBar(content: Text(l10n.failedToOpenUrl)),
                                 );
                               }
                             },
                         ),
-                        const TextSpan(text: 'を確認の上、同意する'),
+                        TextSpan(text: l10n.agreeToTerms),
                       ],
                     ),
                   ),
@@ -164,7 +169,7 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'プライバシーポリシー',
+                    text: l10n.privacyPolicy,
                     style: const TextStyle(
                       color: Colors.blue,
                       decoration: TextDecoration.underline,
@@ -173,15 +178,15 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
                       ..onTap = () async {
                         const url = 'https://tsutsunoidoblog.com/movie_and_anime_holy_land_sns_privacy_policy/';
                         if (await canLaunch(url)) {
-                        await launch(url);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('URLを開けませんでした')),
-                        );
-                      }
-                    },
+                          await launch(url);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.failedToOpenUrl)),
+                          );
+                        }
+                      },
                   ),
-                  const TextSpan(text: 'を読む'),
+                  TextSpan(text: l10n.readPrivacyPolicy),
                 ],
               ),
             ),
@@ -192,15 +197,19 @@ class CreateAccountMailaddressPageState extends State<CreateAccountMailaddressPa
                 backgroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text('登録', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(l10n.register,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 8),
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: 'アカウント登録済みの方は'),
+                  TextSpan(text: l10n.alreadyHaveAccount),
                   TextSpan(
-                    text: 'こちら',
+                    text: l10n.clickHere,
                     style: const TextStyle(
                       color: Colors.blue,
                       decoration: TextDecoration.underline,

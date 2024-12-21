@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'review_detail.dart';
 import 'reviews_lists.dart';
-import 'recommended_products_lists.dart';
 import '../utils/anime_lists.dart';
 import 'anime_detail.dart';
 import 'anime_more.dart';
@@ -18,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
 import 'spot_detail.dart';
 import 'new_seichi.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -27,37 +24,18 @@ class Home extends ConsumerStatefulWidget {
 }
 
 class HomeState extends ConsumerState<Home> {
-  Future<String> _loadRakutenApplicationId() async {
-    final String jsonString =
-        await rootBundle.loadString('assets/config/config.json');
-    final Map<String, dynamic> jsonMap = json.decode(jsonString);
-    return jsonMap['rakutenApplicationId'];
-  }
-
-  Future<List<dynamic>> fetchRakutenItems() async {
-    final String applicationId = await _loadRakutenApplicationId();
-    final String keyword = Uri.encodeComponent('人気アニメ グッズ');
-    final response = await http.get(Uri.parse(
-        'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?applicationId=$applicationId&keyword=$keyword&hits=10'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['Items'];
-    } else {
-      throw Exception('楽天APIからデータの取得に失敗しました');
-    }
-  }
-
   Future<void> _launchURL(String url) async {
+    final l10n = AppLocalizations.of(context)!;
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      throw 'URLを開けませんでした: $url';
+      throw '${l10n.failedToOpenUrl}: $url';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subscriptionState = ref.watch(subscriptionProvider);
 
     return Scaffold(
@@ -121,9 +99,9 @@ class HomeState extends ConsumerState<Home> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'おすすめ作品',
-                    style: TextStyle(
+                  Text(
+                    l10n.recommendedWorks,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -136,7 +114,7 @@ class HomeState extends ConsumerState<Home> {
                             builder: (context) => const AnimeMorePage()),
                       );
                     },
-                    child: const Text('作品一覧'),
+                    child: Text(l10n.worksList),
                   ),
                 ],
               ),
@@ -197,9 +175,9 @@ class HomeState extends ConsumerState<Home> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '新着口コミ',
-                    style: TextStyle(
+                  Text(
+                    l10n.newReviews,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -212,7 +190,7 @@ class HomeState extends ConsumerState<Home> {
                             builder: (context) => const ReviewsListPage()),
                       );
                     },
-                    child: const Text('もっと見る'),
+                    child: Text(l10n.viewMore),
                   ),
                 ],
               ),
@@ -233,13 +211,14 @@ class HomeState extends ConsumerState<Home> {
 
               if (snapshot.hasError) {
                 return SliverToBoxAdapter(
-                  child: Center(child: Text('エラーが発生しました: ${snapshot.error}')),
+                  child: Center(
+                      child: Text('${l10n.loadingError}: ${snapshot.error}')),
                 );
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(child: Text('口コミはありません')),
+                return SliverToBoxAdapter(
+                  child: Center(child: Text(l10n.noReviews)),
                 );
               }
 
@@ -277,8 +256,8 @@ class HomeState extends ConsumerState<Home> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
-                child: const Text('口コミ一覧',
-                    style: TextStyle(
+                child: Text(l10n.reviewsList,
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
@@ -292,9 +271,9 @@ class HomeState extends ConsumerState<Home> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '新着聖地',
-                    style: TextStyle(
+                  Text(
+                    l10n.newHolyPlaces,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -307,7 +286,7 @@ class HomeState extends ConsumerState<Home> {
                             builder: (context) => const NewSeichiPage()),
                       );
                     },
-                    child: const Text('もっと見る'),
+                    child: Text(l10n.viewMore),
                   ),
                 ],
               ),
@@ -328,13 +307,14 @@ class HomeState extends ConsumerState<Home> {
 
               if (snapshot.hasError) {
                 return SliverToBoxAdapter(
-                  child: Center(child: Text('エラーが発生しました: ${snapshot.error}')),
+                  child: Center(
+                      child: Text('${l10n.loadingError}: ${snapshot.error}')),
                 );
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(child: Text('聖地はまだありません')),
+                return SliverToBoxAdapter(
+                  child: Center(child: Text(l10n.noHolyPlaces)),
                 );
               }
 
@@ -418,101 +398,13 @@ class HomeState extends ConsumerState<Home> {
               );
             },
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'おすすめ商品',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                const RecommendedProductsListPage()),
-                      );
-                    },
-                    child: const Text('もっと見る'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: SizedBox(
-                height: 200,
-                child: FutureBuilder<List<dynamic>>(
-                  future: fetchRakutenItems(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(
-                          child: Text('エラーが発生しました: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('商品が見つかりませんでした'));
-                    }
-
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        final item = snapshot.data![index]['Item'];
-                        return GestureDetector(
-                          onTap: () => _launchURL(item['itemUrl']),
-                          child: Container(
-                            width: 150,
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Image.network(
-                                  item['mediumImageUrls'][0]['imageUrl'],
-                                  height: 100,
-                                  width: 150,
-                                  fit: BoxFit.cover,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  item['itemName'],
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                Text(
-                                  '¥${item['itemPrice']}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
-                'ランキング',
-                style: TextStyle(
+                l10n.ranking,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -542,20 +434,20 @@ class HomeState extends ConsumerState<Home> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Icon(Icons.star, color: Colors.white, size: 30),
-                        SizedBox(height: 8),
+                        const Icon(Icons.star, color: Colors.white, size: 30),
+                        const SizedBox(height: 8),
                         Text(
-                          '全国聖地ランキング',
-                          style: TextStyle(
+                          l10n.nationalHolyPlacesRanking,
+                          style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 20),
                         ),
-                        Text(' by レビュー',
+                        Text(l10n.byReviews,
                             style:
-                                TextStyle(color: Colors.white, fontSize: 16)),
+                                const TextStyle(color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
@@ -575,20 +467,20 @@ class HomeState extends ConsumerState<Home> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Icon(Icons.comment, color: Colors.white, size: 30),
-                        SizedBox(height: 8),
+                        const Icon(Icons.comment, color: Colors.white, size: 30),
+                        const SizedBox(height: 8),
                         Text(
-                          '全国聖地ランキング',
-                          style: TextStyle(
+                          l10n.nationalHolyPlacesRanking,
+                          style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 20),
                         ),
-                        Text(' by 口コミ数',
+                        Text(l10n.byReviewsCount,
                             style:
-                                TextStyle(color: Colors.white, fontSize: 16)),
+                                const TextStyle(color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
@@ -620,9 +512,9 @@ class HomeState extends ConsumerState<Home> {
                       'assets/images/x_icon.png',
                     ),
                   ),
-                  const Text(
-                    '公式',
-                    style: TextStyle(
+                  Text(
+                    l10n.official,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),

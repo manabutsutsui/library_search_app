@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/subscription_state.dart';
 import 'subscription_premium.dart';
 
@@ -35,7 +36,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   Future<void> _loadUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
       final userData = userDoc.data() as Map<String, dynamic>?;
       setState(() {
         _username = userData?['username'];
@@ -50,6 +52,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 
   Future<void> _updateUsername() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('users').doc(user.uid).update({
@@ -73,22 +77,22 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         _username = _usernameController.text;
         _isEditing = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ユーザー名を更新しました')),
+        SnackBar(content: Text(l10n.usernameUpdated)),
       );
     }
   }
 
   void _showXAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
-      text: _xAccountUrl?.replaceAll('https://x.com/', '')
-    );
-    
+        text: _xAccountUrl?.replaceAll('https://x.com/', ''));
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xアカウントの設定'),
+        title: Text(l10n.xAccount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -100,16 +104,16 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'アカウント名のみを入力してください',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+            Text(
+              l10n.enterUsername,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -118,26 +122,27 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 username = username.substring(1);
               }
               final url = username.isEmpty ? null : 'https://x.com/$username';
-              
+
               await _firestore
                   .collection('users')
                   .doc(_auth.currentUser?.uid)
                   .update({'xAccountUrl': url});
-              
+
               setState(() {
                 _xAccountUrl = url;
               });
-              
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(url == null ? 'Xアカウントを削除しました' : 'Xアカウントを更新しました'),
+                    content:
+                        Text(url == null ? 'Xアカウントを削除しました' : 'Xアカウントを更新しました'),
                   ),
                 );
               }
             },
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -145,14 +150,15 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 
   void _showInstagramAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
-      text: _instagramAccountUrl?.replaceAll('https://www.instagram.com/', '')
-    );
-    
+        text:
+            _instagramAccountUrl?.replaceAll('https://www.instagram.com/', ''));
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Instagramアカウントの設定'),
+        title: Text(l10n.instagramAccount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -164,16 +170,16 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'アカウント名のみを入力してください',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+            Text(
+              l10n.enterUsername,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -181,27 +187,31 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               if (username.startsWith('@')) {
                 username = username.substring(1);
               }
-              final url = username.isEmpty ? null : 'https://www.instagram.com/$username';
-              
+              final url = username.isEmpty
+                  ? null
+                  : 'https://www.instagram.com/$username';
+
               await _firestore
                   .collection('users')
                   .doc(_auth.currentUser?.uid)
                   .update({'instagramAccountUrl': url});
-              
+
               setState(() {
                 _instagramAccountUrl = url;
               });
-              
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(url == null ? 'Instagramアカウントを削除しました' : 'Instagramアカウントを更新しました'),
+                    content: Text(url == null
+                        ? '${l10n.instagramAccount}${l10n.accountDeleted}'
+                        : '${l10n.instagramAccount}${l10n.accountUpdated}'),
                   ),
                 );
               }
             },
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -209,14 +219,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 
   void _showTiktokAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
-      text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', '')
-    );
-    
+        text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', ''));
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('TikTokアカウントの設定'),
+        title: Text(l10n.tiktokAccount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -232,7 +242,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -240,27 +250,30 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               if (username.startsWith('@')) {
                 username = username.substring(1);
               }
-              final url = username.isEmpty ? null : 'https://www.tiktok.com/@$username';
-              
+              final url =
+                  username.isEmpty ? null : 'https://www.tiktok.com/@$username';
+
               await _firestore
                   .collection('users')
                   .doc(_auth.currentUser?.uid)
                   .update({'tiktokAccountUrl': url});
-              
+
               setState(() {
                 _tiktokAccountUrl = url;
               });
-              
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(url == null ? 'TikTokアカウントを削除しました' : 'TikTokアカウントを更新しました'),
+                    content: Text(url == null
+                        ? 'TikTokアカウントを削除しました'
+                        : 'TikTokアカウントを更新しました'),
                   ),
                 );
               }
             },
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -269,6 +282,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isPremium = ref.watch(subscriptionProvider).value ?? false;
 
     void handleSNSButtonPress(VoidCallback onPremium) {
@@ -285,7 +299,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('アカウント', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(l10n.accountSettings,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
       ),
       body: Padding(
@@ -296,15 +314,20 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
-                child: _profileImageUrl == null ? const Icon(Icons.person, size: 50) : null,
+                backgroundImage: _profileImageUrl != null
+                    ? NetworkImage(_profileImageUrl!)
+                    : null,
+                child: _profileImageUrl == null
+                    ? const Icon(Icons.person, size: 50)
+                    : null,
               ),
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('ユーザー名', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.username,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(width: 32),
                 _isEditing
                     ? Expanded(
@@ -328,7 +351,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       )
                     : Row(
                         children: [
-                          Text(_username ?? '未設定', style: const TextStyle(fontSize: 18)),
+                          Text(_username ?? l10n.notSet,
+                              style: const TextStyle(fontSize: 18)),
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
@@ -345,15 +369,17 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('メールアドレス', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(_email ?? '未設定', style: const TextStyle(fontSize: 18)),
+                Text(l10n.email,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(_email ?? l10n.notSet, style: const TextStyle(fontSize: 18)),
               ],
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Xアカウント', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.xAccount,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     if (_xAccountUrl != null) ...[
@@ -374,12 +400,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit),
-                        onPressed: () => handleSNSButtonPress(_showXAccountDialog),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showXAccountDialog),
                       ),
                     ] else
                       TextButton(
-                        onPressed: () => handleSNSButtonPress(_showXAccountDialog),
-                        child: const Text('設定する'),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showXAccountDialog),
+                        child: Text(l10n.set),
                       ),
                   ],
                 ),
@@ -388,8 +416,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Instagramアカウント', 
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.instagramAccount,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     if (_instagramAccountUrl != null) ...[
@@ -400,7 +428,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           }
                         },
                         child: Text(
-                          _instagramAccountUrl!.replaceAll('https://www.instagram.com/', '@'),
+                          _instagramAccountUrl!
+                              .replaceAll('https://www.instagram.com/', '@'),
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.blue,
@@ -410,12 +439,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit),
-                        onPressed: () => handleSNSButtonPress(_showInstagramAccountDialog),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showInstagramAccountDialog),
                       ),
                     ] else
                       TextButton(
-                        onPressed: () => handleSNSButtonPress(_showInstagramAccountDialog),
-                        child: const Text('設定する'),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showInstagramAccountDialog),
+                        child: Text(l10n.set),
                       ),
                   ],
                 ),
@@ -424,7 +455,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('TikTokアカウント', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.tiktokAccount,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     if (_tiktokAccountUrl != null) ...[
@@ -435,7 +467,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           }
                         },
                         child: Text(
-                          _tiktokAccountUrl!.replaceAll('https://www.tiktok.com/@', '@'),
+                          _tiktokAccountUrl!
+                              .replaceAll('https://www.tiktok.com/@', '@'),
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.blue,
@@ -445,12 +478,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit),
-                        onPressed: () => handleSNSButtonPress(_showTiktokAccountDialog),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showTiktokAccountDialog),
                       ),
                     ] else
                       TextButton(
-                        onPressed: () => handleSNSButtonPress(_showTiktokAccountDialog),
-                        child: const Text('設定する'),
+                        onPressed: () =>
+                            handleSNSButtonPress(_showTiktokAccountDialog),
+                        child: Text(l10n.set),
                       ),
                   ],
                 ),

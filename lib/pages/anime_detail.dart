@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/anime_lists.dart';
 import 'spot_detail.dart';
 
@@ -36,10 +37,18 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(widget.anime.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+        title: Text(widget.anime.name, 
+          style: const TextStyle(
+            fontWeight: FontWeight.bold, 
+            fontSize: 16, 
+            color: Colors.white
+          )
+        ),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
@@ -56,7 +65,7 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                     onTap: () => _launchURL(widget.anime.imageUrl),
                     child: Center(
                       child: Text(
-                        '出典元: ${widget.anime.imageUrl}',
+                        '${l10n.sourceImage}: ${widget.anime.imageUrl}',
                         style: const TextStyle(
                           fontSize: 8,
                           color: Colors.blue,
@@ -66,18 +75,35 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Center(child: Text("'${widget.anime.name}'の聖地一覧", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                  Center(
+                    child: Text(
+                      "'${widget.anime.name}'${l10n.holyPlaceList}", 
+                      style: const TextStyle(
+                        fontSize: 20, 
+                        fontWeight: FontWeight.bold
+                      )
+                    )
+                  ),
                   const SizedBox(height: 32),
-                  Center(child: Text('聖地数: ${_spots.length}件', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                  Center(
+                    child: Text(
+                      '${l10n.numberOfHolyPlaces}: ${_spots.length}${l10n.places}', 
+                      style: const TextStyle(
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold
+                      )
+                    )
+                  ),
                   const SizedBox(height: 16),
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _spots.isEmpty
-                          ? const Center(child: Text('聖地が見つかりませんでした'))
+                          ? Center(child: Text(l10n.noHolyPlacesFound))
                           : GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 8.0,
                                 mainAxisSpacing: 8.0,
@@ -91,17 +117,23 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => SpotDetailPage(spot: spot),
+                                        builder: (context) =>
+                                            SpotDetailPage(spot: spot),
                                       ),
                                     );
                                   },
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: spot['imageURL'] != null && spot['imageURL'].toString().isNotEmpty
+                                        child: spot['imageURL'] != null &&
+                                                spot['imageURL']
+                                                    .toString()
+                                                    .isNotEmpty
                                             ? ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                                 child: Image.network(
                                                   spot['imageURL'],
                                                   width: double.infinity,
@@ -144,10 +176,11 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
   }
 
   void _launchURL(String url) async {
+    final l10n = AppLocalizations.of(context)!;
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      throw 'URLを開けませんでした: $url';
+      throw '${l10n.failedToOpenUrl}: $url';
     }
   }
 }
