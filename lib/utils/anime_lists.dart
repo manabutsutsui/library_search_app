@@ -289,4 +289,10 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/oshinoko.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=26315',
   ),
+  AnimeList(
+    name: 'けいおん！！',
+    genre: 'ドラマ/青春',
+    imageAsset: 'assets/images/keionn.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20329',
+  ),
 ];

@@ -81,14 +81,14 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(l10n.selectHolyPlace,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),

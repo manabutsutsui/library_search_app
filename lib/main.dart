@@ -21,6 +21,7 @@ import 'pages/anime_more.dart';
 import 'utils/seichi_de_dekirukoto.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
+import 'ad/ad_app_open.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,18 +30,18 @@ void main() async {
   );
 
   const isDebug = !bool.fromEnvironment('dart.vm.product');
-  
+
   final config = await loadConfig();
   final configuration = PurchasesConfiguration(
     Platform.isAndroid
-      ? config['revenueCatApiKeyAndroid']
-      : config['revenueCatApiKeyiOS'],
+        ? config['revenueCatApiKeyAndroid']
+        : config['revenueCatApiKeyiOS'],
   );
-  
+
   String appUserId = await _getOrCreateAppUserId();
-  
+
   await Purchases.configure(configuration..appUserID = appUserId);
-  
+
   Purchases.setDebugLogsEnabled(isDebug);
 
   runApp(
@@ -58,12 +59,12 @@ Future<Map<String, dynamic>> loadConfig() async {
 Future<String> _getOrCreateAppUserId() async {
   final prefs = await SharedPreferences.getInstance();
   String? appUserId = prefs.getString('app_user_id');
-  
+
   if (appUserId == null) {
     appUserId = const Uuid().v4();
     await prefs.setString('app_user_id', appUserId);
   }
-  
+
   return appUserId;
 }
 
@@ -74,20 +75,38 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  late AppOpenAdManager appOpenAdManager;
 
   @override
   void initState() {
     super.initState();
+    appOpenAdManager = AppOpenAdManager(ref: ref);
+    appOpenAdManager.loadAd();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(subscriptionProvider.notifier).checkSubscription();
     });
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    appOpenAdManager.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      appOpenAdManager.showAdIfAvailable();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentLocale = ref.watch(localeProvider);
-    
+
     return MaterialApp(
       title: 'アニメ聖地マップ - Seichi',
       theme: ThemeData(
@@ -118,10 +137,12 @@ class AppWithBottomNavigation extends ConsumerStatefulWidget {
   const AppWithBottomNavigation({super.key});
 
   @override
-  ConsumerState<AppWithBottomNavigation> createState() => AppWithBottomNavigationState();
+  ConsumerState<AppWithBottomNavigation> createState() =>
+      AppWithBottomNavigationState();
 }
 
-class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation> {
+class AppWithBottomNavigationState
+    extends ConsumerState<AppWithBottomNavigation> {
   int _selectedIndex = 0;
   bool _isLoggedIn = false;
   late List<GlobalKey<NavigatorState>> _navigatorKeys;
@@ -190,7 +211,8 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        final isFirstRouteInCurrentTab = !await _navigatorKeys[_selectedIndex].currentState!.maybePop();
+        final isFirstRouteInCurrentTab =
+            !await _navigatorKeys[_selectedIndex].currentState!.maybePop();
         if (isFirstRouteInCurrentTab) {
           if (_selectedIndex != 0) {
             _onItemTapped(0);
@@ -222,7 +244,8 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
           children: [
             Consumer(
               builder: (context, ref, child) {
-                final isSubscribed = ref.watch(subscriptionProvider).value == true;
+                final isSubscribed =
+                    ref.watch(subscriptionProvider).value == true;
                 return isSubscribed ? const SizedBox() : const AdBanner();
               },
             ),
