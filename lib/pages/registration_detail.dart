@@ -102,7 +102,7 @@ class SeichiRegistrationDetail extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.location_on),
+                const Icon(Icons.location_on, color: Colors.blue),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

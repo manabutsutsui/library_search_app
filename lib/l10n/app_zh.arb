@@ -291,5 +291,9 @@
     "holyPlaceName": "圣地名",
     "requestSent": "请求已发送",
     "allFieldsRequired": "请输入所有字段",
-    "sendRequest": "发送请求"
+    "sendRequest": "发送请求",
+    "reviewRequestTitle": "请评价应用",
+    "reviewRequestMessage": "您喜欢这个应用吗？\n评分和评论是开发的动力。",
+    "later": "稍后",
+    "review": "评分"
 }

@@ -151,11 +151,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               SnackBar(content: Text(l10n.notInteractive)),
                             );
                             break;
-                          default:
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.unhandledError)),
-                            );
-                            break;
                         }
                       }
                     }

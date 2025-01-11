@@ -315,11 +315,8 @@ class SettingPageState extends ConsumerState<SettingPage> {
                       title: l10n.writeReview,
                       onTap: () async {
                         if (await inAppReview.isAvailable()) {
-                          inAppReview.requestReview();
-                        } else {
-                          inAppReview.openStoreListing(
-                            appStoreId: 'あなたのApp Store ID',
-                            microsoftStoreId: 'あなたのMicrosoft Store ID',
+                          await inAppReview.openStoreListing(
+                            appStoreId: '6723886292',
                           );
                         }
                       },

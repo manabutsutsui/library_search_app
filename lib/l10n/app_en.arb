@@ -291,5 +291,9 @@
     "holyPlaceName": "Holy Place Name",
     "requestSent": "Request Sent",
     "allFieldsRequired": "Please enter all fields",
-    "sendRequest": "Send Request"
+    "sendRequest": "Send Request",
+    "reviewRequestTitle": "Please rate the app",
+    "reviewRequestMessage": "Did you enjoy the app?\nRating and reviews are a great encouragement for development.",
+    "later": "Later",
+    "review": "Rate"
 }

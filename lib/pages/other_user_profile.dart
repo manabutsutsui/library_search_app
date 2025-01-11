@@ -356,7 +356,7 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_on),
+                                const Icon(Icons.location_on, color: Colors.blue),
                                 Text(
                                   spot['spotName'] ?? AppLocalizations.of(context)!.unknownHolyPlace,
                                   style: const TextStyle(

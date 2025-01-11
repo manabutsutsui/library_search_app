@@ -291,5 +291,9 @@
     "holyPlaceName": "성지 이름",
     "requestSent": "요청이 전송되었습니다",
     "allFieldsRequired": "모든 필수 항목을 입력해주세요",
-    "sendRequest": "요청 전송"
+    "sendRequest": "요청 전송",
+    "reviewRequestTitle": "앱 평가 요청",
+    "reviewRequestMessage": "앱을 즐겼나요?\n평가와 리뷰는 개발의 동기부여가 됩니다.",
+    "later": "나중에",
+    "review": "평가하기"
 }

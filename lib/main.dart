@@ -17,7 +17,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/subscription_state.dart';
 import 'pages/create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'pages/anime_more.dart';
 import 'utils/seichi_de_dekirukoto.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
@@ -164,7 +163,6 @@ class AppWithBottomNavigationState
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
     ];
     _updatePages();
   }
@@ -195,7 +193,6 @@ class AppWithBottomNavigationState
     _pages = [
       const Home(),
       const MapPage(),
-      const AnimeMorePage(),
       const RegistrationPage(),
       _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
@@ -258,10 +255,6 @@ class AppWithBottomNavigationState
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.map),
                   label: AppLocalizations.of(context)!.map,
-                ),
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.library_add_check),
-                  label: AppLocalizations.of(context)!.works,
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.favorite),

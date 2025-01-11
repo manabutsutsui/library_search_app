@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.4.1+1
+version: 1.4.2+1
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
@@ -44,11 +44,11 @@ dependencies:
   firebase_core: ^3.5.0
   cloud_firestore: ^5.4.2
   geocoding: ^3.0.0
-  firebase_auth: ^5.3.0
+  firebase_auth: ^5.4.0
   url_launcher: ^6.3.0
   image_picker: ^1.1.2
   flutter_rating_bar: ^4.0.1
-  firebase_storage: ^12.3.1
+  firebase_storage: ^12.4.0
   intl: ^0.19.0
   in_app_review: ^2.0.9
   google_mobile_ads: ^5.1.0
@@ -67,6 +67,7 @@ dependencies:
   google_maps_cluster_manager: ^3.1.0
   carousel_slider: ^5.0.0
   smooth_page_indicator: ^1.2.0+3
+  flutter_google_street_view: ^1.0.2
 
 flutter_icons:
   android: true
@@ -148,6 +149,7 @@ flutter:
     - assets/images/shika.png
     - assets/images/oshinoko.png
     - assets/images/keionn.png
+    - assets/images/dandadan.png
     - assets/subscription_images/premium_image_seichi.png
     - assets/subscription_images/seichi_note.png
     - assets/subscription_images/1.png

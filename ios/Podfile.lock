@@ -1158,63 +1158,63 @@ PODS:
     - BoringSSL-GRPC/Interface (= 0.0.36)
   - BoringSSL-GRPC/Interface (0.0.36)
   - cloud_firestore (5.4.2):
-    - Firebase/Firestore (= 11.2.0)
+    - Firebase/Firestore (= 11.6.0)
     - firebase_core
     - Flutter
-  - Firebase/Auth (11.2.0):
+  - Firebase/Auth (11.6.0):
     - Firebase/CoreOnly
-    - FirebaseAuth (~> 11.2.0)
-  - Firebase/CoreOnly (11.2.0):
-    - FirebaseCore (= 11.2.0)
-  - Firebase/Firestore (11.2.0):
+    - FirebaseAuth (~> 11.6.0)
+  - Firebase/CoreOnly (11.6.0):
+    - FirebaseCore (~> 11.6.0)
+  - Firebase/Firestore (11.6.0):
     - Firebase/CoreOnly
-    - FirebaseFirestore (~> 11.2.0)
-  - Firebase/Messaging (11.2.0):
+    - FirebaseFirestore (~> 11.6.0)
+  - Firebase/Messaging (11.6.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 11.2.0)
-  - Firebase/Storage (11.2.0):
+    - FirebaseMessaging (~> 11.6.0)
+  - Firebase/Storage (11.6.0):
     - Firebase/CoreOnly
-    - FirebaseStorage (~> 11.2.0)
-  - firebase_auth (5.3.0):
-    - Firebase/Auth (= 11.2.0)
+    - FirebaseStorage (~> 11.6.0)
+  - firebase_auth (5.4.0):
+    - Firebase/Auth (= 11.6.0)
     - firebase_core
     - Flutter
-  - firebase_core (3.6.0):
-    - Firebase/CoreOnly (= 11.2.0)
+  - firebase_core (3.10.0):
+    - Firebase/CoreOnly (= 11.6.0)
     - Flutter
   - firebase_messaging (15.1.3):
-    - Firebase/Messaging (= 11.2.0)
+    - Firebase/Messaging (= 11.6.0)
     - firebase_core
     - Flutter
-  - firebase_storage (12.3.1):
-    - Firebase/Storage (= 11.2.0)
+  - firebase_storage (12.4.0):
+    - Firebase/Storage (= 11.6.0)
     - firebase_core
     - Flutter
   - FirebaseAppCheckInterop (11.6.0)
-  - FirebaseAuth (11.2.0):
+  - FirebaseAuth (11.6.0):
     - FirebaseAppCheckInterop (~> 11.0)
     - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.0)
-    - FirebaseCoreExtension (~> 11.0)
+    - FirebaseCore (~> 11.6.0)
+    - FirebaseCoreExtension (~> 11.6.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
     - GoogleUtilities/Environment (~> 8.0)
-    - GTMSessionFetcher/Core (~> 3.4)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
     - RecaptchaInterop (~> 100.0)
   - FirebaseAuthInterop (11.6.0)
-  - FirebaseCore (11.2.0):
-    - FirebaseCoreInternal (~> 11.0)
+  - FirebaseCore (11.6.0):
+    - FirebaseCoreInternal (~> 11.6.0)
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/Logger (~> 8.0)
-  - FirebaseCoreExtension (11.4.1):
-    - FirebaseCore (~> 11.0)
+  - FirebaseCoreExtension (11.6.0):
+    - FirebaseCore (~> 11.6.0)
   - FirebaseCoreInternal (11.6.0):
     - "GoogleUtilities/NSData+zlib (~> 8.0)"
-  - FirebaseFirestore (11.2.0):
-    - FirebaseCore (~> 11.0)
-    - FirebaseCoreExtension (~> 11.0)
-    - FirebaseFirestoreInternal (= 11.2.0)
+  - FirebaseFirestore (11.6.0):
+    - FirebaseCore (~> 11.6.0)
+    - FirebaseCoreExtension (~> 11.6.0)
+    - FirebaseFirestoreInternal (= 11.6.0)
     - FirebaseSharedSwift (~> 11.0)
-  - FirebaseFirestoreInternal (11.2.0):
+  - FirebaseFirestoreInternal (11.6.0):
     - abseil/algorithm (~> 1.20240116.1)
     - abseil/base (~> 1.20240116.1)
     - abseil/container/flat_hash_map (~> 1.20240116.1)
@@ -1224,18 +1224,18 @@ PODS:
     - abseil/time (~> 1.20240116.1)
     - abseil/types (~> 1.20240116.1)
     - FirebaseAppCheckInterop (~> 11.0)
-    - FirebaseCore (~> 11.0)
+    - FirebaseCore (~> 11.6.0)
     - "gRPC-C++ (~> 1.65.0)"
     - gRPC-Core (~> 1.65.0)
     - leveldb-library (~> 1.22)
     - nanopb (~> 3.30910.0)
-  - FirebaseInstallations (11.4.0):
-    - FirebaseCore (~> 11.0)
+  - FirebaseInstallations (11.6.0):
+    - FirebaseCore (~> 11.6.0)
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - FirebaseMessaging (11.2.0):
-    - FirebaseCore (~> 11.0)
+  - FirebaseMessaging (11.6.0):
+    - FirebaseCore (~> 11.6.0)
     - FirebaseInstallations (~> 11.0)
     - GoogleDataTransport (~> 10.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
@@ -1244,14 +1244,17 @@ PODS:
     - GoogleUtilities/UserDefaults (~> 8.0)
     - nanopb (~> 3.30910.0)
   - FirebaseSharedSwift (11.6.0)
-  - FirebaseStorage (11.2.0):
+  - FirebaseStorage (11.6.0):
     - FirebaseAppCheckInterop (~> 11.0)
     - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.0)
-    - FirebaseCoreExtension (~> 11.0)
+    - FirebaseCore (~> 11.6.0)
+    - FirebaseCoreExtension (~> 11.6.0)
     - GoogleUtilities/Environment (~> 8.0)
-    - GTMSessionFetcher/Core (~> 3.4)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - Flutter (1.0.0)
+  - flutter_google_street_view (1.0.0):
+    - Flutter
+    - GoogleMaps
   - flutter_native_splash (0.0.1):
     - Flutter
   - geocoding_ios (1.0.5):
@@ -1457,6 +1460,7 @@ DEPENDENCIES:
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
+  - flutter_google_street_view (from `.symlinks/plugins/flutter_google_street_view/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
@@ -1524,6 +1528,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
+  flutter_google_street_view:
+    :path: ".symlinks/plugins/flutter_google_street_view/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
   geocoding_ios:
@@ -1561,25 +1567,26 @@ SPEC CHECKSUMS:
   abseil: d121da9ef7e2ff4cab7666e76c5a3e0915ae08c3
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   BoringSSL-GRPC: ca6a8e5d04812fce8ffd6437810c2d46f925eaeb
-  cloud_firestore: ffbf407692570e7cc01eb17758b9c36860e73178
-  Firebase: 98e6bf5278170668a7983e12971a66b2cd57fc8c
-  firebase_auth: fa0a64faed1efd32905446de54e398fe3b180dc8
-  firebase_core: 2bedc3136ec7c7b8561c6123ed0239387b53f2af
-  firebase_messaging: 15d114e1a41fc31e4fbabcd48d765a19eec94a38
-  firebase_storage: 47e12b79a66bfdfeec97977d38019b349fbf6b47
+  cloud_firestore: 39e78fabeb11eb9651c42a1faee923d4aee124b4
+  Firebase: 374a441a91ead896215703a674d58cdb3e9d772b
+  firebase_auth: 223c0d5afbd4eba3cd202177ec872436437549ba
+  firebase_core: feb37e79f775c2bd08dd35e02d83678291317e10
+  firebase_messaging: c7de41799682eee29cb27f86bd635ba2e343bed9
+  firebase_storage: f976f1db24f7bcfdba40777be217dc65a27e98a9
   FirebaseAppCheckInterop: 347aa09a805219a31249b58fc956888e9fcb314b
-  FirebaseAuth: 2a198b8cdbbbd457f08d74df7040feb0a0e7777a
+  FirebaseAuth: 0304982cfe00df8d49bf533bc4becd3de36c7122
   FirebaseAuthInterop: a919d415797d23b7bfe195a04f322b86c65020ef
-  FirebaseCore: a282032ae9295c795714ded2ec9c522fc237f8da
-  FirebaseCoreExtension: f1bc67a4702931a7caa097d8e4ac0a1b0d16720e
+  FirebaseCore: 48b0dd707581cf9c1a1220da68223fb0a562afaa
+  FirebaseCoreExtension: 2d77d6430c16cf43ca2b04608302ed02b3598361
   FirebaseCoreInternal: d98ab91e2d80a56d7b246856a8885443b302c0c2
-  FirebaseFirestore: 62708adbc1dfcd6d165a7c0a202067b441912dc9
-  FirebaseFirestoreInternal: ad9b9ee2d3d430c8f31333a69b3b6737a7206232
-  FirebaseInstallations: 6ef4a1c7eb2a61ee1f74727d7f6ce2e72acf1414
-  FirebaseMessaging: c9ec7b90c399c7a6100297e9d16f8a27fc7f7152
+  FirebaseFirestore: d5dcc15724f291fe4b415322754bfa01616037fe
+  FirebaseFirestoreInternal: db478fdaeb98fe8686ff49e600f3871c224a76ff
+  FirebaseInstallations: efc0946fc756e4d22d8113f7c761948120322e8c
+  FirebaseMessaging: e1aca1fcc23e8b9eddb0e33f375ff90944623021
   FirebaseSharedSwift: a4e5dfca3e210633bb3a3dfb94176c019211948b
-  FirebaseStorage: 9353f926690b2329957860abfcbc8b4074fe45e8
+  FirebaseStorage: 52fb65a69d3e87675186881a08e2a5db86452ace
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_google_street_view: 40cf05d8d407185e922550f15ab8ad2218c174c6
   flutter_native_splash: edf599c81f74d093a4daf8e17bd7a018854bc778
   geocoding_ios: d7460f56e80e118d57678efe5c2cdc888739ff18
   geolocator_apple: 6cbaf322953988e009e5ecb481f07efece75c450
@@ -1615,6 +1622,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
   webview_flutter_wkwebview: 0982481e3d9c78fd5c6f62a002fcd24fc791f1e4
 
-PODFILE CHECKSUM: 1959d098c91d8a792531a723c4a9d7e9f6a01e38
+PODFILE CHECKSUM: 33ff5b6bba1c65773de8c2b15e454e76412699d1
 
 COCOAPODS: 1.16.2

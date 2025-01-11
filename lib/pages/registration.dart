@@ -145,7 +145,7 @@ class _VisitedSpotsTab extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              const Icon(Icons.location_on),
+                              const Icon(Icons.location_on, color: Colors.blue),
                               Text(
                                 spot['spotName'] ?? '不明な聖地',
                                 style: const TextStyle(

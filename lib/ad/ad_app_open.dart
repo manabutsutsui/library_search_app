@@ -34,13 +34,13 @@ class AppOpenAdManager {
             isLoaded = true;
           },
           onAdFailedToLoad: (error) {
-            print('アプリ起動広告の読み込みに失敗: $error');
+            // print('アプリ起動広告の読み込みに失敗: $error');
             isLoaded = false;
           },
         ),
       );
     } catch (e) {
-      print('アプリ起動広告のロード中にエラーが発生: $e');
+      // print('アプリ起動広告のロード中にエラーが発生: $e');
     }
   }
 

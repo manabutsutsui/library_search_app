@@ -96,7 +96,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     }
   }
 
-  void _showXAccountDialog() {
+  void showXAccountDialog() {
     final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller =
         TextEditingController(text: _xAccountUrl);
@@ -158,7 +158,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     );
   }
 
-  void _showInstagramAccountDialog() {
+  void showInstagramAccountDialog() {
     final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
         text:
@@ -212,7 +212,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     );
   }
 
-  void _showTiktokAccountDialog() {
+  void showTiktokAccountDialog() {
     final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
         text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', ''));

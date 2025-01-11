@@ -291,5 +291,9 @@
     "holyPlaceName": "Nom du lieu saint",
     "requestSent": "Requête envoyée",
     "allFieldsRequired": "Veuillez entrer tous les champs",
-    "sendRequest": "Envoyer la requête"
+    "sendRequest": "Envoyer la requête",
+    "reviewRequestTitle": "Veuillez évaluer l'application",
+    "reviewRequestMessage": "Avez-vous apprécié l'application ?\nLes évaluations et les critiques sont une grande motivation pour le développement.",
+    "later": "Plus tard",
+    "review": "Évaluer"
 }

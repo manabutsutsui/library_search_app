@@ -15,6 +15,7 @@ import '../providers/subscription_state.dart';
 import 'spot_detail.dart';
 import 'new_seichi.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/review_request_manager.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -24,6 +25,15 @@ class Home extends ConsumerStatefulWidget {
 }
 
 class HomeState extends ConsumerState<Home> {
+  @override
+  void initState() {
+    super.initState();
+    // 少し遅延させてダイアログを表示（画面遷移後に表示させるため）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ReviewRequestManager.checkAndShowReviewDialog(context);
+    });
+  }
+
   Future<void> _launchURL(String url) async {
     final l10n = AppLocalizations.of(context)!;
     if (await canLaunch(url)) {

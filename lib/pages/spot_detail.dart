@@ -102,7 +102,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
   AnimeList? _getAnimeInfo(String workName) {
     return animeList.firstWhere(
       (anime) => anime.name == workName,
-      orElse: () => AnimeList(name: '', genre: '', imageAsset: '', imageUrl: ''),
+      orElse: () =>
+          AnimeList(name: '', genre: '', imageAsset: '', imageUrl: ''),
     );
   }
 
@@ -169,13 +170,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               Tab(
                 child: Text(
                   AppLocalizations.of(context)!.information,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               Tab(
                 child: Text(
                   AppLocalizations.of(context)!.note,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -224,12 +227,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         ),
                         const SizedBox(height: 32),
                         Text(AppLocalizations.of(context)!.basicInformation,
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         const Divider(color: Colors.grey),
-                        _buildInfoRow(AppLocalizations.of(context)!.address, widget.spot['address']),
+                        _buildInfoRow(AppLocalizations.of(context)!.address,
+                            widget.spot['address']),
                         const SizedBox(height: 8),
                         const Divider(color: Colors.grey),
-                        _buildInfoRow(AppLocalizations.of(context)!.map, 'Google Mapsを開く'),
+                        _buildInfoRow(AppLocalizations.of(context)!.map,
+                            'Google Mapsを開く'),
                         const SizedBox(height: 8),
                         const Divider(color: Colors.grey),
                         const SizedBox(height: 8),
@@ -252,32 +258,39 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         ),
                         const SizedBox(height: 32),
                         Text(AppLocalizations.of(context)!.spotMemo,
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Consumer(
                           builder: (context, ref, child) {
-                            final subscriptionState = ref.watch(subscriptionProvider);
-                            
+                            final subscriptionState =
+                                ref.watch(subscriptionProvider);
+
                             return subscriptionState.when(
                               data: (isPro) {
                                 if (isPro) {
                                   return FutureBuilder<DocumentSnapshot>(
                                     future: FirebaseFirestore.instance
                                         .collection('users')
-                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .doc(FirebaseAuth
+                                            .instance.currentUser?.uid)
                                         .collection('seichi_notes')
                                         .doc(widget.spot.id)
                                         .get(),
                                     builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                        return const Center(child: CircularProgressIndicator());
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Center(
+                                            child: CircularProgressIndicator());
                                       }
 
-                                      if (!snapshot.hasData || !snapshot.data!.exists) {
+                                      if (!snapshot.hasData ||
+                                          !snapshot.data!.exists) {
                                         return const SizedBox.shrink();
                                       }
 
-                                      final noteData = snapshot.data!.data() as Map<String, dynamic>;
+                                      final noteData = snapshot.data!.data()
+                                          as Map<String, dynamic>;
                                       final note = noteData['note'] as String?;
 
                                       if (note == null || note.isEmpty) {
@@ -289,11 +302,14 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
                                           color: Colors.grey[100],
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.grey[300]!),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.grey[300]!),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               note,
@@ -304,7 +320,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              AppLocalizations.of(context)!.yourMemo,
+                                              AppLocalizations.of(context)!
+                                                  .yourMemo,
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey,
@@ -330,10 +347,12 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         builder: (BuildContext context) {
                                           return GestureDetector(
                                             onTap: () {
-                                              DefaultTabController.of(context).animateTo(1);
+                                              DefaultTabController.of(context)
+                                                  .animateTo(1);
                                             },
                                             child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                               child: Image.asset(
                                                 'assets/subscription_images/seichi_note.png',
                                                 fit: BoxFit.cover,
@@ -344,26 +363,29 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                   Center(
+                                    Center(
                                       child: Text(
                                         AppLocalizations.of(context)!.yourMemo2,
                                         style: const TextStyle(
                                           fontSize: 12,
-                                          color: Color.fromARGB(255, 119, 119, 119),
+                                          color: Color.fromARGB(
+                                              255, 119, 119, 119),
                                         ),
                                       ),
                                     ),
                                   ],
                                 );
                               },
-                              loading: () => const Center(child: CircularProgressIndicator()),
+                              loading: () => const Center(
+                                  child: CircularProgressIndicator()),
                               error: (_, __) => const SizedBox.shrink(),
                             );
                           },
                         ),
                         const SizedBox(height: 32),
                         Text('・${AppLocalizations.of(context)!.workName}',
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(widget.spot['work'],
                             style: const TextStyle(
@@ -419,7 +441,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                 child: Column(
                                   children: [
                                     if (widget.spot['imageURL'] != null &&
-                                        widget.spot['imageURL'].toString().isNotEmpty) ...[
+                                        widget.spot['imageURL']
+                                            .toString()
+                                            .isNotEmpty) ...[
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
                                         child: Image.network(
@@ -432,13 +456,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       Builder(
                                         builder: (context) {
                                           return InkWell(
-                                            onTap: () => _launchURL(widget.spot['source']),
+                                            onTap: () => _launchURL(
+                                                widget.spot['source']),
                                             child: Text(
                                               '${AppLocalizations.of(context)!.sourceImage}: ${widget.spot['source'] ?? ''}',
                                               style: const TextStyle(
                                                 fontSize: 8,
                                                 color: Colors.blue,
-                                                decoration: TextDecoration.underline,
+                                                decoration:
+                                                    TextDecoration.underline,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
@@ -495,7 +521,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         ),
                         const SizedBox(height: 32),
                         Center(
-                            child: Text('${AppLocalizations.of(context)!.kuchikomi} ${_reviews.length}${AppLocalizations.of(context)!.reviews}',
+                            child: Text(
+                                '${AppLocalizations.of(context)!.kuchikomi} ${_reviews.length}${AppLocalizations.of(context)!.reviews}',
                                 style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold))),
@@ -503,8 +530,10 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         _reviews.isEmpty
                             ? Center(
                                 child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                                child: Text(AppLocalizations.of(context)!.noReviews),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(
+                                    AppLocalizations.of(context)!.noReviews),
                               ))
                             : ListView.builder(
                                 shrinkWrap: true,
@@ -605,7 +634,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                         color: Colors
                                                                             .red),
                                                                     title: Text(
-                                                                        AppLocalizations.of(context)!.delete,
+                                                                        AppLocalizations.of(context)!
+                                                                            .delete,
                                                                         style: const TextStyle(
                                                                             color:
                                                                                 Colors.red)),
@@ -643,7 +673,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                           true) {
                                                                         try {
                                                                           // 画像がある場合、Storageから削除
-                                                                          if (review['imageUrl'] != null) {
+                                                                          if (review['imageUrl'] !=
+                                                                              null) {
                                                                             try {
                                                                               final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
                                                                               await storageRef.delete();
@@ -653,24 +684,29 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                           }
 
                                                                           // Firestoreから口コミを削除
-                                                                          await FirebaseFirestore.instance
+                                                                          await FirebaseFirestore
+                                                                              .instance
                                                                               .collection('reviews')
                                                                               .doc(review.id)
                                                                               .delete();
 
-                                                                          Navigator.of(context).pop();
-                                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                                          Navigator.of(context)
+                                                                              .pop();
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(
                                                                             SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleted)),
                                                                           );
                                                                           _fetchReviews();
                                                                         } catch (e) {
                                                                           // print('口コミの削除中にエラーが発生しました: $e');
-                                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(
                                                                             SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleteError)),
                                                                           );
                                                                         }
                                                                       } else {
-                                                                        Navigator.of(context).pop();
+                                                                        Navigator.of(context)
+                                                                            .pop();
                                                                       }
                                                                     },
                                                                   )
@@ -682,7 +718,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                         color: Colors
                                                                             .red),
                                                                     title: Text(
-                                                                        AppLocalizations.of(context)!.report,
+                                                                        AppLocalizations.of(context)!
+                                                                            .report,
                                                                         style: const TextStyle(
                                                                             color:
                                                                                 Colors.red)),
@@ -742,7 +779,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                                           Icons
                                                                               .cancel),
                                                                   title: Text(
-                                                                      AppLocalizations.of(context)!.cancel),
+                                                                      AppLocalizations.of(
+                                                                              context)!
+                                                                          .cancel),
                                                                   onTap: () {
                                                                     Navigator.pop(
                                                                         context);
@@ -776,7 +815,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                                           Axis.horizontal,
                                                     ),
                                                     const SizedBox(width: 8),
-                                                    Text(': ${AppLocalizations.of(context)!.seichitourokuSatisfaction}'),
+                                                    Text(
+                                                        ': ${AppLocalizations.of(context)!.seichitourokuSatisfaction}'),
                                                   ],
                                                 ),
                                                 const SizedBox(height: 8),
@@ -808,8 +848,9 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                   children: [
                     Consumer(
                       builder: (context, ref, child) {
-                        final subscriptionState = ref.watch(subscriptionProvider);
-                        
+                        final subscriptionState =
+                            ref.watch(subscriptionProvider);
+
                         return subscriptionState.when(
                           data: (isPro) {
                             if (isPro) {
@@ -823,7 +864,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => const SubscriptionPremium(),
+                                          builder: (context) =>
+                                              const SubscriptionPremium(),
                                         ),
                                       );
                                     },
@@ -831,12 +873,12 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       backgroundColor: Colors.blue,
                                     ),
                                     child: Text(
-                                      AppLocalizations.of(context)!.premiumPlanLimitedFunction,
+                                      AppLocalizations.of(context)!
+                                          .premiumPlanLimitedFunction,
                                       style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14
-                                      ),
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
                                     ),
                                   ),
                                 ),
@@ -846,7 +888,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const SubscriptionPremium(),
+                                        builder: (context) =>
+                                            const SubscriptionPremium(),
                                       ),
                                     );
                                   },
@@ -857,7 +900,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -873,7 +917,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         ),
                                         const SizedBox(height: 20),
                                         Text(
-                                          AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription,
+                                          AppLocalizations.of(context)!
+                                              .premiumPlanLimitedFunctionDescription,
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
@@ -881,7 +926,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         ),
                                         const SizedBox(height: 20),
                                         Text(
-                                          AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription2,
+                                          AppLocalizations.of(context)!
+                                              .premiumPlanLimitedFunctionDescription2,
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,
@@ -905,7 +951,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const SubscriptionPremium(),
+                                        builder: (context) =>
+                                            const SubscriptionPremium(),
                                       ),
                                     );
                                   },
@@ -929,7 +976,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               ],
                             );
                           },
-                          loading: () => const Center(child: CircularProgressIndicator()),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
                           error: (_, __) => const SizedBox.shrink(),
                         );
                       },
@@ -959,7 +1007,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               }
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.loginRequired)),
+                SnackBar(
+                    content: Text(AppLocalizations.of(context)!.loginRequired)),
               );
             }
           },
