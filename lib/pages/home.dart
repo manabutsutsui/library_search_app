@@ -9,13 +9,14 @@ import 'anime_more.dart';
 import 'ranking_review.dart';
 import 'ranking_comment.dart';
 import 'subscription_premium.dart';
-import '../ad/ad_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
 import 'spot_detail.dart';
 import 'new_seichi.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/review_request_manager.dart';
+import '../utils/amazon_product.dart';
+import 'products_more.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -408,10 +409,96 @@ class HomeState extends ConsumerState<Home> {
               );
             },
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.recommendedProducts,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProductsMorePage()),
+                      );
+                    },
+                    child: Text(l10n.viewMore),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 350,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: recommendedProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = recommendedProducts[index];
+                        return GestureDetector(
+                          onTap: () => _launchURL(product.affiliateLink),
+                          child: Container(
+                            padding: const EdgeInsets.only(right: 8),
+                            width: 200,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    product.imageUrl,
+                                    height: 300,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  product.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  product.price,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(16),
               child: Text(
                 l10n.ranking,
                 style: const TextStyle(
@@ -424,7 +511,7 @@ class HomeState extends ConsumerState<Home> {
           SliverToBoxAdapter(
             child: Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  const EdgeInsets.symmetric(horizontal: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -456,8 +543,8 @@ class HomeState extends ConsumerState<Home> {
                               fontSize: 20),
                         ),
                         Text(l10n.byReviews,
-                            style:
-                                const TextStyle(color: Colors.white, fontSize: 16)),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
@@ -479,7 +566,8 @@ class HomeState extends ConsumerState<Home> {
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.comment, color: Colors.white, size: 30),
+                        const Icon(Icons.comment,
+                            color: Colors.white, size: 30),
                         const SizedBox(height: 8),
                         Text(
                           l10n.nationalHolyPlacesRanking,
@@ -489,26 +577,13 @@ class HomeState extends ConsumerState<Home> {
                               fontSize: 20),
                         ),
                         Text(l10n.byReviewsCount,
-                            style:
-                                const TextStyle(color: Colors.white, fontSize: 16)),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          subscriptionState.when(
-            data: (isPro) => isPro
-                ? const SliverToBoxAdapter(child: SizedBox.shrink())
-                : const SliverToBoxAdapter(
-                    child: AdBanner(),
-                  ),
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, stack) => SliverToBoxAdapter(
-              child: Center(child: Text('エラーが発生しました: $error')),
             ),
           ),
           SliverToBoxAdapter(

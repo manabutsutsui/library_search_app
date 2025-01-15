@@ -145,11 +145,11 @@
     "imageUpdateError": "画像の更新に失敗しました",
     "profile": "プロフィール",
     "bookmarks": "ブックマーク",
-    "xAccountSetting": "Xアカウントの設定",
+    "xAccountSetting": "Xアカウント",
     "enterXAccountUrl": "自身のアカウントのURLを入力してください",
     "xAccountUpdated": "Xアカウントを更新しました",
-    "instagramAccountSetting": "Instagramアカウントの設定",
-    "tiktokAccountSetting": "TikTokアカウントの設定",
+    "instagramAccountSetting": "Instagramアカウント",
+    "tiktokAccountSetting": "TikTokアカウント",
     "tiktokAccountDeleted": "TikTokアカウントを削除しました",
     "tiktokAccountUpdated": "TikTokアカウントを更新しました",
     "unknown": "名前未設定",
@@ -295,5 +295,12 @@
     "reviewRequestTitle": "アプリの評価をお願いします",
     "reviewRequestMessage": "アプリを気に入っていただけましたか？\n評価やレビューをいただけると開発の励みになります。",
     "later": "後で",
-    "review": "評価する"
+    "review": "評価する",
+    "recommendedProducts": "おすすめ商品",
+    "posts": "投稿",
+    "welcomeToPost": "投稿機能について\n・右下の「+」ボタンから、投稿が可能です。\n・聖地の感想や思い出を共有しましょう\n・他のユーザーの投稿にいいね♡を付けることができます\n・不適切な投稿は運営により削除される場合があります",
+    "hintTextPosts": "投稿文を書いてください",
+    "writeComment": "コメントを書く...",
+    "reportSent": "報告を送信しました",
+    "spotRegistered": "聖地を登録しました"
 } 

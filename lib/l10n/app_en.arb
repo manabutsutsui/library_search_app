@@ -295,5 +295,12 @@
     "reviewRequestTitle": "Please rate the app",
     "reviewRequestMessage": "Did you enjoy the app?\nRating and reviews are a great encouragement for development.",
     "later": "Later",
-    "review": "Rate"
+    "review": "Rate",
+    "recommendedProducts": "Recommended Products",
+    "posts": "Posts",
+    "welcomeToPost": "Welcome to the app's posting feature!\nYou can post text and images from the bottom right \"+\" button.\n・Share your thoughts and memories about holy places\n・You can like other users' posts👍\n・Inappropriate posts may be deleted by the operator",
+    "hintTextPosts": "Write a post",
+    "writeComment": "Write a comment",
+    "reportSent": "Report Sent",
+    "spotRegistered": "Holy Place Registered"
 }

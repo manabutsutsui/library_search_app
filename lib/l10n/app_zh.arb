@@ -295,5 +295,12 @@
     "reviewRequestTitle": "请评价应用",
     "reviewRequestMessage": "您喜欢这个应用吗？\n评分和评论是开发的动力。",
     "later": "稍后",
-    "review": "评分"
+    "review": "评分",
+    "recommendedProducts": "推荐商品",
+    "posts": "投稿",
+    "welcomeToPost": "欢迎使用应用程序的投稿功能！\n您可以从右下角的“+”按钮发布文本和图像。\n・分享您对圣地巡礼的感想和回忆\n・您可以喜欢其他用户的帖子👍\n・不适当的内容可能会被运营商删除",
+    "hintTextPosts": "写一篇帖子",
+    "writeComment": "写评论...",
+    "reportSent": "举报已发送",
+    "spotRegistered": "圣地已登记"
 }

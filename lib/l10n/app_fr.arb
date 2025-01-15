@@ -295,5 +295,12 @@
     "reviewRequestTitle": "Veuillez évaluer l'application",
     "reviewRequestMessage": "Avez-vous apprécié l'application ?\nLes évaluations et les critiques sont une grande motivation pour le développement.",
     "later": "Plus tard",
-    "review": "Évaluer"
+    "review": "Évaluer",
+    "recommendedProducts": "Produits recommandés",
+    "posts": "Posts",
+    "welcomeToPost": "Bienvenue dans la fonctionnalité de publication de l'application !\nVous pouvez poster du texte et des images à partir du bouton \"+\" en bas à droite.\n・Partagez vos pensées et souvenirs sur les lieux saints\n・Vous pouvez aimer les posts d'autres utilisateurs👍\n・Les posts inappropriés peuvent être supprimés par l'opérateur",
+    "hintTextPosts": "Écrivez un post",
+    "writeComment": "Écrivez un commentaire...",
+    "reportSent": "Signalement envoyé",
+    "spotRegistered": "Lieu saint enregistré"
 }

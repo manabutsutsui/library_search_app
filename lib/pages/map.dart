@@ -3,22 +3,19 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/visited_spots_provider.dart';
 import '../utils/seichi_request.dart';
 import '../utils/search_anime.dart';
 import '../utils/cluster.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class MapPage extends ConsumerStatefulWidget {
+class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
   @override
-  ConsumerState<MapPage> createState() => _MapPageState();
+  State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends ConsumerState<MapPage> {
+class _MapPageState extends State<MapPage> {
   GoogleMapController? mapController;
   LatLng _center = const LatLng(35.6895, 139.6917);
   Set<Marker> _markers = {};
@@ -26,7 +23,6 @@ class _MapPageState extends ConsumerState<MapPage> {
   OverlayEntry? _overlayEntry;
 
   final TextEditingController _searchController = TextEditingController();
-  bool _showOnlyVisited = false;
   double _currentZoom = 12.0;
   List<SpotData> _allSpots = [];
 
@@ -34,7 +30,6 @@ class _MapPageState extends ConsumerState<MapPage> {
   void initState() {
     super.initState();
     _initializeLocation();
-    _fetchVisitedSpots();
   }
 
   Future<void> _initializeLocation() async {
@@ -99,12 +94,9 @@ class _MapPageState extends ConsumerState<MapPage> {
   Future<void> _fetchSpots() async {
     Query spotsQuery = FirebaseFirestore.instance.collection('spots');
     QuerySnapshot snapshot = await spotsQuery.get();
-    final visitedSpots = ref.read(visitedSpotsProvider);
 
-    _allSpots = snapshot.docs
-        .map((doc) =>
-            SpotData.fromFirestore(doc, visitedSpots.containsKey(doc.id)))
-        .toList();
+    _allSpots =
+        snapshot.docs.map((doc) => SpotData.fromFirestore(doc, false)).toList();
 
     _updateMarkers();
   }
@@ -134,26 +126,21 @@ class _MapPageState extends ConsumerState<MapPage> {
       });
     } else {
       for (var spot in _allSpots) {
-        if (!_showOnlyVisited || spot.isVisited) {
-          newMarkers.add(Marker(
-            markerId: MarkerId(spot.id),
-            position: spot.location,
-            icon: spot.isVisited
-                ? BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue)
-                : BitmapDescriptor.defaultMarker,
-            infoWindow: InfoWindow(
-              title: spot.name,
-              snippet: spot.work,
-            ),
-            onTap: () async => _showSpotDetails(
-              await FirebaseFirestore.instance
-                  .collection('spots')
-                  .doc(spot.id)
-                  .get(),
-            ),
-          ));
-        }
+        newMarkers.add(Marker(
+          markerId: MarkerId(spot.id),
+          position: spot.location,
+          icon: BitmapDescriptor.defaultMarker,
+          infoWindow: InfoWindow(
+            title: spot.name,
+            snippet: spot.work,
+          ),
+          onTap: () async => _showSpotDetails(
+            await FirebaseFirestore.instance
+                .collection('spots')
+                .doc(spot.id)
+                .get(),
+          ),
+        ));
       }
     }
 
@@ -308,33 +295,9 @@ class _MapPageState extends ConsumerState<MapPage> {
     _overlayEntry = null;
   }
 
-  Future<void> _fetchVisitedSpots() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final visitedSpotsSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('visited_spots')
-          .get();
-
-      final visitedSpots = visitedSpotsSnapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'spotId': data['spotId'],
-          'spotName': data['spotName'],
-        };
-      }).toList();
-
-      ref.read(visitedSpotsProvider.notifier).setVisitedSpots(visitedSpots);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    ref.listen(visitedSpotsProvider, (previous, next) {
-      _fetchSpots();
-    });
 
     return Scaffold(
       body: Stack(
@@ -436,43 +399,6 @@ class _MapPageState extends ConsumerState<MapPage> {
                   child: const Icon(Icons.add_location, size: 30),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            top: 110,
-            left: 10,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _showOnlyVisited = !_showOnlyVisited;
-                });
-                _fetchSpots();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _showOnlyVisited ? Colors.blue : Colors.grey,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.registered,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],

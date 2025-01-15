@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
 import 'pages/home.dart';
 import 'dart:convert';
-import 'pages/registration.dart';
+import 'pages/posts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -140,8 +140,7 @@ class AppWithBottomNavigation extends ConsumerStatefulWidget {
       AppWithBottomNavigationState();
 }
 
-class AppWithBottomNavigationState
-    extends ConsumerState<AppWithBottomNavigation> {
+class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation> {
   int _selectedIndex = 0;
   bool _isLoggedIn = false;
   late List<GlobalKey<NavigatorState>> _navigatorKeys;
@@ -193,7 +192,7 @@ class AppWithBottomNavigationState
     _pages = [
       const Home(),
       const MapPage(),
-      const RegistrationPage(),
+      const PostsPage(),
       _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
   }
@@ -257,8 +256,8 @@ class AppWithBottomNavigationState
                   label: AppLocalizations.of(context)!.map,
                 ),
                 BottomNavigationBarItem(
-                  icon: const Icon(Icons.favorite),
-                  label: AppLocalizations.of(context)!.registration,
+                  icon: const Icon(Icons.post_add),
+                  label: AppLocalizations.of(context)!.posts,
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.person),

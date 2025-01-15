@@ -295,5 +295,12 @@
     "reviewRequestTitle": "앱 평가 요청",
     "reviewRequestMessage": "앱을 즐겼나요?\n평가와 리뷰는 개발의 동기부여가 됩니다.",
     "later": "나중에",
-    "review": "평가하기"
+    "review": "평가하기",
+    "recommendedProducts": "추천 상품",
+    "posts": "게시물",
+    "welcomeToPost": "앱의 게시물 기능에 오신 것을 환영합니다!\n오른쪽 하단의 \"+\" 버튼에서 텍스트와 이미지를 게시할 수 있습니다.\n・성지 감상과 추억을 공유하세요\n・다른 사용자의 게시물에 좋아요👍를 달 수 있습니다\n・부적절한 게시물은 운영자에 의해 삭제될 수 있습니다",
+    "hintTextPosts": "게시물을 작성해주세요",
+    "writeComment": "댓글을 작성해주세요",
+    "reportSent": "신고를 전송했습니다",
+    "spotRegistered": "성지를 등록했습니다"
 }

@@ -73,6 +73,19 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       }
       await batch.commit();
 
+      final postsQuery = await _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      final postsBatch = _firestore.batch();
+      for (var doc in postsQuery.docs) {
+        postsBatch.update(doc.reference, {
+          'userName': _usernameController.text,
+        });
+      }
+      await postsBatch.commit();
+
       setState(() {
         _username = _usernameController.text;
         _isEditing = false;

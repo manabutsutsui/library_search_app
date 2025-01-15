@@ -257,132 +257,6 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        Text(AppLocalizations.of(context)!.spotMemo,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final subscriptionState =
-                                ref.watch(subscriptionProvider);
-
-                            return subscriptionState.when(
-                              data: (isPro) {
-                                if (isPro) {
-                                  return FutureBuilder<DocumentSnapshot>(
-                                    future: FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(FirebaseAuth
-                                            .instance.currentUser?.uid)
-                                        .collection('seichi_notes')
-                                        .doc(widget.spot.id)
-                                        .get(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Center(
-                                            child: CircularProgressIndicator());
-                                      }
-
-                                      if (!snapshot.hasData ||
-                                          !snapshot.data!.exists) {
-                                        return const SizedBox.shrink();
-                                      }
-
-                                      final noteData = snapshot.data!.data()
-                                          as Map<String, dynamic>;
-                                      final note = noteData['note'] as String?;
-
-                                      if (note == null || note.isEmpty) {
-                                        return const SizedBox.shrink();
-                                      }
-
-                                      return Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[100],
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: Colors.grey[300]!),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              note,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                height: 1.5,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              AppLocalizations.of(context)!
-                                                  .yourMemo,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }
-                                return Column(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.blue,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Builder(
-                                        builder: (BuildContext context) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              DefaultTabController.of(context)
-                                                  .animateTo(1);
-                                            },
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Image.asset(
-                                                'assets/subscription_images/seichi_note.png',
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Center(
-                                      child: Text(
-                                        AppLocalizations.of(context)!.yourMemo2,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color.fromARGB(
-                                              255, 119, 119, 119),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                              loading: () => const Center(
-                                  child: CircularProgressIndicator()),
-                              error: (_, __) => const SizedBox.shrink(),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 32),
                         Text('・${AppLocalizations.of(context)!.workName}',
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
@@ -1012,7 +886,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               );
             }
           },
-          child: const Icon(Icons.edit),
+          backgroundColor: Colors.blue,
+          child: const Icon(Icons.edit, color: Colors.white),
         ),
       ),
     );

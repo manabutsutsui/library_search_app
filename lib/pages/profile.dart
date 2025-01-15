@@ -4,10 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'spot_detail.dart';
 import 'setting.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
@@ -21,16 +18,10 @@ class ProfilePage extends ConsumerStatefulWidget {
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends ConsumerState<ProfilePage>
-    with SingleTickerProviderStateMixin {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   String? _username;
   String? _profileImageUrl;
-  late TabController _tabController;
   late Stream<DocumentSnapshot> _userStream;
-  late Stream<QuerySnapshot> _reviewsStream;
-  late Stream<QuerySnapshot> _visitedSpotsStream;
-  int _reviewCount = 0;
-  int _visitedSpotsCount = 0;
   String? _xAccountUrl;
   String? _instagramAccountUrl;
   String? _tiktokAccountUrl;
@@ -39,7 +30,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   void initState() {
     super.initState();
     _initStreams();
-    _tabController = TabController(length: 2, vsync: this);
     _loadSocialAccounts();
   }
 
@@ -50,34 +40,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           .collection('users')
           .doc(user.uid)
           .snapshots();
-
-      _reviewsStream = FirebaseFirestore.instance
-          .collection('reviews')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('timestamp', descending: true)
-          .snapshots();
-
-      _visitedSpotsStream = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('visited_spots')
-          .snapshots();
-
-      _reviewsStream.listen((snapshot) {
-        if (mounted) {
-          setState(() {
-            _reviewCount = snapshot.docs.length;
-          });
-        }
-      });
-
-      _visitedSpotsStream.listen((snapshot) {
-        if (mounted) {
-          setState(() {
-            _visitedSpotsCount = snapshot.docs.length;
-          });
-        }
-      });
     }
   }
 
@@ -96,31 +58,57 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     }
   }
 
-  void showXAccountDialog() {
+  void showSocialAccountDialog({
+    required String type,
+    required String? currentUrl,
+    required String baseUrl,
+    required String prefixText,
+    required Function(String?) onSave,
+  }) {
     final l10n = AppLocalizations.of(context)!;
-    final TextEditingController controller =
-        TextEditingController(text: _xAccountUrl);
+    String? cleanCurrentUrl;
+
+    switch (type) {
+      case 'x':
+        cleanCurrentUrl = currentUrl?.replaceAll('https://x.com/', '');
+        break;
+      case 'instagram':
+        cleanCurrentUrl =
+            currentUrl?.replaceAll('https://www.instagram.com/', '');
+        break;
+      case 'tiktok':
+        cleanCurrentUrl =
+            currentUrl?.replaceAll('https://www.tiktok.com/@', '');
+        break;
+    }
+
+    final controller = TextEditingController(text: cleanCurrentUrl);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.xAccountSetting,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          _getSocialTitle(type, l10n),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'https://x.com/@username',
-                prefixText: 'https://x.com/',
+              decoration: InputDecoration(
+                labelText: '$baseUrl@username',
+                prefixText: prefixText,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.enterXAccountUrl,
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+            if (type == 'x') ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.enterXAccountUrl,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -134,151 +122,90 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               if (username.startsWith('@')) {
                 username = username.substring(1);
               }
-              final url = 'https://x.com/$username';
+              final url = username.isEmpty ? null : '$baseUrl$username';
+
               await FirebaseFirestore.instance
                   .collection('users')
                   .doc(FirebaseAuth.instance.currentUser?.uid)
-                  .update({'xAccountUrl': url});
-              setState(() {
-                _xAccountUrl = url;
-              });
+                  .update({'${type}AccountUrl': url});
+
+              onSave(url);
+
               if (mounted) {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(l10n.xAccountUpdated,
-                          style: const TextStyle(fontWeight: FontWeight.bold))),
-                );
+                _showUpdateSnackBar(type, url, l10n);
               }
             },
-            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(l10n.save,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
+    );
+  }
+
+  String _getSocialTitle(String type, AppLocalizations l10n) {
+    switch (type) {
+      case 'x':
+        return l10n.xAccountSetting;
+      case 'instagram':
+        return l10n.instagramAccountSetting;
+      case 'tiktok':
+        return l10n.tiktokAccountSetting;
+      default:
+        return '';
+    }
+  }
+
+  void _showUpdateSnackBar(String type, String? url, AppLocalizations l10n) {
+    String message;
+    switch (type) {
+      case 'x':
+        message = l10n.xAccountUpdated;
+        break;
+      case 'tiktok':
+        message =
+            url == null ? l10n.tiktokAccountDeleted : l10n.tiktokAccountUpdated;
+        break;
+      default:
+        return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(message,
+              style: const TextStyle(fontWeight: FontWeight.bold))),
+    );
+  }
+
+  void showXAccountDialog() {
+    showSocialAccountDialog(
+      type: 'x',
+      currentUrl: _xAccountUrl,
+      baseUrl: 'https://x.com/',
+      prefixText: 'https://x.com/',
+      onSave: (url) => setState(() => _xAccountUrl = url),
     );
   }
 
   void showInstagramAccountDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final TextEditingController controller = TextEditingController(
-        text:
-            _instagramAccountUrl?.replaceAll('https://www.instagram.com/', ''));
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.instagramAccountSetting,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'https://www.instagram.com/username',
-                prefixText: 'https://www.instagram.com/',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              String username = controller.text.trim();
-              if (username.startsWith('@')) {
-                username = username.substring(1);
-              }
-              final url = username.isEmpty
-                  ? null
-                  : 'https://www.instagram.com/$username';
-
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                  .update({'instagramAccountUrl': url});
-
-              if (mounted) {
-                Navigator.pop(context);
-              }
-            },
-            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+    showSocialAccountDialog(
+      type: 'instagram',
+      currentUrl: _instagramAccountUrl,
+      baseUrl: 'https://www.instagram.com/',
+      prefixText: 'https://www.instagram.com/',
+      onSave: (url) => setState(() => _instagramAccountUrl = url),
     );
   }
 
   void showTiktokAccountDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final TextEditingController controller = TextEditingController(
-        text: _tiktokAccountUrl?.replaceAll('https://www.tiktok.com/@', ''));
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.tiktokAccountSetting,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'https://www.tiktok.com/@username',
-                prefixText: 'https://www.tiktok.com/@',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              String username = controller.text.trim();
-              if (username.startsWith('@')) {
-                username = username.substring(1);
-              }
-              final url =
-                  username.isEmpty ? null : 'https://www.tiktok.com/@$username';
-
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                  .update({'tiktokAccountUrl': url});
-
-              setState(() {
-                _tiktokAccountUrl = url;
-              });
-
-              if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(url == null
-                        ? l10n.tiktokAccountDeleted
-                        : l10n.tiktokAccountUpdated),
-                  ),
-                );
-              }
-            },
-            child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+    showSocialAccountDialog(
+      type: 'tiktok',
+      currentUrl: _tiktokAccountUrl,
+      baseUrl: 'https://www.tiktok.com/@',
+      prefixText: 'https://www.tiktok.com/@',
+      onSave: (url) => setState(() => _tiktokAccountUrl = url),
     );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _pickImage() async {
@@ -327,6 +254,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           });
         }
         await batch.commit();
+
+        final postsQuery = await FirebaseFirestore.instance
+            .collection('posts')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        final postsBatch = FirebaseFirestore.instance.batch();
+        for (var doc in postsQuery.docs) {
+          postsBatch.update(doc.reference, {
+            'userImage': downloadUrl,
+          });
+        }
+        await postsBatch.commit();
 
         setState(() {
           _profileImageUrl = downloadUrl;
@@ -384,25 +324,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               const SizedBox(height: 16),
               _buildProfileHeader(context),
               const SizedBox(height: 16),
-              TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: l10n.kuchikomi),
-                  Tab(text: l10n.bookmarks),
-                ],
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildReviewsTab(),
-                      _buildBookmarksTab(),
-                    ],
-                  ),
-                ),
-              ),
             ],
           );
         },
@@ -444,15 +365,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Row(
-                  children: [
-                    _buildStatItem(
-                        Icons.rate_review, '$_reviewCount', l10n.kuchikomi),
-                    const SizedBox(width: 16),
-                    _buildStatItem(
-                        Icons.place, '$_visitedSpotsCount', l10n.seichitouroku),
-                  ],
-                ),
                 const SizedBox(height: 8),
                 _buildSocialIcons(),
               ],
@@ -478,8 +390,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               );
               return;
             }
-            if (_xAccountUrl != null) {
-              launchUrl(Uri.parse(_xAccountUrl!));
+            if (_xAccountUrl == null) {
+              showXAccountDialog();
+            } else {
+              launchUrl(Uri.parse(_xAccountUrl!),
+                  mode: LaunchMode.externalApplication);
             }
           },
           child: Image.asset(
@@ -500,8 +415,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               );
               return;
             }
-            if (_instagramAccountUrl != null) {
-              launchUrl(Uri.parse(_instagramAccountUrl!));
+            if (_instagramAccountUrl == null) {
+              showInstagramAccountDialog();
+            } else {
+              launchUrl(Uri.parse(_instagramAccountUrl!),
+                  mode: LaunchMode.externalApplication);
             }
           },
           child: Image.asset(
@@ -522,8 +440,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               );
               return;
             }
-            if (_tiktokAccountUrl != null) {
-              launchUrl(Uri.parse(_tiktokAccountUrl!));
+            if (_tiktokAccountUrl == null) {
+              showTiktokAccountDialog();
+            } else {
+              launchUrl(Uri.parse(_tiktokAccountUrl!),
+                  mode: LaunchMode.externalApplication);
             }
           },
           child: Image.asset(
@@ -531,353 +452,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             width: 24,
             height: 24,
             color: _tiktokAccountUrl != null ? null : Colors.grey,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBookmarksTab() {
-    final l10n = AppLocalizations.of(context)!;
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
-          .collection('bookmarks')
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Center(child: Text(l10n.errorOccurred));
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.bookmark_border,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.noBookmarks,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            final doc = snapshot.data!.docs[index];
-            final data = doc.data() as Map<String, dynamic>;
-            return ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Icon(Icons.place, size: 24, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Text(data['name'] ?? l10n.unknown,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              subtitle: Text('${l10n.address}: ${data['address'] ?? l10n.unknownAddress}',
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () async {
-                final spotDoc = await FirebaseFirestore.instance
-                    .collection('spots')
-                    .doc(data['spotId'])
-                    .get();
-
-                if (spotDoc.exists) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SpotDetailPage(spot: spotDoc),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.spotNotFound)),
-                  );
-                }
-              },
-              trailing: const Icon(Icons.chevron_right),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildReviewsTab() {
-    final l10n = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return Center(child: Text(l10n.loginRequired));
-    }
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('reviews')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Center(child: Text(l10n.errorOccurred));
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.rate_review, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(l10n.noReviews,
-                    style: const TextStyle(color: Colors.grey, fontSize: 16)),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            final review = snapshot.data!.docs[index];
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (review['imageUrl'] != null)
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(8)),
-                        child: Image.network(
-                          review['imageUrl'],
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: review['userProfileImage'] !=
-                                        null
-                                    ? NetworkImage(review['userProfileImage'])
-                                    : null,
-                                child: review['userProfileImage'] == null
-                                    ? const Icon(Icons.person)
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      review['userName'] ?? l10n.unknown,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      '${l10n.postedDate}: ${review['timestamp'] != null ? DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate()) : l10n.unknownDate}',
-                                      style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          ListTile(
-                                            leading: const Icon(Icons.delete,
-                                                color: Colors.red),
-                                            title: Text(l10n.delete,
-                                                style: const TextStyle(
-                                                    color: Colors.red)),
-                                            onTap: () async {
-                                              final bool? confirmDelete =
-                                                  await showDialog<bool>(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    title: Text(l10n.confirm),
-                                                    content: Text(
-                                                        l10n.deleteReviewConfirm,
-                                                        style: const TextStyle(
-                                                            fontSize: 12)),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        child: Text(l10n.cancel),
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(false),
-                                                      ),
-                                                      TextButton(
-                                                        child: Text(l10n.delete,
-                                                            style: const TextStyle(
-                                                                color: Colors
-                                                                    .red)),
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(true),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-
-                                              if (confirmDelete == true) {
-                                                try {
-                                                  if (review['imageUrl'] !=
-                                                      null) {
-                                                    try {
-                                                      final storageRef =
-                                                          FirebaseStorage
-                                                              .instance
-                                                              .refFromURL(review[
-                                                                  'imageUrl']);
-                                                      await storageRef.delete();
-                                                    } catch (e) {
-                                                      // print(
-                                                          // '画像の削除中にエラーが発生しました: $e');
-                                                    }
-                                                  }
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('reviews')
-                                                      .doc(review.id)
-                                                      .delete();
-
-                                                  Navigator.of(context).pop();
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                        content:
-                                                            Text(l10n.reviewDeleted)),
-                                                  );
-                                                } catch (e) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                        content: Text(
-                                                            l10n.reviewDeleteError)),
-                                                  );
-                                                }
-                                              } else {
-                                                Navigator.of(context).pop();
-                                              }
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(Icons.cancel),
-                                            title: Text(l10n.cancel),
-                                            onTap: () {
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                                icon: const Icon(Icons.more_vert),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              RatingBarIndicator(
-                                rating: review['rating'].toDouble(),
-                                itemBuilder: (context, index) => const Icon(
-                                  Icons.star,
-                                  color: Colors.orange,
-                                ),
-                                itemCount: 5,
-                                itemSize: 20.0,
-                                direction: Axis.horizontal,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(': ${l10n.seichitourokuSatisfaction}'),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            review['review'],
-                            style: TextStyle(color: Colors.grey[800]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildStatItem(IconData icon, String count, String label) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.blue),
-        const SizedBox(width: 4),
-        Text(
-          count,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
           ),
         ),
       ],
