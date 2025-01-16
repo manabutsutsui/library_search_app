@@ -318,6 +318,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -88,11 +88,12 @@ class _SeichiSearchBottomSheetState extends State<SeichiSearchBottomSheet> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(l10n.selectHolyPlace,
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

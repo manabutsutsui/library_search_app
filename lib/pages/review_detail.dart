@@ -25,6 +25,7 @@ class ReviewDetailPage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: Colors.white)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Padding(

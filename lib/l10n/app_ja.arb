@@ -302,5 +302,13 @@
     "hintTextPosts": "投稿文を書いてください",
     "writeComment": "コメントを書く...",
     "reportSent": "報告を送信しました",
-    "spotRegistered": "聖地を登録しました"
+    "spotRegistered": "聖地を登録しました",
+    "favorite": "いいね",
+    "editBio": "自己紹介を編集",
+    "bioHint": "自己紹介を入力してください",
+    "bioUpdated": "自己紹介を更新しました",
+    "tapToAddBio": "タップして自己紹介を追加",
+    "myKuchikomi": "口コミ一覧",
+    "needLogin": "ログインが必要です",
+    "noKuchikomi": "口コミはありません"
 } 

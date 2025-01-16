@@ -69,6 +69,7 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   flutter_google_street_view: ^1.0.2
   timeago: ^3.7.0
+  rxdart: ^0.27.7
 
 flutter_icons:
   android: true

@@ -147,6 +147,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                     fontWeight: FontWeight.bold,
                     fontSize: 16)),
             backgroundColor: Colors.blue,
+            iconTheme: const IconThemeData(color: Colors.white),
           ),
           body: SingleChildScrollView(
             child: Column(

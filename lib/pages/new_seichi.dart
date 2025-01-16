@@ -22,6 +22,7 @@ class NewSeichiPage extends StatelessWidget {
           ),
         ),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

@@ -302,5 +302,13 @@
     "hintTextPosts": "写一篇帖子",
     "writeComment": "写评论...",
     "reportSent": "举报已发送",
-    "spotRegistered": "圣地已登记"
+    "spotRegistered": "圣地已登记",
+    "favorite": "喜欢",
+    "editBio": "编辑个人简介",
+    "bioHint": "输入个人简介",
+    "bioUpdated": "个人简介已更新",
+    "tapToAddBio": "点击添加个人简介",
+    "myKuchikomi": "我的评论",
+    "needLogin": "需要登录",
+    "noKuchikomi": "没有评论"
 }

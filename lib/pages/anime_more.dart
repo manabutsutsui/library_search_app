@@ -63,6 +63,7 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
           ),
         ),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [

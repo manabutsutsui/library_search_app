@@ -146,6 +146,7 @@ class RankingCommentPageState extends ConsumerState<RankingCommentPage> {
         backgroundColor: Colors.blue,
         title: Text(l10n.rankingComment, 
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

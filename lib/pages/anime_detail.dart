@@ -50,6 +50,7 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
           )
         ),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Column(

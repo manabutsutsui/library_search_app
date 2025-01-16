@@ -104,6 +104,7 @@ class CreatePostPageState extends State<CreatePostPage> {
             ),
           ),
         ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [

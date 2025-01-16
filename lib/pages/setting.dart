@@ -220,6 +220,7 @@ class SettingPageState extends ConsumerState<SettingPage> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Padding(

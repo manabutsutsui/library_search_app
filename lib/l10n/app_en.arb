@@ -302,5 +302,13 @@
     "hintTextPosts": "Write a post",
     "writeComment": "Write a comment",
     "reportSent": "Report Sent",
-    "spotRegistered": "Holy Place Registered"
+    "spotRegistered": "Holy Place Registered",
+    "favorite": "Favorite",
+    "editBio": "Edit Bio",
+    "bioHint": "Enter Bio",
+    "bioUpdated": "Bio Updated",
+    "tapToAddBio": "Tap to Add Bio",
+    "myKuchikomi": "My Reviews",
+    "needLogin": "Login Required",
+    "noKuchikomi": "No Reviews"
 }

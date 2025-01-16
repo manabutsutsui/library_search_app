@@ -107,6 +107,7 @@ class ReviewFormState extends State<ReviewForm> {
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

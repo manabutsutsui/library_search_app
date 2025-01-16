@@ -169,6 +169,7 @@ class RankingReviewPageState extends ConsumerState<RankingReviewPage> {
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

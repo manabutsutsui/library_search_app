@@ -93,6 +93,7 @@ class _AnimeSearchBottomSheetState extends State<AnimeSearchBottomSheet> {
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

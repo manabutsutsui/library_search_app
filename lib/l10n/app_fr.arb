@@ -302,5 +302,13 @@
     "hintTextPosts": "Écrivez un post",
     "writeComment": "Écrivez un commentaire...",
     "reportSent": "Signalement envoyé",
-    "spotRegistered": "Lieu saint enregistré"
+    "spotRegistered": "Lieu saint enregistré",
+    "favorite": "Favoris",
+    "editBio": "Éditer la biographie",
+    "bioHint": "Entrer la biographie",
+    "bioUpdated": "Biographie mise à jour",
+    "tapToAddBio": "Cliquer pour ajouter la biographie",
+    "myKuchikomi": "Liste des critiques",
+    "needLogin": "Connexion nécessaire",
+    "noKuchikomi": "Aucune critique"
 }

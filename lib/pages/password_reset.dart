@@ -45,6 +45,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
           )
         ),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -15,6 +15,7 @@ class ReviewsListPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.reviewList, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

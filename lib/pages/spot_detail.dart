@@ -185,6 +185,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
             labelColor: Colors.white,
             indicatorColor: Colors.white,
           ),
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: TabBarView(
           children: [
