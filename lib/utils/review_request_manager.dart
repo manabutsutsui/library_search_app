@@ -12,25 +12,26 @@ class ReviewRequestManager {
 
   static Future<void> checkAndShowReviewDialog(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // 初回起動日時を取得または保存
-    final firstLaunchDate = prefs.getInt(_keyFirstLaunchDate) ?? 
+    final firstLaunchDate = prefs.getInt(_keyFirstLaunchDate) ??
         DateTime.now().millisecondsSinceEpoch;
     await prefs.setInt(_keyFirstLaunchDate, firstLaunchDate);
 
     // レビューダイアログが既に表示されているか確認
-    final hasShownReviewDialog = prefs.getBool(_keyHasShownReviewDialog) ?? false;
+    final hasShownReviewDialog =
+        prefs.getBool(_keyHasShownReviewDialog) ?? false;
     if (hasShownReviewDialog) return;
 
     // 初回起動から24時間経過しているか確認
     final now = DateTime.now().millisecondsSinceEpoch;
-    final daysSinceFirstLaunch = 
+    final daysSinceFirstLaunch =
         (now - firstLaunchDate) / (1000 * 60 * 60 * 24);
 
     if (daysSinceFirstLaunch >= 1) {
       // ダイアログを表示済みとしてマーク
       await prefs.setBool(_keyHasShownReviewDialog, true);
-      
+
       if (context.mounted) {
         _showReviewDialog(context);
       }
@@ -39,12 +40,14 @@ class ReviewRequestManager {
 
   static void _showReviewDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.reviewRequestTitle),
-        content: Text(l10n.reviewRequestMessage),
+        title: Text(l10n.reviewRequestTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Text(l10n.reviewRequestMessage,
+            style: const TextStyle(fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -53,7 +56,8 @@ class ReviewRequestManager {
           TextButton(
             onPressed: () async {
               if (Platform.isAndroid) {
-                final url = 'market://details?id=com.your.package.name';  // あなたのアプリのPackage名に置き換えてください
+                final url =
+                    'market://details?id=com.your.package.name'; // あなたのアプリのPackage名に置き換えてください
                 if (await canLaunch(url)) {
                   await launch(url);
                 }

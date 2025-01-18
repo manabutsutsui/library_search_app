@@ -501,7 +501,6 @@ class PostsPage extends ConsumerWidget {
                                                       );
                                                     },
                                                     child: CircleAvatar(
-                                                      radius: 12,
                                                       backgroundImage: commentData[
                                                                   'userImage'] !=
                                                               null
@@ -581,7 +580,6 @@ class PostsPage extends ConsumerWidget {
                                                                   const BoxConstraints(),
                                                               icon: const Icon(
                                                                 Icons.more_vert,
-                                                                size: 16,
                                                               ),
                                                               onPressed: () {
                                                                 final currentUser =

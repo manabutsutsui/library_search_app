@@ -13,6 +13,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:rxdart/rxdart.dart';
 import 'user_kuchikomi.dart';
 import 'bookmarks.dart';
+import 'user_posts.dart';
+import 'liked_posts.dart';
+import '../utils/seichi_de_dekirukoto.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -372,7 +375,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 title: l10n.posts,
                 count: postCount,
                 onTap: () {
-                  // TODO: 投稿一覧への遷移
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserPostsPage(userId: userId),
+                    ),
+                  );
                 },
               ),
               Divider(height: 1, color: Colors.grey[300]),
@@ -381,7 +389,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 title: l10n.favorite,
                 count: favoriteCount,
                 onTap: () {
-                  // TODO: お気に入り一覧への遷移
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LikedPostsPage(),
+                    ),
+                  );
                 },
               ),
             ],
@@ -535,10 +548,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                _buildProfileHeader(context),
-                const SizedBox(height: 16),
-                _buildUserStats(context),
-                const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -563,6 +572,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         fit: BoxFit.cover,
                       ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildProfileHeader(context),
+                const SizedBox(height: 16),
+                _buildUserStats(context),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (context) => const SeichiDeDekirukoto(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                        child: Text(l10n.howToUseSeichi,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                                color: Colors.white))),
                   ),
                 ),
               ],

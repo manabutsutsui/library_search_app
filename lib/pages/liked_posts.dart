@@ -7,10 +7,8 @@ import '../utils/comment.dart';
 import 'other_user_profile.dart';
 import 'package:uuid/uuid.dart';
 
-class UserPostsPage extends StatelessWidget {
-  final String userId;
-
-  const UserPostsPage({super.key, required this.userId});
+class LikedPostsPage extends StatelessWidget {
+  const LikedPostsPage({super.key});
 
   Future<void> _toggleLike(
       String postId, bool isLiked, List<String> likedBy) async {
@@ -137,45 +135,24 @@ class UserPostsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _deleteComment(String postId, String commentId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(postId)
-          .collection('comments')
-          .doc(commentId)
-          .delete();
-    } catch (e) {
-      // エラー処理
-    }
-  }
-
-  Future<void> _reportComment(BuildContext context, String commentId) async {
-    try {
-      await FirebaseFirestore.instance.collection('reports').add({
-        'commentId': commentId,
-        'reportedAt': FieldValue.serverTimestamp(),
-        'reportedBy': FirebaseAuth.instance.currentUser?.uid,
-        'type': 'comment',
-      });
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.reportSent)),
-        );
-      }
-    } catch (e) {
-      // エラー処理
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.favorite),
+        ),
+        body: Center(child: Text(l10n.errorOccurred)),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(l10n.posts,
+        title: Text(l10n.favorite,
             style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -186,7 +163,7 @@ class UserPostsPage extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('posts')
-            .where('userId', isEqualTo: userId)
+            .where('likedBy', arrayContains: user.uid)
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -209,9 +186,7 @@ class UserPostsPage extends StatelessWidget {
               final createdAt = timestamp?.toDate() ?? DateTime.now();
 
               final likedBy = List<String>.from(post['likedBy'] ?? []);
-              final currentUser = FirebaseAuth.instance.currentUser;
-              final isLiked =
-                  currentUser != null && likedBy.contains(currentUser.uid);
+              final isLiked = likedBy.contains(user.uid);
               final likesCount = post['likes'] ?? 0;
 
               return Column(
@@ -326,19 +301,6 @@ class UserPostsPage extends StatelessWidget {
                                   padding: const EdgeInsets.only(bottom: 8.0),
                                   child: Text(post['text']),
                                 ),
-                              if (post['imageUrl'] != null)
-                                Column(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      child: Image.network(
-                                        post['imageUrl'],
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ],
-                                ),
                               Row(
                                 children: [
                                   IconButton(
@@ -377,7 +339,6 @@ class UserPostsPage extends StatelessWidget {
                                     onPressed: () {
                                       _showCommentDialog(context, postId);
                                     },
-                                    color: Colors.grey[600],
                                   ),
                                   StreamBuilder<QuerySnapshot>(
                                     stream: FirebaseFirestore.instance
@@ -395,178 +356,6 @@ class UserPostsPage extends StatelessWidget {
                                     },
                                   ),
                                 ],
-                              ),
-                              StreamBuilder<QuerySnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection('posts')
-                                    .doc(postId)
-                                    .collection('comments')
-                                    .orderBy('createdAt', descending: false)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  final comments = snapshot.data!.docs;
-                                  if (comments.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  return Column(
-                                    children: comments.map((comment) {
-                                      final commentData = comment.data()
-                                          as Map<String, dynamic>;
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 8.0),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        OtherUserProfilePage(
-                                                      userId:
-                                                          commentData['userId'],
-                                                      userName: commentData[
-                                                              'userName'] ??
-                                                          l10n.unknown,
-                                                      profileImage: commentData[
-                                                          'userImage'],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                              child: CircleAvatar(
-                                                backgroundImage:
-                                                    commentData['userImage'] !=
-                                                            null
-                                                        ? NetworkImage(
-                                                            commentData[
-                                                                'userImage'])
-                                                        : null,
-                                                child: commentData[
-                                                            'userImage'] ==
-                                                        null
-                                                    ? const Icon(Icons.person)
-                                                    : null,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        commentData[
-                                                                'userName'] ??
-                                                            l10n.unknown,
-                                                        style: const TextStyle(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                      IconButton(
-                                                        style:
-                                                            const ButtonStyle(
-                                                          tapTargetSize:
-                                                              MaterialTapTargetSize
-                                                                  .shrinkWrap,
-                                                        ),
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        constraints:
-                                                            const BoxConstraints(),
-                                                        icon: const Icon(
-                                                            Icons.more_vert),
-                                                        onPressed: () {
-                                                          final currentUser =
-                                                              FirebaseAuth
-                                                                  .instance
-                                                                  .currentUser;
-                                                          final isCommentOwner =
-                                                              currentUser
-                                                                      ?.uid ==
-                                                                  commentData[
-                                                                      'userId'];
-
-                                                          showModalBottomSheet(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return SafeArea(
-                                                                child: Column(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: [
-                                                                    if (isCommentOwner)
-                                                                      ListTile(
-                                                                        leading: const Icon(
-                                                                            Icons
-                                                                                .delete,
-                                                                            color:
-                                                                                Colors.red),
-                                                                        title: Text(
-                                                                            l10n.delete),
-                                                                        onTap:
-                                                                            () {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                          _deleteComment(
-                                                                              postId,
-                                                                              commentData['id']);
-                                                                        },
-                                                                      )
-                                                                    else
-                                                                      ListTile(
-                                                                        leading:
-                                                                            const Icon(Icons.flag),
-                                                                        title: Text(
-                                                                            l10n.report),
-                                                                        onTap:
-                                                                            () {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                          _reportComment(
-                                                                              context,
-                                                                              commentData['id']);
-                                                                        },
-                                                                      ),
-                                                                  ],
-                                                                ),
-                                                              );
-                                                            },
-                                                          );
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Text(
-                                                    commentData['content'] ??
-                                                        '',
-                                                    style: const TextStyle(
-                                                        fontSize: 12),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                },
                               ),
                             ],
                           ),
