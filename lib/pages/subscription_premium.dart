@@ -20,7 +20,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
 
   final List<String> _featureImages = [
     'assets/subscription_images/1.png',
-    // 'assets/subscription_images/2.png',
+    'assets/subscription_images/2.png',
     'assets/subscription_images/3.png',
     'assets/subscription_images/4.png',
     'assets/subscription_images/5.png',
@@ -226,7 +226,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              l10n.monthlyPlan,
+                              '${l10n.monthlyPlan} ・${l10n.premiumMonthlyPlanPrice}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -240,22 +240,27 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 24, vertical: 12),
                               ),
-                              child: Text(
-                                '¥500/${l10n.month}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    l10n.trialPeriod,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(l10n.cancelAnytime),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                                '¥500/${l10n.month} ・${l10n.affordablePrice}',
+                                '${l10n.premiumMonthlyPlanPrice} ・${l10n.affordablePrice}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold)),
                           ],
@@ -295,13 +300,13 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                     backgroundColor: Colors.blue,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 24, vertical: 12),
                                   ),
                                   child: Text(
-                                    '¥5,000/${l10n.year}',
+                                    l10n.premiumAnnualPlanPrice,
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -310,7 +315,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                    '¥5,000/${l10n.year} ・${l10n.affordablePrice}',
+                                    '${l10n.premiumAnnualPlanPrice} ・${l10n.affordablePrice}',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold)),
                               ],

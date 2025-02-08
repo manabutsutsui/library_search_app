@@ -199,7 +199,7 @@
     "scene": "Scène",
     "premiumPlanLimitedFunction": "Plan Premium limité",
     "premiumPlanLimitedFunctionDescription": "Le plan Premium vous permet de voir plus de classements !",
-    "premiumPlanLimitedFunctionDescription2": "◆ Votre propre mémo\n◆ Vous pouvez enregistrer un nombre illimité d'images",
+    "premiumPlanLimitedFunctionDescription2": "◆ Votre propre photo\n◆ Vous pouvez enregistrer un nombre illimité d'images",
     "premiumPlanLimitedFunctionDescription3": "Voir ce mémo pour plus de détails👆",
     "noAvailablePlan": "Aucun plan disponible",
     "noAvailablePackage": "Aucun package disponible",
@@ -274,6 +274,7 @@
     "whatIsSeichiDescription8": "Enregistrer un lieu saint visité",
     "whatIsSeichiDescription9": "Vous pouvez enregistrer un lieu saint visité avec une photo. Sauvegardez vos souvenirs !",
     "whatIsSeichiDescription10": "Achetez le plan Premium pour profiter encore plus de \"Seichi\" !",
+    "whatIsSeichiDescription11": "Profitez encore plus de \"Seichi\" avec le plan Premium !",
     "close": "Fermer",
     "saveSuccess": "Enregistrement réussi",
     "saveError": "Échec de l'enregistrement",
@@ -311,5 +312,12 @@
     "myKuchikomi": "Liste des critiques",
     "needLogin": "Connexion nécessaire",
     "noKuchikomi": "Aucune critique",
-    "howToUseSeichi": "Seichiの使い方"
+    "howToUseSeichi": "Seichiの使い方",
+    "photos": "Photos",
+    "gallery": "Galerie",
+    "users": "Utilisateurs",
+    "trialPeriod": "Commencer 3 jours gratuits",
+    "cancelAnytime": "Annuler à tout moment",
+    "premiumMonthlyPlanPrice": "€2.99/mois",
+    "premiumAnnualPlanPrice": "€39.99/an"
 }

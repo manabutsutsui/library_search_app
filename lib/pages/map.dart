@@ -395,8 +395,9 @@ class _MapPageState extends State<MapPage> {
                   style: ElevatedButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.blue,
                   ),
-                  child: const Icon(Icons.add_location, size: 30),
+                  child: const Icon(Icons.add_location, size: 30, color: Colors.white),
                 ),
               ],
             ),

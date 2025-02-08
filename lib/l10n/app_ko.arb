@@ -199,8 +199,8 @@
     "scene": "등장 장면",
     "premiumPlanLimitedFunction": "PREMIUM 플랜 제한 기능",
     "premiumPlanLimitedFunctionDescription": "PREMIUM 플랜으로 더 많은 기능을 사용할 수 있습니다!",
-    "premiumPlanLimitedFunctionDescription2": "◆ 당신만 볼 수 있는 메모\n◆ 사진을 무제한으로 저장할 수 있습니다",
-    "premiumPlanLimitedFunctionDescription3": "자세한 내용은 이 메모를 탭하세요👆",
+    "premiumPlanLimitedFunctionDescription2": "◆ 당신만 볼 수 있는 사진\n◆ 사진을 무제한으로 저장할 수 있습니다",
+    "premiumPlanLimitedFunctionDescription3": "자세한 내용은 이 사진을 탭하세요👆",
     "noAvailablePlan": "사용 가능한 플랜이 없습니다",
     "noAvailablePackage": "사용 가능한 패키지가 없습니다",
     "premiumPlanPurchaseComplete": "PREMIUM 플랜 구매가 완료되었습니다!",
@@ -274,6 +274,7 @@
     "whatIsSeichiDescription8": "방문한 성지 등록하기",
     "whatIsSeichiDescription9": "사진과 함께 방문한 성지를 등록할 수 있습니다. 기억을 저장하세요!",
     "whatIsSeichiDescription10": "Premium 등록하여 「Seichi」를 더 많이 즐기세요!",
+    "whatIsSeichiDescription11": "Premium 플랜으로 「Seichi」를 더 많이 즐기세요!",
     "close": "닫기",
     "saveSuccess": "저장에 성공했습니다",
     "saveError": "저장에 실패했습니다",
@@ -311,5 +312,12 @@
     "myKuchikomi": "내 리뷰",
     "needLogin": "로그인이 필요합니다",
     "noKuchikomi": "리뷰가 없습니다",
-    "howToUseSeichi": "Seichiの使い方"
+    "howToUseSeichi": "Seichi의 사용법",
+    "photos": "사진",
+    "gallery": "갤러리",
+    "users": "사용자",
+    "trialPeriod": "3일간 무료 트라이얼",
+    "cancelAnytime": "언제든지 취소 가능",
+    "premiumMonthlyPlanPrice": "₩4,400.00/월",
+    "premiumAnnualPlanPrice": "₩49,000.00/년"
 }

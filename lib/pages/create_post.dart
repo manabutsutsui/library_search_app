@@ -84,76 +84,79 @@ class CreatePostPageState extends State<CreatePostPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _createPost,
-            child: Text(
-              l10n.posts,
-              style: TextStyle(
-                color: _textController.text.isNotEmpty || _image != null
-                    ? Colors.blue
-                    : Colors.grey,
-                fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isLoading ? null : _createPost,
+              child: Text(
+                l10n.posts,
+                style: TextStyle(
+                  color: _textController.text.isNotEmpty || _image != null
+                      ? Colors.blue
+                      : Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    controller: _textController,
-                    maxLines: null,
-                    decoration: InputDecoration(
-                      hintText: l10n.hintTextPosts,
-                      border: InputBorder.none,
-                    ),
-                    onChanged: (text) => setState(() {}),
-                  ),
-                ),
-                if (_image != null)
-                  Stack(
-                    children: [
-                      Image.file(_image!),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => setState(() => _image = null),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-          if (_isLoading) const Center(child: CircularProgressIndicator()),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.photo_library),
-              onPressed: _pickImage,
-            ),
           ],
+          // iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      controller: _textController,
+                      maxLines: null,
+                      decoration: InputDecoration(
+                        hintText: l10n.hintTextPosts,
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (text) => setState(() {}),
+                    ),
+                  ),
+                  if (_image != null)
+                    Stack(
+                      children: [
+                        Image.file(_image!),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => setState(() => _image = null),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            if (_isLoading) const Center(child: CircularProgressIndicator()),
+          ],
+        ),
+        bottomNavigationBar: BottomAppBar(
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.photo_library),
+                onPressed: _pickImage,
+              ),
+            ],
+          ),
         ),
       ),
     );

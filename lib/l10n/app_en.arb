@@ -199,7 +199,7 @@
     "scene": "Scene",
     "premiumPlanLimitedFunction": "PREMIUM plan limited function",
     "premiumPlanLimitedFunctionDescription": "PREMIUM plan allows you to use more functions!",
-    "premiumPlanLimitedFunctionDescription2": "◆ Your own memo\n◆ You can save as many photos as you want",
+    "premiumPlanLimitedFunctionDescription2": "◆ Your own photo\n◆ You can take photos and save as many photos as you want",
     "premiumPlanLimitedFunctionDescription3": "See this memo for details👆",
     "noAvailablePlan": "No available plan",
     "noAvailablePackage": "No available package",
@@ -273,7 +273,8 @@
     "whatIsSeichiDescription7": "You can search for holy places from reviews. You can find your ideal holy place by referring to other users' posts!",
     "whatIsSeichiDescription8": "Register visited holy places",
     "whatIsSeichiDescription9": "You can register visited holy places with photos. Save your memories together!",
-    "whatIsSeichiDescription10": "Register Premium to enjoy \"Seichi\" more!",
+    "whatIsSeichiDescription10": "Premium Plan",
+    "whatIsSeichiDescription11": "Enjoy \"Seichi\" more with Premium Plan!",
     "close": "Close",
     "saveSuccess": "Save Success",
     "saveError": "Save Error",
@@ -311,5 +312,12 @@
     "myKuchikomi": "My Reviews",
     "needLogin": "Login Required",
     "noKuchikomi": "No Reviews",
-    "howToUseSeichi": "How to Use Seichi"
+    "howToUseSeichi": "How to Use Seichi",
+    "photos": "Photos",
+    "gallery": "Gallery",
+    "users": "Users",
+    "trialPeriod": "Start 3-day free trial",
+    "cancelAnytime": "Cancel anytime",
+    "premiumMonthlyPlanPrice": "$2.99/month",
+    "premiumAnnualPlanPrice": "$34.99/year"
 }

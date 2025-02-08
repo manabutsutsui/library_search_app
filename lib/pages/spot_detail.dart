@@ -11,9 +11,9 @@ import '../utils/kuchikomi.dart';
 import '../utils/report.dart';
 import 'subscription_premium.dart';
 import '../providers/subscription_state.dart';
-import '../utils/seichi_note.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/seichi_photos.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final DocumentSnapshot spot;
@@ -176,7 +176,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               ),
               Tab(
                 child: Text(
-                  AppLocalizations.of(context)!.note,
+                  AppLocalizations.of(context)!.photos,
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -716,22 +716,22 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
               ),
             ),
             SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final subscriptionState =
-                            ref.watch(subscriptionProvider);
-
-                        return subscriptionState.when(
-                          data: (isPro) {
-                            if (isPro) {
-                              return SeichiNote(spotId: widget.spot.id);
-                            }
-                            return Column(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final subscriptionState =
+                          ref.watch(subscriptionProvider);
+              
+                      return subscriptionState.when(
+                        data: (isPro) {
+                          if (isPro) {
+                            return SeichiPhotos(spotId: widget.spot.id);
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
                               children: [
                                 Center(
                                   child: ElevatedButton(
@@ -820,45 +820,17 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 32),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const SubscriptionPremium(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.blue,
-                                        width: 2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.asset(
-                                        'assets/subscription_images/premium_image_seichi.png',
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               ],
-                            );
-                          },
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (_, __) => const SizedBox.shrink(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                            ),
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (_, __) => const SizedBox.shrink(),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],

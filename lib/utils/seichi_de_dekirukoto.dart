@@ -49,14 +49,9 @@ class _SeichiDeDekirukotoState extends State<SeichiDeDekirukoto> {
         'image': 'assets/registration_page/dekiru_03.png',
       },
       {
-        'title': l10n.whatIsSeichiDescription8,
-        'description': l10n.whatIsSeichiDescription9,
-        'image': 'assets/registration_page/dekiru_04.png',
-      },
-      {
         'title': l10n.whatIsSeichiDescription10,
-        'description': l10n.whatIsSeichiDescription10,
-        'image': 'assets/registration_page/dekiru_05.png',
+        'description': l10n.whatIsSeichiDescription11,
+        'image': 'assets/registration_page/dekiru_04.png',
       },
     ];
   }
