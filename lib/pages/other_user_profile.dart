@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -28,87 +27,17 @@ class OtherUserProfilePage extends StatefulWidget {
 class _OtherUserProfilePageState extends State<OtherUserProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String? _xAccountUrl;
-  String? _instagramAccountUrl;
-  String? _tiktokAccountUrl;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadSocialAccounts();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadSocialAccounts() async {
-    final userData = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .get();
-    setState(() {
-      _xAccountUrl = userData.data()?['xAccountUrl'];
-      _instagramAccountUrl = userData.data()?['instagramAccountUrl'];
-      _tiktokAccountUrl = userData.data()?['tiktokAccountUrl'];
-    });
-  }
-
-  Widget _buildSocialIcons() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: _xAccountUrl != null
-              ? () async {
-                  if (await canLaunch(_xAccountUrl!)) {
-                    await launch(_xAccountUrl!);
-                  }
-                }
-              : null,
-          child: Image.asset(
-            'assets/sns_icon/x_icon.png',
-            width: 24,
-            height: 24,
-            color: _xAccountUrl != null ? null : Colors.grey,
-          ),
-        ),
-        const SizedBox(width: 16),
-        GestureDetector(
-          onTap: _instagramAccountUrl != null
-              ? () async {
-                  if (await canLaunch(_instagramAccountUrl!)) {
-                    await launch(_instagramAccountUrl!);
-                  }
-                }
-              : null,
-          child: Image.asset(
-            'assets/sns_icon/insta_icon.png',
-            width: 24,
-            height: 24,
-            color: _instagramAccountUrl != null ? null : Colors.grey,
-          ),
-        ),
-        const SizedBox(width: 16),
-        GestureDetector(
-          onTap: _tiktokAccountUrl != null
-              ? () async {
-                  if (await canLaunch(_tiktokAccountUrl!)) {
-                    await launch(_tiktokAccountUrl!);
-                  }
-                }
-              : null,
-          child: Image.asset(
-            'assets/sns_icon/tiktok_icon.png',
-            width: 24,
-            height: 24,
-            color: _tiktokAccountUrl != null ? null : Colors.grey,
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildReviewsTab() {
@@ -563,6 +492,7 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage>
                     child: Column(
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CircleAvatar(
                               radius: 40,
@@ -585,25 +515,12 @@ class _OtherUserProfilePageState extends State<OtherUserProfilePage>
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildSocialIcons(),
+                                Text(
+                                  userDocument?['bio'] ?? '',
+                                ),
                               ],
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            userDocument?['bio'] ?? '',
-                          ),
                         ),
                       ],
                     ),

@@ -319,5 +319,11 @@
     "trialPeriod": "3天免费试用",
     "cancelAnytime": "随时取消",
     "premiumMonthlyPlanPrice": "￥22.00/月",
-    "premiumAnnualPlanPrice": "￥228.00/年"
+    "premiumAnnualPlanPrice": "￥228.00/年",
+    "purchaseSuccess": "购买成功",
+    "purchaseFailed": "购买失败",
+    "spotDetailLocked": "圣地详情已锁定",
+    "watchAdToUnlock": "观看广告以查看此圣地的详情",
+    "watchAd": "观看广告",
+    "adLoadError": "广告加载失败"
 }

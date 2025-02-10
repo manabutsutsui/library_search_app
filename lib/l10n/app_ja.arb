@@ -319,5 +319,11 @@
     "trialPeriod": "3日間無料で始める",
     "cancelAnytime": "いつでもキャンセルOK",
     "premiumMonthlyPlanPrice": "¥500/月",
-    "premiumAnnualPlanPrice": "¥5,000/年"
+    "premiumAnnualPlanPrice": "¥5,000/年",
+    "purchaseSuccess": "購入が完了しました",
+    "purchaseFailed": "購入に失敗しました",
+    "spotDetailLocked": "聖地の詳細はロックされています",
+    "watchAdToUnlock": "この聖地の詳細を閲覧するには、広告を視聴する必要があります。",
+    "watchAd": "広告を視聴",
+    "adLoadError": "広告の読み込みに失敗しました"
 } 

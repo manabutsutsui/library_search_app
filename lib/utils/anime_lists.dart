@@ -14,6 +14,12 @@ class AnimeList {
 
 final List<AnimeList> animeList = [
   AnimeList(
+    name: '僕だけがいない街',
+    genre: 'ホラー/サスペンス/推理',
+    imageAsset: 'assets/images/bokudakega.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20527',
+  ),
+  AnimeList(
     name: 'ダンダダン',
     genre: 'ホラー/サスペンス/推理',
     imageAsset: 'assets/images/dandadan.png',

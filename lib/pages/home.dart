@@ -68,7 +68,7 @@ class HomeState extends ConsumerState<Home> {
                 : SliverToBoxAdapter(
                     child: Padding(
                       padding:
-                          const EdgeInsets.only(top: 16, left: 16, right: 16),
+                          const EdgeInsets.only(top: 16, left: 8, right: 8),
                       child: GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -79,19 +79,25 @@ class HomeState extends ConsumerState<Home> {
                           );
                         },
                         child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.blue,
-                              width: 2,
-                            ),
+                            color: Colors.blue,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/subscription_images/premium_image_seichi.png',
-                              fit: BoxFit.cover,
+                          child: Text(
+                            '👑PREMIUM PLAN👑',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.5),
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
@@ -510,8 +516,7 @@ class HomeState extends ConsumerState<Home> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

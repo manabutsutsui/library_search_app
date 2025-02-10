@@ -319,5 +319,11 @@
     "trialPeriod": "Start 3-day free trial",
     "cancelAnytime": "Cancel anytime",
     "premiumMonthlyPlanPrice": "$2.99/month",
-    "premiumAnnualPlanPrice": "$34.99/year"
+    "premiumAnnualPlanPrice": "$34.99/year",
+    "purchaseSuccess": "Purchase completed",
+    "purchaseFailed": "Purchase failed",
+    "spotDetailLocked": "Spot Detail Locked",
+    "watchAdToUnlock": "Watch an ad to view this spot's details",
+    "watchAd": "Watch Ad",
+    "adLoadError": "Failed to load advertisement"
 }

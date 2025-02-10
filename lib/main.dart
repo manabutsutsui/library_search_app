@@ -28,8 +28,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  const isDebug = !bool.fromEnvironment('dart.vm.product');
-
   final config = await loadConfig();
   final configuration = PurchasesConfiguration(
     Platform.isAndroid
@@ -40,8 +38,6 @@ void main() async {
   String appUserId = await _getOrCreateAppUserId();
 
   await Purchases.configure(configuration..appUserID = appUserId);
-
-  Purchases.setDebugLogsEnabled(isDebug);
 
   runApp(
     const ProviderScope(

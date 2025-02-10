@@ -15,6 +15,8 @@ class SubscriptionPremium extends ConsumerStatefulWidget {
 
 class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
   bool _isLoading = false;
+  Offering? _offering;
+  Package? _selectedPackage;
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -29,6 +31,7 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
   @override
   void initState() {
     super.initState();
+    _fetchOfferings();
   }
 
   @override
@@ -37,83 +40,41 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
     super.dispose();
   }
 
-  Future<void> _handlePurchase({bool isAnnual = false}) async {
-    final l10n = AppLocalizations.of(context)!;
+  Future<void> _fetchOfferings() async {
+    try {
+      final offerings = await Purchases.getOfferings();
+      setState(() {
+        _offering = offerings.current;
+        _selectedPackage = _offering?.monthly;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _purchasePackage(Package package) async {
     setState(() {
       _isLoading = true;
     });
-
     try {
-      final offerings = await Purchases.getOfferings();
-      if (offerings.current == null) {
-        throw Exception(l10n.noAvailablePlan);
-      }
-
-      Package? packageToPurchase;
-      final possibleIds = isAnnual ? ['sa_28.86_1y'] : ['sa_399_1m'];
-
-      for (var id in possibleIds) {
-        try {
-          packageToPurchase = offerings.current!.availablePackages.firstWhere(
-              (package) =>
-                  package.identifier == id ||
-                  package.storeProduct.identifier == id);
-          debugPrint('Found package with ID: ${packageToPurchase.identifier}');
-          break;
-        } catch (e) {
-          continue;
-        }
-      }
-
-      if (packageToPurchase == null &&
-          offerings.current!.availablePackages.isNotEmpty) {
-        packageToPurchase = offerings.current!.availablePackages.first;
-        debugPrint(
-            'Using first available package: ${packageToPurchase.identifier}');
-      }
-
-      if (packageToPurchase == null) {
-        throw Exception(l10n.noAvailablePackage);
-      }
-
-      final purchaserInfo = await Purchases.purchasePackage(packageToPurchase);
-      final hasActiveEntitlement = purchaserInfo.entitlements.active.isNotEmpty;
-
-      if (hasActiveEntitlement) {
-        ref.read(subscriptionProvider.notifier).checkSubscription();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.premiumPlanPurchaseComplete),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+      await Purchases.purchasePackage(package);
+      ref.read(subscriptionProvider.notifier).checkSubscription();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.purchaseSuccess)),
+        );
+        Navigator.of(context).pop();
       }
     } catch (e) {
-      debugPrint('Purchase error: $e');
-      if (!mounted) return;
-
-      String errorMessage = l10n.purchaseError;
-
-      if (e.toString().contains('PlatformException')) {
-        errorMessage = l10n.storeCommunicationError;
-      } else if (e.toString().contains('UserCancelled')) {
-        errorMessage = l10n.purchaseCanceled;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
+      debugPrint('Purchase failed: $e');
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.purchaseFailed)),
+        );
       }
     }
   }
@@ -235,7 +196,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                             ),
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : _handlePurchase,
+                              onPressed: _isLoading || _selectedPackage == null
+                                  ? null
+                                  : () => _purchasePackage(_selectedPackage!),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
@@ -293,9 +256,11 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 ),
                                 const SizedBox(height: 8),
                                 ElevatedButton(
-                                  onPressed: _isLoading
+                                  onPressed: _isLoading ||
+                                          _offering?.annual == null
                                       ? null
-                                      : () => _handlePurchase(isAnnual: true),
+                                      : () =>
+                                          _purchasePackage(_offering!.annual!),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue,
                                     foregroundColor: Colors.white,
@@ -409,15 +374,13 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer1,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer1, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq2,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer2,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer2, textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL('https://x.com/gaku29189'),
@@ -434,15 +397,13 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer3,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer3, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq4,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer4,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer4, textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL(
@@ -460,43 +421,37 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer5,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer5, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq6,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer6,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer6, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq7,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer7,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer7, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq8,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer8,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer8, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq9,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer9,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer9, textAlign: TextAlign.left),
                           const SizedBox(height: 16),
                           Text(l10n.faq10,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(l10n.answer10,
-                              textAlign: TextAlign.left),
+                          Text(l10n.answer10, textAlign: TextAlign.left),
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () => _launchURL(

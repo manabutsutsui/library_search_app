@@ -319,5 +319,11 @@
     "trialPeriod": "3일간 무료 트라이얼",
     "cancelAnytime": "언제든지 취소 가능",
     "premiumMonthlyPlanPrice": "₩4,400.00/월",
-    "premiumAnnualPlanPrice": "₩49,000.00/년"
+    "premiumAnnualPlanPrice": "₩49,000.00/년",
+    "purchaseSuccess": "구매가 완료되었습니다",
+    "purchaseFailed": "구매에 실패했습니다",
+    "spotDetailLocked": "성지 상세 정보가 잠금 상태입니다",
+    "watchAdToUnlock": "이 성지의 상세 정보를 보려면 광고를 시청해주세요",
+    "watchAd": "광고 시청",
+    "adLoadError": "광고 로드에 실패했습니다"
 }

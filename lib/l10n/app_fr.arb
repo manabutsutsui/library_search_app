@@ -319,5 +319,11 @@
     "trialPeriod": "Commencer 3 jours gratuits",
     "cancelAnytime": "Annuler à tout moment",
     "premiumMonthlyPlanPrice": "€2.99/mois",
-    "premiumAnnualPlanPrice": "€39.99/an"
+    "premiumAnnualPlanPrice": "€39.99/an",
+    "purchaseSuccess": "Achat réussi",
+    "purchaseFailed": "Échec de l'achat",
+    "spotDetailLocked": "Détails du lieu saint verrouillés",
+    "watchAdToUnlock": "Voir les détails du lieu saint, veuillez visionner une publicité",
+    "watchAd": "Visionner une publicité",
+    "adLoadError": "Échec de la lecture de la publicité"
 }
