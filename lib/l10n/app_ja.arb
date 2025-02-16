@@ -209,7 +209,7 @@
     "purchaseCanceled": "購入がキャンセルされました",
     "urlCannotBeOpened": "URLを開けませんでした",
     "premiumPlan02": "Premium プラン",
-    "premiumPlanEnjoy": "Premiumプランで\nSeichiをもっと楽しもう!",
+    "premiumPlanEnjoy": "プレミアムサービス",
     "monthlyPlan": "月額プラン",
     "month": "月",
     "affordablePrice": "お手頃価格",
@@ -325,5 +325,18 @@
     "spotDetailLocked": "聖地の詳細はロックされています",
     "watchAdToUnlock": "この聖地の詳細を閲覧するには、広告を視聴する必要があります。",
     "watchAd": "広告を視聴",
-    "adLoadError": "広告の読み込みに失敗しました"
+    "adLoadError": "広告の読み込みに失敗しました",
+    "noAds": "広告非表示！",
+    "noAdsDescription": "広告なしで快適にご利用になれます。",
+    "unlimitedUse": "写真機能！",
+    "unlimitedUseDescription": "聖地の写真を撮影、保存できる機能です。",
+    "premiumExclusive": "ランキングの閲覧数増加!",
+    "premiumExclusiveDescription": "ランキングの閲覧数が増えます。",
+    "premiumExclusiveDescription2": "・本コンテンツは、予告なく変更されることがあります。",
+    "premiumExclusiveDescription3": "・サブスクリプションは、期間終了24時間以内に自動更新の解除をされない場合、登録は自動更新となり、料金が請求されます。解約する場合はiPhoneの設定から行なってください。",
+    "premiumExclusiveDescription4": "・アプリを再インストールなどした場合は、「購入履歴を復元する」をタップしてください。",
+    "restorePurchase": "購入履歴を復元する",
+    "restoreSuccess": "購入履歴を復元しました",
+    "restoreFailed": "購入履歴の復元に失敗しました",
+    "restoreNoSubscription": "購入履歴にプレミアムプランが見つかりませんでした"
 } 

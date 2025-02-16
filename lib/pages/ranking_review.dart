@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
-import 'subscription_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_state.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -176,33 +175,6 @@ class RankingReviewPageState extends ConsumerState<RankingReviewPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubscriptionPremium(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.blue,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          'assets/subscription_images/premium_image_seichi.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
                   subscriptionState.when(
                     data: (isPro) => isPro 
                         ? const SizedBox.shrink()

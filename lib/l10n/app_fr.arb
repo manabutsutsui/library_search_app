@@ -209,7 +209,7 @@
     "purchaseCanceled": "Achat annulé",
     "urlCannotBeOpened": "URL ne peut être ouvert",
     "premiumPlan02": "Plan Premium",
-    "premiumPlanEnjoy": "Plan Premium vous permet de voir plus de classements !",
+    "premiumPlanEnjoy": "Service Premium",
     "monthlyPlan": "Plan Mensuel",
     "month": "Mois",
     "affordablePrice": "Prix abordable",
@@ -325,5 +325,18 @@
     "spotDetailLocked": "Détails du lieu saint verrouillés",
     "watchAdToUnlock": "Voir les détails du lieu saint, veuillez visionner une publicité",
     "watchAd": "Visionner une publicité",
-    "adLoadError": "Échec de la lecture de la publicité"
+    "adLoadError": "Échec de la lecture de la publicité",
+    "noAds": "Publicités non affichées !",
+    "noAdsDescription": "Publicités non affichées, utilisation fluide",
+    "unlimitedUse": "Fonction photo !",
+    "unlimitedUseDescription": "Vous pouvez prendre des photos et enregistrer autant de photos que vous le souhaitez.",
+    "premiumExclusive": "Nombre de vues du classement augmenté!",
+    "premiumExclusiveDescription": "Le nombre de vues du classement augmentera.",
+    "premiumExclusiveDescription2": "・Ce contenu peut être modifié sans préavis.",
+    "premiumExclusiveDescription3": "・La souscription sera automatiquement renouvelée si l'annulation n'est pas faite dans les 24 heures suivant la fin du contrat. Pour annuler, veuillez aller dans les paramètres de votre iPhone.",
+    "premiumExclusiveDescription4": "・Si vous réinstallez l'application, veuillez cliquer sur \"Restaurer l'achat\".",
+    "restorePurchase": "Restaurer l'achat",
+    "restoreSuccess": "Achat restauré",
+    "restoreFailed": "Échec de la restauration de l'achat",
+    "restoreNoSubscription": "Aucun plan Premium trouvé dans l'historique des achats"
 }

@@ -18,15 +18,6 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
   Offering? _offering;
   Package? _selectedPackage;
   final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  final List<String> _featureImages = [
-    'assets/subscription_images/1.png',
-    'assets/subscription_images/2.png',
-    'assets/subscription_images/3.png',
-    'assets/subscription_images/4.png',
-    'assets/subscription_images/5.png',
-  ];
 
   @override
   void initState() {
@@ -79,6 +70,36 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
     }
   }
 
+  Future<void> _handleRestore() async {
+    setState(() => _isLoading = true);
+    try {
+      final customerInfo = await Purchases.restorePurchases();
+      final isPro =
+          customerInfo.entitlements.active.containsKey('sa_399_1m');
+      if (isPro) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.restoreSuccess)),
+        );
+        ref.read(subscriptionProvider.notifier).checkSubscription();
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.restoreNoSubscription)),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.restoreFailed)),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _launchURL(String urlString) async {
     final l10n = AppLocalizations.of(context)!;
     final Uri url = Uri.parse(urlString);
@@ -102,73 +123,96 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
         Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
           appBar: AppBar(
-            title: Text(l10n.premiumPlan02,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16)),
             backgroundColor: Colors.blue,
             iconTheme: const IconThemeData(color: Colors.white),
           ),
           body: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(
-                  height: 0.46 * MediaQuery.of(context).size.height,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: _featureImages.length,
-                    onPageChanged: (int page) {
-                      setState(() {
-                        _currentPage = page;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return Container(
-                        width: MediaQuery.of(context).size.width,
+                Stack(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 200,
+                      child: Image.asset(
+                        'assets/subscription_images/premium_icon.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 50,
+                      child: Container(
                         decoration: const BoxDecoration(
-                          color: Colors.white,
-                        ),
-                        child: Image.asset(
-                          _featureImages[index],
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _featureImages.length,
-                      (index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: CircleAvatar(
-                          radius: 4,
-                          backgroundColor: _currentPage == index
-                              ? Colors.blue
-                              : Colors.grey.shade300,
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Color.fromARGB(255, 245, 245, 245),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          l10n.premiumPlanEnjoy,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: Colors.blue,
+                            size: 20,
                           ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.premiumPlanEnjoy,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.star,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildFeatureItem(
+                              icon: Icons.block,
+                              title: l10n.noAds,
+                              description: l10n.noAdsDescription,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildFeatureItem(
+                              icon: Icons.photo_library,
+                              title: l10n.unlimitedUse,
+                              description: l10n.unlimitedUseDescription,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildFeatureItem(
+                              icon: Icons.star,
+                              title: l10n.premiumExclusive,
+                              description: l10n.premiumExclusiveDescription,
+                            ),
+                          ],
                         ),
                       ),
                       Container(
@@ -187,14 +231,21 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '${l10n.monthlyPlan} ・${l10n.premiumMonthlyPlanPrice}',
+                              l10n.monthlyPlan,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            Text(
+                              l10n.premiumMonthlyPlanPrice,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
                             ElevatedButton(
                               onPressed: _isLoading || _selectedPackage == null
                                   ? null
@@ -221,11 +272,6 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                                '${l10n.premiumMonthlyPlanPrice} ・${l10n.affordablePrice}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -278,11 +324,6 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                    '${l10n.premiumAnnualPlanPrice} ・${l10n.affordablePrice}',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -309,24 +350,17 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.premiumPlanNotApplied,
-                            style: const TextStyle(fontSize: 12),
+                      GestureDetector(
+                        onTap: () {
+                          _handleRestore();
+                        },
+                        child: Text(
+                          l10n.restorePurchase,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.premiumPlanPrice,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.premiumPlanOldPrice,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -362,106 +396,29 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      const Text('🌸 FAQ',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.faq1,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer1, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq2,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer2, textAlign: TextAlign.left),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            onTap: () => _launchURL('https://x.com/gaku29189'),
-                            child: Text(
-                              l10n.developerTwitter,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
+                          Text(
+                            l10n.premiumExclusiveDescription2,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq3,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer3, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq4,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer4, textAlign: TextAlign.left),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            onTap: () => _launchURL(
-                                'https://support.apple.com/ja-jp/118428'),
-                            child: Text(
-                              l10n.cancellationProcedure,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
+                          Text(
+                            l10n.premiumExclusiveDescription3,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq5,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer5, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq6,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer6, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq7,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer7, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq8,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer8, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq9,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer9, textAlign: TextAlign.left),
-                          const SizedBox(height: 16),
-                          Text(l10n.faq10,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(l10n.answer10, textAlign: TextAlign.left),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            onTap: () => _launchURL(
-                                'https://tsutsunoidoblog.com/contact/'),
-                            child: Text(
-                              l10n.contactForm,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
+                          Text(
+                            l10n.premiumExclusiveDescription4,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
                             ),
                           ),
                         ],
@@ -482,6 +439,53 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Colors.blue.shade300,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

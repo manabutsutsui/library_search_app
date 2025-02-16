@@ -30,6 +30,7 @@ class SpotData {
   final String prefecture;
   final LatLng location;
   final bool isVisited;
+  final String imageURL;
 
   SpotData({
     required this.id,
@@ -38,6 +39,7 @@ class SpotData {
     required this.prefecture,
     required this.location,
     required this.isVisited,
+    required this.imageURL,
   });
 
   factory SpotData.fromFirestore(DocumentSnapshot doc, bool isVisited) {
@@ -51,6 +53,7 @@ class SpotData {
       prefecture: data['prefecture'] ?? '不明',
       location: LatLng(location.latitude, location.longitude),
       isVisited: isVisited,
+      imageURL: data['imageURL'] ?? '',
     );
   }
 }

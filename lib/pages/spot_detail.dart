@@ -39,9 +39,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     _getSpotLocation();
     _fetchReviews().then((_) => _calculateAverageRating());
     _checkBookmarkStatus();
-    _rewardAdManager.initialize().then((_) {
-    }).catchError((error) {
-    });
+    _rewardAdManager.initialize().then((_) {}).catchError((error) {});
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bool isReward = widget.spot['isReward'] ?? false;
@@ -282,7 +280,16 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                             style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              widget.spot['imageURL'],
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               RatingBarIndicator(
@@ -296,7 +303,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                 direction: Axis.horizontal,
                               ),
                               Text(
-                                ' (${_averageRating.toStringAsFixed(1)})',
+                                ' ${_averageRating.toStringAsFixed(1)}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

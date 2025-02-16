@@ -141,51 +141,23 @@ class SettingPageState extends ConsumerState<SettingPage> {
     }
   }
 
-  Widget _buildLanguageSelector() {
-    final currentLocale = ref.watch(localeProvider);
-    final l10n = AppLocalizations.of(context)!;
-
-    return _buildListItem(
-      icon: Icons.language,
-      title: l10n.languageSettings,
-      subtitle: _getLanguageName(currentLocale.languageCode),
-      onTap: () => _showLanguageDialog(),
-    );
-  }
-
-  String _getLanguageName(String languageCode) {
-    switch (languageCode) {
-      case 'ja':
-        return '日本語';
-      case 'en':
-        return 'English';
-      case 'zh':
-        return '中文';
-      case 'ko':
-        return '한국어';
-      case 'fr':
-        return 'Français';
-      default:
-        return '日本語';
-    }
-  }
-
-  void _showLanguageDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    
+  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(l10n.selectLanguage),
+          title: Text(AppLocalizations.of(context)!.selectLanguage),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildLanguageOption('ja', '日本語'),
-              _buildLanguageOption('en', 'English'),
-              _buildLanguageOption('zh', '中文'),
-              _buildLanguageOption('ko', '한국어'),
-              _buildLanguageOption('fr', 'Français'),
+              _buildLanguageOption(context, ref, '🇯🇵日本語', const Locale('ja')),
+              _buildLanguageOption(
+                  context, ref, '🇺🇸English', const Locale('en')),
+              _buildLanguageOption(
+                  context, ref, '🇨🇳简体中文', const Locale('zh')),
+              _buildLanguageOption(
+                  context, ref, '🇫🇷Français', const Locale('fr')),
+              _buildLanguageOption(context, ref, '🇰🇷한국어', const Locale('ko')),
             ],
           ),
         );
@@ -193,24 +165,35 @@ class SettingPageState extends ConsumerState<SettingPage> {
     );
   }
 
-  Widget _buildLanguageOption(String languageCode, String languageName) {
+  Widget _buildLanguageOption(
+      BuildContext context, WidgetRef ref, String label, Locale locale) {
     final currentLocale = ref.watch(localeProvider);
+    final isSelected = currentLocale.languageCode == locale.languageCode &&
+        currentLocale.countryCode == locale.countryCode;
 
     return ListTile(
-      title: Text(languageName),
-      trailing: currentLocale.languageCode == languageCode
-          ? const Icon(Icons.check, color: Colors.blue)
-          : null,
+      title: Text(label),
+      trailing: isSelected ? const Icon(Icons.check) : null,
       onTap: () {
-        ref.read(localeProvider.notifier).changeLocale(languageCode);
+        ref.read(localeProvider.notifier).setLocale(locale);
+        Navigator.pop(context);
       },
     );
+  }
+
+  String _getLanguageLabel(Locale locale) {
+    if (locale.languageCode == 'ja') return '🇯🇵日本語';
+    if (locale.languageCode == 'en') return '🇺🇸English';
+    if (locale.languageCode == 'zh') return '🇨🇳简体中文';
+    if (locale.languageCode == 'fr') return '🇫🇷Français';
+    if (locale.languageCode == 'ko') return '🇰🇷한국어';
+    return '';
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -256,7 +239,12 @@ class SettingPageState extends ConsumerState<SettingPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: _buildLanguageSelector(),
+                child: _buildListItem(
+                  icon: Icons.language,
+                  title: AppLocalizations.of(context)!.selectLanguage,
+                  subtitle: _getLanguageLabel(ref.watch(localeProvider)),
+                  onTap: () => _showLanguageDialog(context, ref),
+                ),
               ),
               const SizedBox(height: 32),
               Text(l10n.aboutApp,

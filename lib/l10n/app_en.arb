@@ -209,7 +209,7 @@
     "purchaseCanceled": "Purchase canceled",
     "urlCannotBeOpened": "URL cannot be opened",
     "premiumPlan02": "Premium Plan",
-    "premiumPlanEnjoy": "Premium plan allows you to use more functions!",
+    "premiumPlanEnjoy": "Premium Service",
     "monthlyPlan": "Monthly Plan",
     "month": "Month",
     "affordablePrice": "Affordable Price",
@@ -325,5 +325,18 @@
     "spotDetailLocked": "Spot Detail Locked",
     "watchAdToUnlock": "Watch an ad to view this spot's details",
     "watchAd": "Watch Ad",
-    "adLoadError": "Failed to load advertisement"
+    "adLoadError": "Failed to load advertisement",
+    "noAds": "No Ads!",
+    "noAdsDescription": "No ads, smooth use",
+    "unlimitedUse": "Photo Function!",
+    "unlimitedUseDescription": "You can take photos and save as many photos as you want.",
+    "premiumExclusive": "Ranking View Count Increase!",
+    "premiumExclusiveDescription": "The number of views of the ranking will increase.",
+    "premiumExclusiveDescription2": "・This content may be changed without notice.",
+    "premiumExclusiveDescription3": "・The subscription will be automatically renewed if the cancellation is not made within 24 hours of the end of the contract period. To cancel, please go to the settings of your iPhone.",
+    "premiumExclusiveDescription4": "・If you reinstall the app, please tap \"Restore Purchase\".",
+    "restorePurchase": "Restore Purchase",
+    "restoreSuccess": "Purchase history restored",
+    "restoreFailed": "Failed to restore purchase history",
+    "restoreNoSubscription": "No premium plan found in purchase history"
 }

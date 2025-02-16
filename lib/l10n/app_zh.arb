@@ -209,7 +209,7 @@
     "purchaseCanceled": "购买已取消",
     "urlCannotBeOpened": "URL无法打开",
     "premiumPlan02": "Premium计划",
-    "premiumPlanEnjoy": "Premium计划允许您使用更多功能！",
+    "premiumPlanEnjoy": "Premium服务",
     "monthlyPlan": "月度计划",
     "month": "月",
     "affordablePrice": "实惠价格",
@@ -325,5 +325,18 @@
     "spotDetailLocked": "圣地详情已锁定",
     "watchAdToUnlock": "观看广告以查看此圣地的详情",
     "watchAd": "观看广告",
-    "adLoadError": "广告加载失败"
+    "adLoadError": "广告加载失败",
+    "noAds": "广告不显示！",
+    "noAdsDescription": "广告不显示，流畅使用",
+    "unlimitedUse": "照片功能！",
+    "unlimitedUseDescription": "您可以拍摄照片并保存任意数量的照片。",
+    "premiumExclusive": "排行榜浏览数增加!",
+    "premiumExclusiveDescription": "排行榜浏览数增加。",
+    "premiumExclusiveDescription2": "・本内容可能会随时更改。",
+    "premiumExclusiveDescription3": "・订阅在合同期结束前24小时内未取消自动更新（自动续订）的，将自动更新，并收取费用。要取消，请从iPhone的设置中进行。",
+    "premiumExclusiveDescription4": "・如果重新安装应用程序，请点击“恢复购买”。",
+    "restorePurchase": "恢复购买",
+    "restoreSuccess": "购买历史已恢复",
+    "restoreFailed": "购买历史恢复失败",
+    "restoreNoSubscription": "购买历史中没有找到Premium计划"
 }

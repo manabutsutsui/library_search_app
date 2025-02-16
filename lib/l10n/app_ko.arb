@@ -209,7 +209,7 @@
     "purchaseCanceled": "구매가 취소되었습니다",
     "urlCannotBeOpened": "URL을 열 수 없습니다",
     "premiumPlan02": "PREMIUM 플랜",
-    "premiumPlanEnjoy": "PREMIUM 플랜으로 더 많은 기능을 사용할 수 있습니다!",
+    "premiumPlanEnjoy": "Premium Service",
     "monthlyPlan": "월간 플랜",
     "month": "월",
     "affordablePrice": "저렴한 가격",
@@ -325,5 +325,18 @@
     "spotDetailLocked": "성지 상세 정보가 잠금 상태입니다",
     "watchAdToUnlock": "이 성지의 상세 정보를 보려면 광고를 시청해주세요",
     "watchAd": "광고 시청",
-    "adLoadError": "광고 로드에 실패했습니다"
+    "adLoadError": "광고 로드에 실패했습니다",
+    "noAds": "광고 없음!",
+    "noAdsDescription": "광고 없이 즐겁게 사용할 수 있습니다.",
+    "unlimitedUse": "사진 기능!",
+    "unlimitedUseDescription": "성지 사진을 찍고 저장할 수 있는 기능입니다.",
+    "premiumExclusive": "랭킹 조회 수 증가!",
+    "premiumExclusiveDescription": "랭킹 조회 수가 증가합니다.",
+    "premiumExclusiveDescription2": "・이 콘텐츠는 언제든지 변경될 수 있습니다.",
+    "premiumExclusiveDescription3": "・구독은 계약 기간 종료 24시간 내에 해지(자동 갱신 해제)를 하지 않는 경우, 자동 갱신됩니다. 해지하려면 iPhone 설정에서 진행해주세요.",
+    "premiumExclusiveDescription4": "・앱을 재설치한 경우, \"구매 기록 복구\"를 탭해주세요.",
+    "restorePurchase": "구매 기록 복구",
+    "restoreSuccess": "구매 기록 복구 성공",
+    "restoreFailed": "구매 기록 복구 실패",
+    "restoreNoSubscription": "구매 기록에 프리미엄 플랜이 없습니다"
 }

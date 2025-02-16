@@ -14,6 +14,12 @@ class AnimeList {
 
 final List<AnimeList> animeList = [
   AnimeList(
+    name: 'おおかみこどもの雨と雪',
+    genre: '映画',
+    imageAsset: 'assets/images/ookami.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27405',
+  ),
+  AnimeList(
     name: '僕だけがいない街',
     genre: 'ホラー/サスペンス/推理',
     imageAsset: 'assets/images/bokudakega.png',

@@ -232,7 +232,6 @@ class _MapPageState extends State<MapPage> {
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Text(spot['address']),
                 const SizedBox(height: 10),
                 Row(
                   children: [
