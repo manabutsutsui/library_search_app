@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'spot_detail.dart';
+import '../utils/seichi_spots.dart';
 
 class BookmarksPage extends StatelessWidget {
   const BookmarksPage({super.key});
@@ -55,24 +56,30 @@ class BookmarksPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final bookmark = snapshot.data!.docs[index];
 
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('spots')
-                    .doc(bookmark['spotId'])
-                    .get(),
-                builder: (context, spotSnapshot) {
-                  if (!spotSnapshot.hasData) {
+              return FutureBuilder<SeichiSpot>(
+                future: Future.value(
+                  seichiSpots.firstWhere(
+                    (spot) => spot.id == bookmark['spotId'],
+                    orElse: () => throw Exception('Spot not found'),
+                  ),
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
                     return const SizedBox();
                   }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final spot = spotSnapshot.data!;
+                  final spot = snapshot.data!;
 
                   return Column(
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.location_on, size: 40, color: Colors.blue),
-                        title: Text(spot['name']),
-                        subtitle: Text(spot['address']),
+                        leading: const Icon(Icons.location_on,
+                            size: 40, color: Colors.blue),
+                        title: Text(spot.name),
+                        subtitle: Text(spot.address),
                         onTap: () {
                           Navigator.push(
                             context,

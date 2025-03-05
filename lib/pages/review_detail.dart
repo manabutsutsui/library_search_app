@@ -6,20 +6,20 @@ import 'spot_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/seichi_spots.dart';
 
 class ReviewDetailPage extends StatelessWidget {
   final DocumentSnapshot review;
-  final DocumentSnapshot spot;
+  final SeichiSpot spot;
 
-  const ReviewDetailPage({Key? key, required this.review, required this.spot})
-      : super(key: key);
+  const ReviewDetailPage({super.key, required this.review, required this.spot});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(spot['name'],
+        title: Text(spot.name,
             style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -33,7 +33,6 @@ class ReviewDetailPage extends StatelessWidget {
           child: Column(
             children: [
               Card(
-                elevation: 10,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -159,7 +158,6 @@ class ReviewDetailPage extends StatelessWidget {
                                                       SnackBar(content: Text(l10n.reviewDeleted)),
                                                     );
                                                   } catch (e) {
-                                                    // print('口コミの削除中にエラーが発生しました: $e');
                                                     ScaffoldMessenger.of(context).showSnackBar(
                                                       SnackBar(content: Text(l10n.reviewDeleteError)),
                                                     );
@@ -279,6 +277,9 @@ class ReviewDetailPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: Text(l10n.seeSpotDetail,
                     style: const TextStyle(

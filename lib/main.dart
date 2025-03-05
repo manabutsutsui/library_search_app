@@ -7,8 +7,8 @@ import 'pages/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
 import 'pages/home.dart';
+import 'pages/ranking.dart';
 import 'dart:convert';
-import 'pages/posts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -17,10 +17,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/subscription_state.dart';
 import 'pages/create_account.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'utils/seichi_de_dekirukoto.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
 import 'ad/ad_app_open.dart';
+import 'providers/login_bonus_provider.dart';
+import 'utils/login_bonus_dialog.dart';
+import 'providers/points_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -136,7 +138,8 @@ class AppWithBottomNavigation extends ConsumerStatefulWidget {
       AppWithBottomNavigationState();
 }
 
-class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation> {
+class AppWithBottomNavigationState
+    extends ConsumerState<AppWithBottomNavigation> {
   int _selectedIndex = 0;
   bool _isLoggedIn = false;
   late List<GlobalKey<NavigatorState>> _navigatorKeys;
@@ -147,9 +150,6 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
   void initState() {
     super.initState();
     _checkLoginStatus();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkFirstLaunch();
-    });
     _auth.authStateChanges().listen((User? user) {
       _updateLoginStatus(user != null);
     });
@@ -160,15 +160,26 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
       GlobalKey<NavigatorState>(),
     ];
     _updatePages();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLoginBonus();
+    });
   }
 
-  Future<void> _checkFirstLaunch() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+  void _checkLoginBonus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await ref.read(loginBonusProvider.notifier).checkAndUpdateLoginBonus();
+      await ref.read(pointsProvider.notifier).loadPoints();
+      final loginBonusState = ref.read(loginBonusProvider);
 
-    if (isFirstLaunch && mounted) {
-      await prefs.setBool('is_first_launch', false);
-      SeichiDeDekirukoto.show(context);
+      if (loginBonusState.hasTodayBonus) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => const LoginBonusDialog(),
+          );
+        }
+      }
     }
   }
 
@@ -188,7 +199,7 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
     _pages = [
       const Home(),
       const MapPage(),
-      const PostsPage(),
+      const RankingPage(),
       _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
   }
@@ -252,8 +263,8 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
                   label: AppLocalizations.of(context)!.map,
                 ),
                 BottomNavigationBarItem(
-                  icon: const Icon(Icons.post_add),
-                  label: AppLocalizations.of(context)!.posts,
+                  icon: const Icon(Icons.emoji_events),
+                  label: AppLocalizations.of(context)!.ranking,
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.person),
@@ -264,6 +275,8 @@ class AppWithBottomNavigationState extends ConsumerState<AppWithBottomNavigation
               type: BottomNavigationBarType.fixed,
               selectedItemColor: Colors.blue,
               onTap: _onItemTapped,
+              // showSelectedLabels: false,
+              // showUnselectedLabels: false,
             ),
           ],
         ),

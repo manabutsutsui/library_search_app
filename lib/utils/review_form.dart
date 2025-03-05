@@ -6,9 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/seichi_spots.dart';
 
 class ReviewForm extends StatefulWidget {
-  final DocumentSnapshot spot;
+  final SeichiSpot spot;
 
   const ReviewForm({super.key, required this.spot});
 
@@ -80,7 +81,7 @@ class ReviewFormState extends State<ReviewForm> {
           'userName': userName,
           'userProfileImage': userProfileImage,
           'spotId': widget.spot.id,
-          'work': widget.spot['work'],
+          'work': widget.spot.workName,
           'rating': _rating,
           'review': _reviewController.text,
           'imageUrl': imageUrl,
@@ -101,7 +102,10 @@ class ReviewFormState extends State<ReviewForm> {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: Text(l10n.reviewPost,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -119,7 +123,8 @@ class ReviewFormState extends State<ReviewForm> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(l10n.addPhoto,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: _pickImage,
@@ -147,11 +152,11 @@ class ReviewFormState extends State<ReviewForm> {
                             ),
                     ),
                   ),
-                  if (_showImageError)
-                    const SizedBox.shrink(),
+                  if (_showImageError) const SizedBox.shrink(),
                   const SizedBox(height: 16),
                   Text(l10n.evaluationOfHolyPlace,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   RatingBar.builder(
                     initialRating: _rating.toDouble(),
@@ -172,7 +177,8 @@ class ReviewFormState extends State<ReviewForm> {
                   ),
                   const SizedBox(height: 16),
                   Text(l10n.reviewContent,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _reviewController,
@@ -181,6 +187,8 @@ class ReviewFormState extends State<ReviewForm> {
                       border: const OutlineInputBorder(),
                     ),
                     maxLines: 5,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.reviewContentError;

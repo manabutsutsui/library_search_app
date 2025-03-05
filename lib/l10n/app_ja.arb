@@ -253,6 +253,8 @@
     "daily": "日常/ほのぼの",
     "drama": "ドラマ/青春",
     "sf": "SF/ファンタジー",
+    "comedy": "コメディ/ギャグ",
+    "war": "戦争/ミリタリー",
     "reviewPost": "口コミを投稿",
     "addPhoto": "写真を追加（任意）",
     "tapToAddPhoto": "タップして写真を追加",
@@ -338,5 +340,15 @@
     "restorePurchase": "購入履歴を復元する",
     "restoreSuccess": "購入履歴を復元しました",
     "restoreFailed": "購入履歴の復元に失敗しました",
-    "restoreNoSubscription": "購入履歴にプレミアムプランが見つかりませんでした"
+    "restoreNoSubscription": "購入履歴にプレミアムプランが見つかりませんでした",
+    "premiumAdFree": "\\ プレミアムで、広告を非表示! /",
+    "loginBonusTitle": "ログインボーナス",
+    "loginBonusDaily": "5ポイント獲得！",
+    "loginBonusDailyPremium": "10ポイント獲得！",
+    "loginBonusSpecial": "30ポイント獲得！",
+    "loginBonusSpecialPremium": "60ポイント獲得！",
+    "consecutiveLoginDays": "{days}日連続ログイン達成！",
+    "claim": "受け取る",
+    "pointsAdded": "ポイントを獲得しました！",
+    "yourPoints": "あなたのポイント"
 } 

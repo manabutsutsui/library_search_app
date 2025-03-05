@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/seichi_spots.dart';
 
 class NewSeichiPage extends StatelessWidget {
   const NewSeichiPage({super.key});
@@ -9,7 +9,7 @@ class NewSeichiPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -24,24 +24,9 @@ class NewSeichiPage extends StatelessWidget {
         backgroundColor: Colors.blue,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('spots')
-            .orderBy('createdAt', descending: true)
-            .limit(10)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('${l10n.loadingError}: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text(l10n.noHolyPlacesYet));
-          }
+      body: Builder(
+        builder: (context) {
+          final spots = seichiSpots.reversed.take(10).toList();
 
           return GridView.builder(
             padding: const EdgeInsets.all(8),
@@ -51,9 +36,9 @@ class NewSeichiPage extends StatelessWidget {
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
             ),
-            itemCount: snapshot.data!.docs.length,
+            itemCount: spots.length,
             itemBuilder: (context, index) {
-              var spot = snapshot.data!.docs[index];
+              final spot = spots[index];
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -69,7 +54,7 @@ class NewSeichiPage extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.network(
-                        spot['imageURL'] ?? '',
+                        spot.imageURL,
                         height: 120,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -91,7 +76,7 @@ class NewSeichiPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            spot['name'] ?? '',
+                            spot.name,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -101,7 +86,7 @@ class NewSeichiPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            spot['work'] ?? '',
+                            spot.workName,
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,

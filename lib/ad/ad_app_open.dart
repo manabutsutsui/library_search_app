@@ -75,9 +75,10 @@ class AppOpenAdManager {
   }
 
   Future<String> _getAdUnitId() async {
-    final String configString = await rootBundle.loadString('assets/config/config.json');
+    final String configString =
+        await rootBundle.loadString('assets/config/config.json');
     final Map<String, dynamic> config = json.decode(configString);
-    
+
     if (Platform.isAndroid) {
       return config['androidAppLaunchAdUnitId'] as String;
     } else if (Platform.isIOS) {

@@ -34,7 +34,7 @@ exports.saveToken = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// バージョ��アップ通知を送信するエンドポイント
+// バージョンアップ通知を送信するエンドポイント
 exports.notifyUpdate = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).send("Method Not Allowed");

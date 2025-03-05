@@ -17,7 +17,14 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
   @override
   void initState() {
     super.initState();
-    genres = animeList.map((anime) => anime.genre).toSet().toList()..sort();
+    // 各アニメのジャンル文字列をスペースで分割して個別のジャンルを取得
+    final allGenres = <String>[];
+    for (var anime in animeList) {
+      final animeGenres = anime.genre.split(' ');
+      allGenres.addAll(animeGenres);
+    }
+    // 重複を削除してからソート
+    genres = allGenres.toSet().toList()..sort();
   }
 
   String _translateGenre(BuildContext context, String genre) {
@@ -39,6 +46,10 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
         return l10n.drama;
       case 'SF/ファンタジー':
         return l10n.sf;
+      case 'コメディ/ギャグ':
+        return l10n.comedy;
+      case '戦争/ミリタリー':
+        return l10n.war;
       default:
         return genre;
     }
@@ -49,7 +60,10 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
     final l10n = AppLocalizations.of(context)!;
     final filteredAnimeList = selectedGenre == null
         ? animeList
-        : animeList.where((anime) => anime.genre == selectedGenre).toList();
+        : animeList.where((anime) {
+            final animeGenres = anime.genre.split(' ');
+            return animeGenres.contains(selectedGenre);
+          }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -80,7 +94,8 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     selected: isSelected,
-                    label: Text(_translateGenre(context, genre)),
+                    label: Text(_translateGenre(context, genre),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     onSelected: (selected) {
                       setState(() {
                         selectedGenre = selected ? genre : null;
@@ -89,6 +104,13 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                     backgroundColor: Colors.white,
                     selectedColor: Colors.blue.withOpacity(0.2),
                     checkmarkColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(
+                        color: isSelected ? Colors.blue : Colors.black,
+                        width: 1,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -101,7 +123,8 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: GridView.builder(
                       itemCount: filteredAnimeList.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
@@ -114,7 +137,8 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AnimeDetailPage(anime: anime),
+                                builder: (context) =>
+                                    AnimeDetailPage(anime: anime),
                               ),
                             );
                           },
@@ -129,7 +153,8 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                               ),
                               const SizedBox(height: 8),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Text(
                                   anime.name,
                                   style: const TextStyle(

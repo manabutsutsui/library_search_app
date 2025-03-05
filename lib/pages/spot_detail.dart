@@ -4,21 +4,20 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/anime_lists.dart';
-import '../utils/kuchikomi.dart';
-import '../utils/report.dart';
+import '../utils/review_form.dart';
 import 'subscription_premium.dart';
 import '../providers/subscription_state.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../utils/seichi_photos.dart';
 import '../ad/ad_reward.dart';
 import 'dart:ui';
+import '../utils/seichi_spots.dart';
+import '../utils/review_list_widget.dart';
+import '../utils/report.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
-  final DocumentSnapshot spot;
+  final SeichiSpot spot;
 
   const SpotDetailPage({super.key, required this.spot});
 
@@ -42,7 +41,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     _rewardAdManager.initialize().then((_) {}).catchError((error) {});
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bool isReward = widget.spot['isReward'] ?? false;
+      final bool isReward = widget.spot.isReward;
       final isPremium = ref.read(subscriptionProvider).value ?? false;
 
       if (isReward && !_hasWatchedAd && !isPremium) {
@@ -56,16 +55,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
 
   Future<void> _getSpotLocation() async {
     try {
-      GeoPoint location = widget.spot['location'];
       setState(() {
-        _spotLocation = LatLng(location.latitude, location.longitude);
+        _spotLocation = LatLng(widget.spot.latitude, widget.spot.longitude);
         _markers.add(Marker(
           markerId: MarkerId(widget.spot.id),
           position: _spotLocation!,
         ));
       });
     } catch (e) {
-      // print('${l10n.errorOccurred}: $e');
+      // エラー処理
     }
   }
 
@@ -136,20 +134,57 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.blue,
-          content: Text(l10n.watchAdToUnlock,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.watchAdToUnlock,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Text(l10n.premiumAdFree,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SubscriptionPremium(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '👑PREMIUM PLAN👑',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.5),
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text(l10n.cancel,
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(l10n.cancel),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
               child: Text(l10n.watchAd,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
@@ -187,9 +222,42 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
     }
   }
 
+  Future<void> _showReportDialog(String reviewId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final String? reportReason = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return const ReportDialog();
+      },
+    );
+
+    if (reportReason != null) {
+      try {
+        await FirebaseFirestore.instance.collection('reports').add({
+          'reviewId': reviewId,
+          'reporterId': FirebaseAuth.instance.currentUser?.uid,
+          'reason': reportReason,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.reportReceived)),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.reportFailed)),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isReward = widget.spot['isReward'] ?? false;
+    final bool isReward = widget.spot.isReward;
     final isPremium = ref.watch(subscriptionProvider).value ?? false;
 
     return DefaultTabController(
@@ -198,7 +266,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
           appBar: AppBar(
-            title: Text(widget.spot['name'],
+            title: Text(widget.spot.name,
                 style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -224,8 +292,8 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                     } else {
                       await bookmarkRef.set({
                         'spotId': widget.spot.id,
-                        'name': widget.spot['name'],
-                        'address': widget.spot['address'],
+                        'name': widget.spot.name,
+                        'address': widget.spot.address,
                         'timestamp': FieldValue.serverTimestamp(),
                       });
                     }
@@ -276,7 +344,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                         children: [
                           const SizedBox(height: 8),
                           Text(
-                            widget.spot['name'],
+                            widget.spot.name,
                             style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
@@ -284,7 +352,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              widget.spot['imageURL'],
+                              widget.spot.imageURL,
                               width: double.infinity,
                               fit: BoxFit.cover,
                             ),
@@ -315,15 +383,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                           Text(AppLocalizations.of(context)!.basicInformation,
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
-                          const Divider(color: Colors.grey),
+                          const Divider(color: Colors.black),
                           _buildInfoRow(AppLocalizations.of(context)!.address,
-                              widget.spot['address']),
+                              widget.spot.address),
                           const SizedBox(height: 8),
-                          const Divider(color: Colors.grey),
+                          const Divider(color: Colors.black),
                           _buildInfoRow(AppLocalizations.of(context)!.map,
                               'Google Mapsを開く'),
                           const SizedBox(height: 8),
-                          const Divider(color: Colors.grey),
+                          const Divider(color: Colors.black),
                           const SizedBox(height: 8),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
@@ -347,14 +415,14 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(widget.spot['work'],
+                          Text(widget.spot.workName,
                               style: const TextStyle(
                                   fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Builder(
                             builder: (context) {
                               final animeInfo =
-                                  _getAnimeInfo(widget.spot['work']);
+                                  _getAnimeInfo(widget.spot.workName);
                               if (animeInfo != null) {
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -376,7 +444,6 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         style: const TextStyle(
                                           fontSize: 8,
                                           color: Colors.blue,
-                                          decoration: TextDecoration.underline,
                                         ),
                                       ),
                                     ),
@@ -395,44 +462,36 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 16),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.blue),
+                                  border:
+                                      Border.all(color: Colors.blue, width: 2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Column(
                                     children: [
-                                      if (widget.spot['imageURL'] != null &&
-                                          widget.spot['imageURL']
-                                              .toString()
-                                              .isNotEmpty) ...[
+                                      if (widget.spot.imageURL.isNotEmpty) ...[
                                         ClipRRect(
                                           borderRadius:
                                               BorderRadius.circular(8),
                                           child: Image.network(
-                                            widget.spot['imageURL'],
+                                            widget.spot.imageURL,
                                             width: double.infinity,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        Builder(
-                                          builder: (context) {
-                                            return InkWell(
-                                              onTap: () => _launchURL(
-                                                  widget.spot['source']),
-                                              child: Text(
-                                                '${AppLocalizations.of(context)!.sourceImage}: ${widget.spot['source'] ?? ''}',
-                                                style: const TextStyle(
-                                                  fontSize: 8,
-                                                  color: Colors.blue,
-                                                  decoration:
-                                                      TextDecoration.underline,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            );
-                                          },
+                                        InkWell(
+                                          onTap: () =>
+                                              _launchURL(widget.spot.source),
+                                          child: Text(
+                                            '${AppLocalizations.of(context)!.sourceImage}: ${widget.spot.source}',
+                                            style: const TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.blue,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                         const SizedBox(height: 16),
                                       ] else ...[
@@ -451,7 +510,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                         const SizedBox(height: 16),
                                       ],
                                       Text(
-                                        widget.spot['detail'],
+                                        widget.spot.detail,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -482,6 +541,15 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               ),
                             ],
                           ),
+                          GestureDetector(
+                            onTap: () => _launchURL(
+                                'https://tr.affiliate-sp.docomo.ne.jp/cl/d0000002559/3326/215'),
+                            child: Image.network(
+                              'https://img.affiliate-sp.docomo.ne.jp/ad/d0000002559/215.png',
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                           const SizedBox(height: 32),
                           Center(
                               child: Text(
@@ -490,417 +558,22 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold))),
                           const SizedBox(height: 32),
-                          _reviews.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 16.0),
-                                  child: Text(
-                                      AppLocalizations.of(context)!.noReviews),
-                                ))
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: _reviews.length,
-                                  itemBuilder: (context, index) {
-                                    final review = _reviews[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0),
-                                      child: Card(
-                                        elevation: 10,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            if (review['imageUrl'] != null)
-                                              ClipRRect(
-                                                borderRadius:
-                                                    const BorderRadius.vertical(
-                                                        top:
-                                                            Radius.circular(8)),
-                                                child: Image.network(
-                                                  review['imageUrl'],
-                                                  width: double.infinity,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      CircleAvatar(
-                                                        backgroundImage: review[
-                                                                    'userProfileImage'] !=
-                                                                null
-                                                            ? NetworkImage(review[
-                                                                'userProfileImage'])
-                                                            : null,
-                                                        child:
-                                                            review['userProfileImage'] ==
-                                                                    null
-                                                                ? const Icon(
-                                                                    Icons
-                                                                        .person)
-                                                                : null,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Text(
-                                                              review[
-                                                                  'userName'],
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ),
-                                                            Text(
-                                                              '${AppLocalizations.of(context)!.postedDate}: ${DateFormat('yyyy年MM月dd日 HH時mm分').format(review['timestamp'].toDate())}',
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                          .grey[
-                                                                      600],
-                                                                  fontSize: 12),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      IconButton(
-                                                        onPressed: () {
-                                                          showModalBottomSheet(
-                                                            context: context,
-                                                            builder:
-                                                                (BuildContext
-                                                                    context) {
-                                                              return Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: <Widget>[
-                                                                  if (review[
-                                                                          'userId'] ==
-                                                                      FirebaseAuth
-                                                                          .instance
-                                                                          .currentUser
-                                                                          ?.uid)
-                                                                    ListTile(
-                                                                      leading: const Icon(
-                                                                          Icons
-                                                                              .delete,
-                                                                          color:
-                                                                              Colors.red),
-                                                                      title: Text(
-                                                                          AppLocalizations.of(context)!
-                                                                              .delete,
-                                                                          style:
-                                                                              const TextStyle(color: Colors.red)),
-                                                                      onTap:
-                                                                          () async {
-                                                                        final bool?
-                                                                            confirmDelete =
-                                                                            await showDialog<bool>(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (BuildContext context) {
-                                                                            return AlertDialog(
-                                                                              title: Text(AppLocalizations.of(context)!.confirm),
-                                                                              content: Text(AppLocalizations.of(context)!.deleteReviewConfirm, style: const TextStyle(fontSize: 12)),
-                                                                              actions: <Widget>[
-                                                                                TextButton(
-                                                                                  child: Text(AppLocalizations.of(context)!.cancel),
-                                                                                  onPressed: () => Navigator.of(context).pop(false),
-                                                                                ),
-                                                                                TextButton(
-                                                                                  child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
-                                                                                  onPressed: () => Navigator.of(context).pop(true),
-                                                                                ),
-                                                                              ],
-                                                                            );
-                                                                          },
-                                                                        );
-
-                                                                        if (confirmDelete ==
-                                                                            true) {
-                                                                          try {
-                                                                            // 画像がある場合、Storageから削除
-                                                                            if (review['imageUrl'] !=
-                                                                                null) {
-                                                                              try {
-                                                                                final storageRef = FirebaseStorage.instance.refFromURL(review['imageUrl']);
-                                                                                await storageRef.delete();
-                                                                              } catch (e) {
-                                                                                // print('画像の削除中にエラーが発生しました: $e');
-                                                                              }
-                                                                            }
-
-                                                                            // Firestoreから口コミを削除
-                                                                            await FirebaseFirestore.instance.collection('reviews').doc(review.id).delete();
-
-                                                                            Navigator.of(context).pop();
-                                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                                              SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleted)),
-                                                                            );
-                                                                            _fetchReviews();
-                                                                          } catch (e) {
-                                                                            // print('口コミの削除中にエラーが発生しました: $e');
-                                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                                              SnackBar(content: Text(AppLocalizations.of(context)!.reviewDeleteError)),
-                                                                            );
-                                                                          }
-                                                                        } else {
-                                                                          Navigator.of(context)
-                                                                              .pop();
-                                                                        }
-                                                                      },
-                                                                    )
-                                                                  else ...[
-                                                                    ListTile(
-                                                                      leading: const Icon(
-                                                                          Icons
-                                                                              .flag,
-                                                                          color:
-                                                                              Colors.red),
-                                                                      title: Text(
-                                                                          AppLocalizations.of(context)!
-                                                                              .report,
-                                                                          style:
-                                                                              const TextStyle(color: Colors.red)),
-                                                                      onTap:
-                                                                          () async {
-                                                                        final String?
-                                                                            reportReason =
-                                                                            await showDialog<String>(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (BuildContext context) {
-                                                                            return const ReportDialog();
-                                                                          },
-                                                                        );
-
-                                                                        if (reportReason !=
-                                                                            null) {
-                                                                          try {
-                                                                            await FirebaseFirestore.instance.collection('reports').add({
-                                                                              'reviewId': review.id,
-                                                                              'reporterId': FirebaseAuth.instance.currentUser?.uid,
-                                                                              'reason': reportReason,
-                                                                              'timestamp': FieldValue.serverTimestamp(),
-                                                                            });
-
-                                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                                              SnackBar(content: Text(AppLocalizations.of(context)!.reportReceived)),
-                                                                            );
-                                                                          } catch (e) {
-                                                                            // print(
-                                                                            //     '報告の送信中にエラーが発生しました: $e');
-                                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                                              SnackBar(content: Text(AppLocalizations.of(context)!.reportFailed)),
-                                                                            );
-                                                                          }
-                                                                        }
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                      },
-                                                                    ),
-                                                                  ],
-                                                                  ListTile(
-                                                                    leading:
-                                                                        const Icon(
-                                                                            Icons.cancel),
-                                                                    title: Text(
-                                                                        AppLocalizations.of(context)!
-                                                                            .cancel),
-                                                                    onTap: () {
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              );
-                                                            },
-                                                          );
-                                                        },
-                                                        icon: const Icon(
-                                                            Icons.more_vert),
-                                                      )
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Row(
-                                                    children: [
-                                                      RatingBarIndicator(
-                                                        rating: review['rating']
-                                                            .toDouble(),
-                                                        itemBuilder:
-                                                            (context, index) =>
-                                                                const Icon(
-                                                          Icons.star,
-                                                          color: Colors.orange,
-                                                        ),
-                                                        itemCount: 5,
-                                                        itemSize: 20.0,
-                                                        direction:
-                                                            Axis.horizontal,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                          ': ${AppLocalizations.of(context)!.seichitourokuSatisfaction}'),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Text(
-                                                    review['review'],
-                                                    style: TextStyle(
-                                                        color:
-                                                            Colors.grey[800]),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                          ReviewListWidget(
+                            reviews: _reviews,
+                            onReportTap: (reviewId) {
+                              _showReportDialog(reviewId);
+                            },
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              SingleChildScrollView(
+              const SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final subscriptionState =
-                            ref.watch(subscriptionProvider);
-
-                        return subscriptionState.when(
-                          data: (isPro) {
-                            if (isPro) {
-                              return SeichiPhotos(spotId: widget.spot.id);
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  Center(
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const SubscriptionPremium(),
-                                          ),
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                      ),
-                                      child: Text(
-                                        AppLocalizations.of(context)!
-                                            .premiumPlanLimitedFunction,
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const SubscriptionPremium(),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(16.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '👑 ${AppLocalizations.of(context)!.premiumPlanLimitedFunction} 👑',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            AppLocalizations.of(context)!
-                                                .premiumPlanLimitedFunctionDescription,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            AppLocalizations.of(context)!
-                                                .premiumPlanLimitedFunctionDescription2,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            '<<${AppLocalizations.of(context)!.premiumPlanLimitedFunctionDescription3}>>',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (_, __) => const SizedBox.shrink(),
-                        );
-                      },
-                    ),
-                  ],
+                  children: [],
                 ),
               ),
             ],
@@ -961,7 +634,7 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
         Expanded(
           child: label == AppLocalizations.of(context)!.map
               ? GestureDetector(
-                  onTap: () => _launchMaps(widget.spot['address']),
+                  onTap: () => _launchMaps(widget.spot.address),
                   child: Text(
                     value,
                     style: const TextStyle(

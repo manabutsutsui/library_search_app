@@ -40,6 +40,7 @@
 		<true/>
 		<key>UIBackgroundModes</key>
 		<array>
+			<string>fetch</string>
 			<string>remote-notification</string>
 		</array>
 		<key>UILaunchStoryboardName</key>
@@ -67,7 +68,6 @@
 				<key>SKAdNetworkIdentifier</key>
 				<string>cDkw7geqH8.skadnetwork</string>
 			</dict>
-			<!-- 他の識別子を追加 -->
 		</array>
 		<key>UIStatusBarHidden</key>
 		<true/>
@@ -88,5 +88,7 @@
 		<array>
 			<string>Default</string>
 		</array>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<false/>
 	</dict>
 </plist>

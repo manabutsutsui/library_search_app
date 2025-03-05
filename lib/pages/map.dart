@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'spot_detail.dart';
 import '../utils/seichi_request.dart';
 import '../utils/search_anime.dart';
-import '../utils/cluster.dart';
+import '../utils/spot_data.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../utils/seichi_spots.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -23,7 +23,6 @@ class _MapPageState extends State<MapPage> {
   OverlayEntry? _overlayEntry;
 
   final TextEditingController _searchController = TextEditingController();
-  double _currentZoom = 12.0;
   List<SpotData> _allSpots = [];
 
   @override
@@ -83,7 +82,7 @@ class _MapPageState extends State<MapPage> {
           "elementType": "labels",
           "stylers": [
             {
-              "visibility": "off"
+              "visibility": "on"
             }
           ]
         }
@@ -92,56 +91,23 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _fetchSpots() async {
-    Query spotsQuery = FirebaseFirestore.instance.collection('spots');
-    QuerySnapshot snapshot = await spotsQuery.get();
-
-    _allSpots =
-        snapshot.docs.map((doc) => SpotData.fromFirestore(doc, false)).toList();
+    _allSpots = seichiSpots
+        .map((spot) => SpotData.fromSeichiSpot(spot, false))
+        .toList();
 
     _updateMarkers();
   }
 
   void _updateMarkers() {
-    final l10n = AppLocalizations.of(context)!;
     Set<Marker> newMarkers = {};
 
-    if (_currentZoom <= ClusterManager.clusterZoomThreshold) {
-      final clusters = ClusterManager.createClusters(_allSpots, _currentZoom);
-
-      clusters.forEach((prefecture, spots) {
-        final center = _calculateClusterCenter(spots);
-        newMarkers.add(
-          Marker(
-            markerId: MarkerId('cluster_$prefecture'),
-            position: center,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueViolet),
-            infoWindow: InfoWindow(
-              title: prefecture,
-              snippet: '${spots.length}${l10n.holyPlaces}',
-            ),
-            onTap: () => _showClusterSpots(spots),
-          ),
-        );
-      });
-    } else {
-      for (var spot in _allSpots) {
-        newMarkers.add(Marker(
-          markerId: MarkerId(spot.id),
-          position: spot.location,
-          icon: BitmapDescriptor.defaultMarker,
-          infoWindow: InfoWindow(
-            title: spot.name,
-            snippet: spot.work,
-          ),
-          onTap: () async => _showSpotDetails(
-            await FirebaseFirestore.instance
-                .collection('spots')
-                .doc(spot.id)
-                .get(),
-          ),
-        ));
-      }
+    for (var spot in _allSpots) {
+      newMarkers.add(Marker(
+        markerId: MarkerId(spot.id),
+        position: spot.location,
+        icon: BitmapDescriptor.defaultMarker,
+        onTap: () => _showSpotDetailsFromSeichiSpot(spot.id),
+      ));
     }
 
     setState(() {
@@ -149,66 +115,10 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  LatLng _calculateClusterCenter(List<SpotData> spots) {
-    double sumLat = 0;
-    double sumLng = 0;
-
-    for (var spot in spots) {
-      sumLat += spot.location.latitude;
-      sumLng += spot.location.longitude;
-    }
-
-    return LatLng(sumLat / spots.length, sumLng / spots.length);
-  }
-
-  void _showClusterSpots(List<SpotData> spots) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              '${spots.first.prefecture}${l10n.holyPlacesList}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: spots.length,
-                itemBuilder: (context, index) {
-                  final spot = spots[index];
-                  return ListTile(
-                    title: Text(spot.name,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    subtitle: Text('${l10n.workName}: ${spot.work}'),
-                    leading: Icon(
-                      Icons.location_on,
-                      color: spot.isVisited ? Colors.blue : Colors.red,
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      mapController?.animateCamera(
-                        CameraUpdate.newLatLngZoom(spot.location, 15),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSpotDetails(DocumentSnapshot spot) async {
-    final l10n = AppLocalizations.of(context)!;
+  void _showSpotDetailsFromSeichiSpot(String spotId) {
     _removeOverlay();
-    int reviewCount = await _getReviewCount(spot.id);
+    final seichiSpot = seichiSpots.firstWhere((spot) => spot.id == spotId);
+
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         bottom: 30,
@@ -228,21 +138,16 @@ class _MapPageState extends State<MapPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  spot['name'],
+                  seichiSpot.name,
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.chat_bubble_outline, color: Colors.blue),
-                    const SizedBox(width: 5),
-                    Text('$reviewCount${l10n.reviews}',
-                        style: const TextStyle(color: Colors.blue)),
-                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '${l10n.workName}: ${spot['work']}',
+                        '${AppLocalizations.of(context)!.workName}: ${seichiSpot.workName}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -257,7 +162,10 @@ class _MapPageState extends State<MapPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SpotDetailPage(spot: spot)),
+                        builder: (context) => SpotDetailPage(
+                          spot: seichiSpot,
+                        ),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -265,7 +173,7 @@ class _MapPageState extends State<MapPage> {
                     minimumSize: const Size(double.infinity, 50),
                   ),
                   child: Text(
-                    l10n.toHolyPlacePage,
+                    AppLocalizations.of(context)!.toHolyPlacePage,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -279,14 +187,6 @@ class _MapPageState extends State<MapPage> {
       ),
     );
     Overlay.of(context).insert(_overlayEntry!);
-  }
-
-  Future<int> _getReviewCount(String spotId) async {
-    QuerySnapshot reviewSnapshot = await FirebaseFirestore.instance
-        .collection('reviews')
-        .where('spotId', isEqualTo: spotId)
-        .get();
-    return reviewSnapshot.docs.length;
   }
 
   void _removeOverlay() {
@@ -307,16 +207,12 @@ class _MapPageState extends State<MapPage> {
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: _center,
-                    zoom: _currentZoom,
+                    zoom: 12.0,
                   ),
                   markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   onTap: (_) => _removeOverlay(),
-                  onCameraMove: (position) {
-                    _currentZoom = position.zoom;
-                    _updateMarkers();
-                  },
                 ),
           Positioned(
             top: 50,
@@ -354,26 +250,23 @@ class _MapPageState extends State<MapPage> {
                           builder: (BuildContext context) =>
                               AnimeSearchBottomSheet(
                             onSpotSelected: (spot) {
-                              final data = spot.data() as Map<String, dynamic>;
-                              final location = data['location'] as GeoPoint;
-
                               setState(() {
-                                _searchController.text = data['name'] ?? '';
+                                _searchController.text = spot.name;
                               });
 
                               mapController?.animateCamera(
                                 CameraUpdate.newCameraPosition(
                                   CameraPosition(
                                     target: LatLng(
-                                      location.latitude,
-                                      location.longitude,
+                                      spot.latitude,
+                                      spot.longitude,
                                     ),
                                     zoom: 15.0,
                                   ),
                                 ),
                               );
 
-                              _showSpotDetails(spot);
+                              _showSpotDetailsFromSeichiSpot(spot.id);
                             },
                           ),
                         ),
@@ -396,7 +289,8 @@ class _MapPageState extends State<MapPage> {
                     padding: const EdgeInsets.all(15),
                     backgroundColor: Colors.blue,
                   ),
-                  child: const Icon(Icons.add_location, size: 30, color: Colors.white),
+                  child: const Icon(Icons.add_location,
+                      size: 30, color: Colors.white),
                 ),
               ],
             ),

@@ -6,14 +6,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'setting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'subscription_premium.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:rxdart/rxdart.dart';
-import 'user_kuchikomi.dart';
+import '../providers/points_provider.dart';
 import 'bookmarks.dart';
-import 'user_posts.dart';
-import 'liked_posts.dart';
-import '../utils/seichi_de_dekirukoto.dart';
+import 'user_kuchikomi.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -53,225 +49,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _uploadImage(XFile image) async {
-    try {
-      final User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final storageRef = FirebaseStorage.instance.ref();
-        final imageRef = storageRef.child('profile_images/${user.uid}.jpg');
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final storageRef = FirebaseStorage.instance.ref();
+      final imageRef = storageRef.child('profile_images/${user.uid}.jpg');
 
-        try {
-          await imageRef.delete();
-        } catch (e) {
-          // print('古い画像の削除中にエラーが発生しました（初回または存在しない場合）: $e');
-        }
+      try {
+        await imageRef.delete();
+      } catch (e) {
+        // print('古い画像の削除中にエラーが発生しました（初回または存在しない場合）: $e');
+      }
 
-        final uploadTask = imageRef.putFile(File(image.path));
-        final snapshot = await uploadTask.whenComplete(() {});
-        final downloadUrl = await snapshot.ref.getDownloadURL();
+      final uploadTask = imageRef.putFile(File(image.path));
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
 
-        // ユーザードキュメントの更新
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .update({
-          'profileImage': downloadUrl,
-        });
+      // ユーザードキュメントの更新
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'profileImage': downloadUrl,
+      });
 
-        // レビューコレクションの更新
-        final reviewsQuery = await FirebaseFirestore.instance
-            .collection('reviews')
-            .where('userId', isEqualTo: user.uid)
-            .get();
+      // レビューコレクションの更新
+      final reviewsQuery = await FirebaseFirestore.instance
+          .collection('reviews')
+          .where('userId', isEqualTo: user.uid)
+          .get();
 
-        final batch = FirebaseFirestore.instance.batch();
-        for (var doc in reviewsQuery.docs) {
-          batch.update(doc.reference, {
-            'userProfileImage': downloadUrl,
-          });
-        }
-        await batch.commit();
-
-        final postsQuery = await FirebaseFirestore.instance
-            .collection('posts')
-            .where('userId', isEqualTo: user.uid)
-            .get();
-
-        final postsBatch = FirebaseFirestore.instance.batch();
-        for (var doc in postsQuery.docs) {
-          postsBatch.update(doc.reference, {
-            'userImage': downloadUrl,
-          });
-        }
-        await postsBatch.commit();
-
-        setState(() {
-          _profileImageUrl = downloadUrl;
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in reviewsQuery.docs) {
+        batch.update(doc.reference, {
+          'userProfileImage': downloadUrl,
         });
       }
-    } catch (e) {
-      // print('画像のアップロード中にエラーが発生しました: $e');
+      await batch.commit();
+
+      final postsQuery = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      final postsBatch = FirebaseFirestore.instance.batch();
+      for (var doc in postsQuery.docs) {
+        postsBatch.update(doc.reference, {
+          'userImage': downloadUrl,
+        });
+      }
+      await postsBatch.commit();
+
+      setState(() {
+        _profileImageUrl = downloadUrl;
+      });
     }
-  }
-
-  Widget _buildUserStats(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (userId == null) {
-      return const SizedBox();
-    }
-
-    // 各コレクションのStreamを作成
-    final reviewsStream = FirebaseFirestore.instance
-        .collection('reviews')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map((snap) => snap.docs.length);
-
-    final bookmarksStream = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('bookmarks')
-        .snapshots()
-        .map((snap) => snap.docs.length);
-
-    final postsStream = FirebaseFirestore.instance
-        .collection('posts')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map((snap) => snap.docs.length);
-
-    final favoriteStream = FirebaseFirestore.instance
-        .collection('posts')
-        .where('likedBy', arrayContains: userId)
-        .snapshots()
-        .map((snap) => snap.docs.length);
-
-    return StreamBuilder<List<int>>(
-      stream: Rx.combineLatest4(
-        reviewsStream,
-        bookmarksStream,
-        postsStream,
-        favoriteStream,
-        (reviews, bookmarks, posts, favorites) =>
-            [reviews, bookmarks, posts, favorites],
-      ),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final [reviewCount, bookmarkCount, postCount, favoriteCount] =
-            snapshot.data!;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: [
-              _buildStatItem(
-                icon: Icons.rate_review,
-                title: l10n.kuchikomi,
-                count: reviewCount,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UserKuchikomiPage(),
-                    ),
-                  );
-                },
-              ),
-              Divider(height: 1, color: Colors.grey[300]),
-              _buildStatItem(
-                icon: Icons.bookmark,
-                title: l10n.bookmarks,
-                count: bookmarkCount,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BookmarksPage(),
-                    ),
-                  );
-                },
-              ),
-              Divider(height: 1, color: Colors.grey[300]),
-              _buildStatItem(
-                icon: Icons.post_add,
-                title: l10n.posts,
-                count: postCount,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserPostsPage(userId: userId),
-                    ),
-                  );
-                },
-              ),
-              Divider(height: 1, color: Colors.grey[300]),
-              _buildStatItem(
-                icon: Icons.favorite,
-                title: l10n.favorite,
-                count: favoriteCount,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LikedPostsPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String title,
-    required int count,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: Colors.blue,
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              count.toString(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showBioDialog() {
@@ -300,7 +131,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: Text(l10n.cancel,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () async {
@@ -375,152 +207,197 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _bio = userData?['bio'];
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: _pickImage,
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundImage: _profileImageUrl != null
-                                ? NetworkImage(_profileImageUrl!)
-                                : null,
-                            child: _profileImageUrl == null
-                                ? const Icon(Icons.person, size: 40)
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _username ?? l10n.unknown,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _showBioDialog,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    _bio?.isNotEmpty == true
-                                        ? _bio!
-                                        : l10n.tapToAddBio,
-                                    style: TextStyle(
-                                      color: _bio?.isNotEmpty == true
-                                          ? Colors.black87
-                                          : Colors.grey[600],
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildUserStats(context),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SubscriptionPremium(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    width: double.infinity,
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3))
                     ),
-                    child: Text(
-                      '👑PREMIUM PLAN👑',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.5),
-                            offset: const Offset(0, 4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundImage: _profileImageUrl != null
+                                  ? NetworkImage(_profileImageUrl!)
+                                  : null,
+                              child: _profileImageUrl == null
+                                  ? const Icon(Icons.person, size: 40)
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _username ?? l10n.unknown,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: _showBioDialog,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _bio?.isNotEmpty == true
+                                          ? _bio!
+                                          : l10n.tapToAddBio,
+                                      style: TextStyle(
+                                        color: _bio?.isNotEmpty == true
+                                            ? Colors.black87
+                                            : Colors.grey[600],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.9,
-                      ),
-                      builder: (context) => const SeichiDeDekirukoto(),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    width: double.infinity,
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.yourPoints,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
                     decoration: BoxDecoration(
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Center(
-                        child: Text(l10n.howToUseSeichi,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.5),
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]))),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 32.0),
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final points = ref.watch(pointsProvider);
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "${points.totalPoints}",
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                "Pt",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavigationButton(
+                        icon: Icons.rate_review,
+                        label: l10n.kuchikomi,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const UserKuchikomiPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildNavigationButton(
+                        icon: Icons.bookmark,
+                        label: l10n.bookmarks,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BookmarksPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNavigationButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.blue, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

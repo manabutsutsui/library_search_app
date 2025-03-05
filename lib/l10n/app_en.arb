@@ -253,6 +253,8 @@
     "daily": "Daily/Soft",
     "drama": "Drama/Youth",
     "sf": "SF/Fantasy",
+    "comedy": "Comedy/Gag",
+    "war": "War/Military",
     "reviewPost": "Post Review",
     "addPhoto": "Add Photo (Optional)",
     "tapToAddPhoto": "Tap to Add Photo",
@@ -338,5 +340,14 @@
     "restorePurchase": "Restore Purchase",
     "restoreSuccess": "Purchase history restored",
     "restoreFailed": "Failed to restore purchase history",
-    "restoreNoSubscription": "No premium plan found in purchase history"
+    "restoreNoSubscription": "No premium plan found in purchase history",
+    "premiumAdFree": "\\ Premium Ad Free /",
+    "loginBonusTitle": "Login Bonus",
+    "loginBonusDaily": "5 points received!",
+    "loginBonusDailyPremium": "10 points received!",
+    "loginBonusSpecial": "30 points received!",
+    "loginBonusSpecialPremium": "60 points received!",
+    "consecutiveLoginDays": "{days} consecutive login days achieved!",
+    "pointsAdded": "Points added!",
+    "yourPoints": "Your Points"
 }

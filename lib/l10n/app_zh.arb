@@ -253,6 +253,8 @@
     "daily": "日常/温馨",
     "drama": "电视剧/青春",
     "sf": "科幻/奇幻",
+    "comedy": "喜剧/搞笑",
+    "war": "战争/军事",
     "reviewPost": "发表评论",
     "addPhoto": "添加照片（可选）",
     "tapToAddPhoto": "点击添加照片",
@@ -338,5 +340,14 @@
     "restorePurchase": "恢复购买",
     "restoreSuccess": "购买历史已恢复",
     "restoreFailed": "购买历史恢复失败",
-    "restoreNoSubscription": "购买历史中没有找到Premium计划"
+    "restoreNoSubscription": "购买历史中没有找到Premium计划",
+    "premiumAdFree": "\\  Premium，广告不显示! /",
+    "loginBonusTitle": "登录奖励",
+    "loginBonusDaily": "5点获得！",
+    "loginBonusDailyPremium": "10点获得！",
+    "loginBonusSpecial": "30点获得！",
+    "loginBonusSpecialPremium": "60点获得！",
+    "consecutiveLoginDays": "{days}天连续登录达成！",
+    "pointsAdded": "点数增加！",
+    "yourPoints": "您的点数"
 }

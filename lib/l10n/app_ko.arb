@@ -253,6 +253,8 @@
     "daily": "일상/소노소노",
     "drama": "드라마/청춘",
     "sf": "SF/판타지",
+    "comedy": "코미디/개그",
+    "war": "전쟁/군사",
     "reviewPost": "리뷰 작성",
     "addPhoto": "사진 추가（선택）",
     "tapToAddPhoto": "사진 추가",
@@ -338,5 +340,14 @@
     "restorePurchase": "구매 기록 복구",
     "restoreSuccess": "구매 기록 복구 성공",
     "restoreFailed": "구매 기록 복구 실패",
-    "restoreNoSubscription": "구매 기록에 프리미엄 플랜이 없습니다"
+    "restoreNoSubscription": "구매 기록에 프리미엄 플랜이 없습니다",
+    "premiumAdFree": "\\ 프리미엄으로, 광고 없음! /",
+    "loginBonusTitle": "로그인 보너스",
+    "loginBonusDaily": "5 포인트 획득!",
+    "loginBonusDailyPremium": "10 포인트 획득!",
+    "loginBonusSpecial": "30 포인트 획득!",
+    "loginBonusSpecialPremium": "60 포인트 획득!",
+    "consecutiveLoginDays": "{days}일 연속 로그인 달성!",
+    "pointsAdded": "포인트 추가!",
+    "yourPoints": "당신의 포인트"
 }

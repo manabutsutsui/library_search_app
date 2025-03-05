@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/anime_lists.dart';
 import 'spot_detail.dart';
+import '../utils/seichi_spots.dart';
 
 class AnimeDetailPage extends StatefulWidget {
   final AnimeList anime;
@@ -15,40 +15,23 @@ class AnimeDetailPage extends StatefulWidget {
 }
 
 class AnimeDetailPageState extends State<AnimeDetailPage> {
-  List<DocumentSnapshot> _spots = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _fetchSpots();
-  }
-
-  Future<void> _fetchSpots() async {
-    final QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('spots')
-        .where('work', isEqualTo: widget.anime.name)
-        .get();
-    setState(() {
-      _spots = snapshot.docs;
-      _isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(widget.anime.name, 
-          style: const TextStyle(
-            fontWeight: FontWeight.bold, 
-            fontSize: 16, 
-            color: Colors.white
-          )
-        ),
+        title: Text(widget.anime.name,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white)),
         backgroundColor: Colors.blue,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -58,7 +41,8 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
           children: [
             Image.asset(widget.anime.imageAsset),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -77,30 +61,29 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                   ),
                   const SizedBox(height: 24),
                   Center(
-                    child: Text(
-                      "'${widget.anime.name}'${l10n.holyPlaceList}", 
-                      style: const TextStyle(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold
-                      )
-                    )
-                  ),
+                      child: Text("'${widget.anime.name}'${l10n.holyPlaceList}",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 32),
-                  Center(
-                    child: Text(
-                      '${l10n.numberOfHolyPlaces}: ${_spots.length}${l10n.places}', 
-                      style: const TextStyle(
-                        fontSize: 16, 
-                        fontWeight: FontWeight.bold
-                      )
-                    )
-                  ),
-                  const SizedBox(height: 16),
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _spots.isEmpty
-                          ? Center(child: Text(l10n.noHolyPlacesFound))
-                          : GridView.builder(
+                  Builder(
+                    builder: (context) {
+                      final spots = seichiSpots
+                          .where((spot) => spot.workName == widget.anime.name)
+                          .toList();
+
+                      return Column(
+                        children: [
+                          Center(
+                              child: Text(
+                                  '${l10n.numberOfHolyPlaces}: ${spots.length}${l10n.places}',
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold))),
+                          const SizedBox(height: 16),
+                          if (spots.isEmpty)
+                            Center(child: Text(l10n.noHolyPlacesFound))
+                          else
+                            GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               gridDelegate:
@@ -110,9 +93,9 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                                 mainAxisSpacing: 8.0,
                                 childAspectRatio: 1.3,
                               ),
-                              itemCount: _spots.length,
+                              itemCount: spots.length,
                               itemBuilder: (context, index) {
-                                final spot = _spots[index];
+                                final spot = spots[index];
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -128,45 +111,35 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: spot['imageURL'] != null &&
-                                                spot['imageURL']
-                                                    .toString()
-                                                    .isNotEmpty
-                                            ? ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  spot['imageURL'],
-                                                  width: double.infinity,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              )
-                                            : Container(
-                                                color: Colors.grey[200],
-                                                child: const Center(
-                                                  child: Icon(
-                                                    Icons.image_not_supported,
-                                                    size: 40,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          child: Image.network(
+                                            spot.imageURL,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
                                       ),
+                                      const SizedBox(height: 8),
                                       Text(
-                                        spot['name'],
+                                        spot.name,
                                         style: const TextStyle(
+                                          fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 16,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8),
                                     ],
                                   ),
                                 );
                               },
                             ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

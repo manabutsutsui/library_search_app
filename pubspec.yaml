@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.5.1+1
+version: 1.5.4+1
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
@@ -42,7 +42,7 @@ dependencies:
   http: ^1.2.2
   flutter_launcher_icons: ^0.13.1
   firebase_core: ^3.5.0
-  cloud_firestore: ^5.4.2
+  cloud_firestore: ^5.6.5
   geocoding: ^3.0.0
   firebase_auth: ^5.4.0
   url_launcher: ^6.3.0
@@ -53,7 +53,7 @@ dependencies:
   in_app_review: ^2.0.9
   google_mobile_ads: ^5.1.0
   font_awesome_flutter: ^10.7.0
-  firebase_messaging: ^15.1.3
+  firebase_messaging: ^15.2.3
   package_info_plus: ^8.0.3
   shared_preferences: ^2.2.2
   purchases_flutter: ^8.1.5
@@ -70,6 +70,7 @@ dependencies:
   flutter_google_street_view: ^1.0.2
   timeago: ^3.7.0
   rxdart: ^0.27.7
+  flutter_local_notifications: ^18.0.1
 
 flutter_icons:
   android: true
@@ -162,6 +163,10 @@ flutter:
     - assets/registration_page/dekiru_02.png
     - assets/registration_page/dekiru_03.png
     - assets/registration_page/dekiru_04.png
+    - assets/crowns/crown_gold.png
+    - assets/crowns/crown_silver.png
+    - assets/crowns/crown_copper.png
+    - assets/crowns/crown_blue.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
