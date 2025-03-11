@@ -202,15 +202,9 @@ class _SubscriptionPremiumState extends ConsumerState<SubscriptionPremium> {
                             ),
                             const SizedBox(height: 16),
                             _buildFeatureItem(
-                              icon: Icons.photo_library,
-                              title: l10n.unlimitedUse,
-                              description: l10n.unlimitedUseDescription,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFeatureItem(
                               icon: Icons.star,
-                              title: l10n.premiumExclusive,
-                              description: l10n.premiumExclusiveDescription,
+                              title: l10n.pointsIncreased,
+                              description: l10n.pointsIncreasedDescription,
                             ),
                           ],
                         ),

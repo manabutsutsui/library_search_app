@@ -17,13 +17,11 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
   @override
   void initState() {
     super.initState();
-    // 各アニメのジャンル文字列をスペースで分割して個別のジャンルを取得
     final allGenres = <String>[];
     for (var anime in animeList) {
       final animeGenres = anime.genre.split(' ');
       allGenres.addAll(animeGenres);
     }
-    // 重複を削除してからソート
     genres = allGenres.toSet().toList()..sort();
   }
 
@@ -104,13 +102,6 @@ class _AnimeMorePageState extends State<AnimeMorePage> {
                     backgroundColor: Colors.white,
                     selectedColor: Colors.blue.withOpacity(0.2),
                     checkmarkColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: isSelected ? Colors.blue : Colors.black,
-                        width: 1,
-                      ),
-                    ),
                   ),
                 );
               },

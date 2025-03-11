@@ -36,7 +36,8 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
               ),
               title: Text(
                 l10n.requestHolyPlace,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -52,7 +53,8 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                     ),
                     const SizedBox(height: 16),
                     Text(l10n.requestHolyPlaceDescription,
-                        style: const TextStyle(color: Colors.white, fontSize: 16)),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16)),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _spotNameController,
@@ -67,7 +69,7 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                     TextField(
                       controller: _addressController,
                       decoration: InputDecoration(
-                        hintText: l10n.address,
+                        hintText: l10n.addressOptional,
                         filled: true,
                         fillColor: Colors.white,
                         border: const OutlineInputBorder(),
@@ -101,7 +103,6 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                           _errorMessage = '';
                         });
                         if (_spotNameController.text.isNotEmpty &&
-                            _addressController.text.isNotEmpty &&
                             _workNameController.text.isNotEmpty) {
                           try {
                             await FirebaseFirestore.instance
@@ -110,7 +111,9 @@ class SpotRequestDialogState extends State<SpotRequestDialog> {
                               'spotName': _spotNameController.text,
                               'address': _addressController.text,
                               'workName': _workNameController.text,
-                              'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'unknown',
+                              'userEmail':
+                                  FirebaseAuth.instance.currentUser?.email ??
+                                      'unknown',
                               'timestamp': FieldValue.serverTimestamp(),
                             });
                             Navigator.of(context).pop();

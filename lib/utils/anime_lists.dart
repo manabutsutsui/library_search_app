@@ -14,24 +14,6 @@ class AnimeList {
 
 final List<AnimeList> animeList = [
   AnimeList(
-    name: 'おおかみこどもの雨と雪',
-    genre: '映画',
-    imageAsset: 'assets/images/ookami.png',
-    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27405',
-  ),
-  AnimeList(
-    name: '僕だけがいない街',
-    genre: 'SF/ファンタジー ホラー/サスペンス/推理 ドラマ/青春',
-    imageAsset: 'assets/images/bokudakega.png',
-    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20527',
-  ),
-  AnimeList(
-    name: 'ダンダダン',
-    genre: 'アクション/バトル ホラー/サスペンス/推理 ドラマ/青春',
-    imageAsset: 'assets/images/dandadan.png',
-    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27283',
-  ),
-  AnimeList(
     name: '君の名は。',
     genre: '映画 SF/ファンタジー ドラマ/青春',
     imageAsset: 'assets/images/your_name.png',
@@ -312,5 +294,41 @@ final List<AnimeList> animeList = [
     genre: 'ドラマ/青春 日常/ほのぼの',
     imageAsset: 'assets/images/keionn.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20329',
+  ),
+  AnimeList(
+    name: 'おおかみこどもの雨と雪',
+    genre: '映画',
+    imageAsset: 'assets/images/ookami.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27405',
+  ),
+  AnimeList(
+    name: '僕だけがいない街',
+    genre: 'SF/ファンタジー ホラー/サスペンス/推理 ドラマ/青春',
+    imageAsset: 'assets/images/bokudakega.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=20527',
+  ),
+  AnimeList(
+    name: 'ダンダダン',
+    genre: 'アクション/バトル ホラー/サスペンス/推理 ドラマ/青春',
+    imageAsset: 'assets/images/dandadan.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27283',
+  ),
+  AnimeList(
+    name: 'アオのハコ',
+    genre: '恋愛/ラブコメ ドラマ/青春',
+    imageAsset: 'assets/images/aonohako.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=27358',
+  ),
+  AnimeList(
+    name: 'ルックバック',
+    genre: '映画',
+    imageAsset: 'assets/images/lookback.png',
+    imageUrl: 'https://spice.eplus.jp/articles/332880',
+  ),
+  AnimeList(
+    name: '心が叫びたがってるんだ。',
+    genre: '映画',
+    imageAsset: 'assets/images/kokoro.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21662',
   ),
 ];

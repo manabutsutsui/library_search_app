@@ -10,6 +10,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/points_provider.dart';
 import 'bookmarks.dart';
 import 'user_kuchikomi.dart';
+import '../utils/login_calendar.dart';
+import 'package:in_app_review/in_app_review.dart';
+
+final inAppReview = InAppReview.instance;
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -215,10 +219,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3))
-                    ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: Colors.blue.withOpacity(0.3))),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
@@ -282,7 +286,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.yourPoints,
                     style: const TextStyle(
@@ -340,8 +344,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const UserKuchikomiPage(),
+                              builder: (context) => const UserKuchikomiPage(),
                             ),
                           );
                         },
@@ -358,6 +361,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           );
                         },
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        if (await inAppReview.isAvailable()) {
+                          await inAppReview.openStoreListing(
+                            appStoreId: '6723886292',
+                          );
+                        }
+                      },
+                      child: Text(l10n.writeReview,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold))),
+                  const SizedBox(height: 24),
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.calendar_today,
+                              size: 24, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.loginHistory,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const LoginCalendar(),
                     ],
                   ),
                 ],

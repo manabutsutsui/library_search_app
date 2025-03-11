@@ -7,17 +7,20 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/seichi_spots.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/points_provider.dart';
+import '../providers/subscription_state.dart';
 
-class ReviewForm extends StatefulWidget {
+class ReviewForm extends ConsumerStatefulWidget {
   final SeichiSpot spot;
 
   const ReviewForm({super.key, required this.spot});
 
   @override
-  ReviewFormState createState() => ReviewFormState();
+  ConsumerState<ReviewForm> createState() => ReviewFormState();
 }
 
-class ReviewFormState extends State<ReviewForm> {
+class ReviewFormState extends ConsumerState<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   final _reviewController = TextEditingController();
   int _rating = 1;
@@ -61,6 +64,13 @@ class ReviewFormState extends State<ReviewForm> {
   }
 
   Future<void> _submitReview() async {
+    if (_image == null) {
+      setState(() {
+        _showImageError = true;
+      });
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -88,7 +98,21 @@ class ReviewFormState extends State<ReviewForm> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
+        // プレミアムユーザーかどうかを確認
+        final isPremium = ref.read(subscriptionProvider).value ?? false;
+
+        // プレミアムユーザーには20ポイント、通常ユーザーには10ポイントを付与
+        final pointsToAdd = isPremium ? 20 : 10;
+        await ref.read(pointsProvider.notifier).addPoints(pointsToAdd);
+
         if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.pointsAdded(pointsToAdd)),
+              backgroundColor: Colors.green,
+            ),
+          );
           Navigator.pop(context, true);
         }
       }
@@ -134,6 +158,9 @@ class ReviewFormState extends State<ReviewForm> {
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(8),
+                        border: _showImageError
+                            ? Border.all(color: Colors.red, width: 2)
+                            : null,
                       ),
                       child: _image == null
                           ? Column(
@@ -152,7 +179,14 @@ class ReviewFormState extends State<ReviewForm> {
                             ),
                     ),
                   ),
-                  if (_showImageError) const SizedBox.shrink(),
+                  if (_showImageError)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        l10n.photoRequired,
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   Text(l10n.evaluationOfHolyPlace,
                       style: const TextStyle(
@@ -202,6 +236,9 @@ class ReviewFormState extends State<ReviewForm> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: Text(l10n.submitReview,
                         style: const TextStyle(

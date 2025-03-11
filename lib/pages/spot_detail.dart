@@ -15,6 +15,7 @@ import 'dart:ui';
 import '../utils/seichi_spots.dart';
 import '../utils/review_list_widget.dart';
 import '../utils/report.dart';
+import '../utils/photo_gallery.dart';
 
 class SpotDetailPage extends ConsumerStatefulWidget {
   final SeichiSpot spot;
@@ -570,10 +571,11 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                   ],
                 ),
               ),
-              const SingleChildScrollView(
+              SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [],
+                  children: [
+                    PhotoGalleryWidget(spotId: widget.spot.id),
+                  ],
                 ),
               ),
             ],

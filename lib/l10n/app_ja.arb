@@ -256,7 +256,7 @@
     "comedy": "コメディ/ギャグ",
     "war": "戦争/ミリタリー",
     "reviewPost": "口コミを投稿",
-    "addPhoto": "写真を追加（任意）",
+    "addPhoto": "写真を追加",
     "tapToAddPhoto": "タップして写真を追加",
     "evaluationOfHolyPlace": "聖地の評価",
     "reviewContent": "口コミの内容",
@@ -349,6 +349,42 @@
     "loginBonusSpecialPremium": "60ポイント獲得！",
     "consecutiveLoginDays": "{days}日連続ログイン達成！",
     "claim": "受け取る",
-    "pointsAdded": "ポイントを獲得しました！",
-    "yourPoints": "あなたのポイント"
+    "pointsAdded": "{points}ポイント獲得！",
+    "@pointsAdded": {
+      "description": "ポイント獲得時のメッセージ",
+      "placeholders": {
+        "points": {
+          "type": "int",
+          "example": "20"
+        }
+      }
+    },
+    "yourPoints": "あなたのポイント",
+    "photoRequired": "写真を追加してください",
+    "tenPointsAdded": "10ポイント獲得！",
+    "loginHistory": "ログイン履歴",
+    "sun": "日",
+    "mon": "月",
+    "tue": "火",
+    "wed": "水",
+    "thu": "木",
+    "fri": "金",
+    "sat": "土",
+    "addressOptional": "住所(任意)",
+    "january": "1月",
+    "february": "2月",
+    "march": "3月",
+    "april": "4月",
+    "may": "5月",
+    "june": "6月",
+    "july": "7月",
+    "august": "8月",
+    "september": "9月",
+    "october": "10月",
+    "november": "11月",
+    "december": "12月",
+    "noPhotos": "写真はありません",
+    "recentlyAddedAnime": "最近追加した作品",
+    "pointsIncreased": "もらえるポイントUp！",
+    "pointsIncreasedDescription": "ログインボーナスやレビュー投稿時にもらえるポイントが増えます。"
 } 

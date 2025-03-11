@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'ad/ad_banner.dart';
 import 'pages/home.dart';
 import 'pages/ranking.dart';
+import 'pages/anime_more.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -158,6 +159,7 @@ class AppWithBottomNavigationState
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
       GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
     ];
     _updatePages();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -199,6 +201,7 @@ class AppWithBottomNavigationState
     _pages = [
       const Home(),
       const MapPage(),
+      const AnimeMorePage(),
       const RankingPage(),
       _isLoggedIn ? const ProfilePage() : const CreateAccountPage(),
     ];
@@ -255,12 +258,18 @@ class AppWithBottomNavigationState
             BottomNavigationBar(
               items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
-                  icon: const Icon(Icons.home),
+                  icon: const Icon(
+                    Icons.home,
+                  ),
                   label: AppLocalizations.of(context)!.home,
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.map),
                   label: AppLocalizations.of(context)!.map,
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.work),
+                  label: AppLocalizations.of(context)!.works,
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.emoji_events),
@@ -274,9 +283,9 @@ class AppWithBottomNavigationState
               currentIndex: _selectedIndex,
               type: BottomNavigationBarType.fixed,
               selectedItemColor: Colors.blue,
+              selectedLabelStyle: const TextStyle(fontSize: 12),
+              unselectedLabelStyle: const TextStyle(fontSize: 10),
               onTap: _onItemTapped,
-              // showSelectedLabels: false,
-              // showUnselectedLabels: false,
             ),
           ],
         ),

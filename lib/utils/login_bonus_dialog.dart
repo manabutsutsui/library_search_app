@@ -237,7 +237,10 @@ class _LoginBonusDialogState extends ConsumerState<LoginBonusDialog>
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n.pointsAdded),
+                        content: Text(l10n.pointsAdded(
+                            loginBonus.consecutiveDays % 7 == 0
+                                ? (isPremium ? 60 : 30)
+                                : (isPremium ? 10 : 5))),
                         backgroundColor: Colors.green,
                       ),
                     );

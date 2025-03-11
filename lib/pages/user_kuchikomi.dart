@@ -6,13 +6,20 @@ import 'package:intl/intl.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-class UserKuchikomiPage extends StatelessWidget {
-  const UserKuchikomiPage({super.key});
+class UserKuchikomiPage extends StatefulWidget {
+  final String? userId;
 
+  const UserKuchikomiPage({super.key, this.userId});
+
+  @override
+  _UserKuchikomiPageState createState() => _UserKuchikomiPageState();
+}
+
+class _UserKuchikomiPageState extends State<UserKuchikomiPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final userId = widget.userId ?? FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -82,7 +89,6 @@ class UserKuchikomiPage extends StatelessWidget {
                         DateFormat('yyyy年MM月dd日 HH時mm分').format(timestamp);
 
                     return Card(
-                      elevation: 10,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

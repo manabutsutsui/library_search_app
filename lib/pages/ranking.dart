@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/seichi_spots.dart';
 import 'spot_detail.dart';
-
+import 'user_detail.dart';
 class RankingPage extends ConsumerStatefulWidget {
   const RankingPage({super.key});
 
@@ -44,47 +44,64 @@ class _RankingPageState extends ConsumerState<RankingPage>
     });
 
     try {
-      final reviewsSnapshot = await FirebaseFirestore.instance
-          .collection('reviews')
-          .get(const GetOptions(source: Source.serverAndCache));
+      final reviewsSnapshot =
+          await FirebaseFirestore.instance.collection('reviews').get();
 
-      Map<String, List<double>> ratings = {};
-      Map<String, int> reviewCounts = {};
-      Map<String, int> userReviewCounts = {};
+      // spotIdごとのレビュー数とレーティングの合計を計算
+      final Map<String, int> reviewCounts = {};
+      final Map<String, double> ratingTotals = {};
+      final Map<String, List<double>> allRatings = {};
 
-      for (var review in reviewsSnapshot.docs) {
-        final spotId = review['spotId'];
-        final rating = review['rating']?.toDouble() ?? 0.0;
-        final userId = review['userId'];
+      for (var doc in reviewsSnapshot.docs) {
+        final data = doc.data();
+        final spotId = data['spotId'] as String?;
+        final rating = data['rating'] as num?;
 
-        if (!ratings.containsKey(spotId)) {
-          ratings[spotId] = [];
+        if (spotId != null) {
+          // レビュー数をカウント
+          reviewCounts[spotId] = (reviewCounts[spotId] ?? 0) + 1;
+
+          // レーティングの合計を計算
+          if (rating != null) {
+            ratingTotals[spotId] =
+                (ratingTotals[spotId] ?? 0) + rating.toDouble();
+
+            // 全てのレーティングを保存
+            if (allRatings[spotId] == null) {
+              allRatings[spotId] = [];
+            }
+            allRatings[spotId]!.add(rating.toDouble());
+          }
         }
-        ratings[spotId]!.add(rating);
-
-        reviewCounts[spotId] = (reviewCounts[spotId] ?? 0) + 1;
-
-        userReviewCounts[userId] = (userReviewCounts[userId] ?? 0) + 1;
       }
 
-      List<Map<String, dynamic>> rankedSpotsByRating = seichiSpots.map((spot) {
-        final spotRatings = ratings[spot.id] ?? [];
-        final averageRating = spotRatings.isNotEmpty
-            ? spotRatings.reduce((a, b) => a + b) / spotRatings.length
-            : 0.0;
+      // 平均レーティングを計算
+      final Map<String, double> averageRatings = {};
+      ratingTotals.forEach((spotId, total) {
+        final count = reviewCounts[spotId] ?? 0;
+        if (count > 0) {
+          averageRatings[spotId] = total / count;
+        }
+      });
 
+      // レーティング平均でソートされたスポットリスト
+      final rankedSpotsByRating = seichiSpots.where((spot) {
+        return averageRatings.containsKey(spot.id);
+      }).map((spot) {
         return {
           'id': spot.id,
           'name': spot.name,
           'address': spot.address,
           'work': spot.workName,
-          'averageRating': averageRating,
-          'reviewCount': spotRatings.length,
+          'averageRating': averageRatings[spot.id] ?? 0.0,
           'imageURL': spot.imageURL,
         };
       }).toList();
 
-      List<Map<String, dynamic>> rankedSpotsByCount = seichiSpots.map((spot) {
+      // レビュー数でソートされたスポットリスト
+      final rankedSpotsByCount = seichiSpots.where((spot) {
+        return reviewCounts.containsKey(spot.id);
+      }).map((spot) {
         return {
           'id': spot.id,
           'name': spot.name,
@@ -94,6 +111,14 @@ class _RankingPageState extends ConsumerState<RankingPage>
           'imageURL': spot.imageURL,
         };
       }).toList();
+
+      // レーティング平均で降順ソート
+      rankedSpotsByRating.sort((a, b) => ((b['averageRating'] ?? 0.0) as num)
+          .compareTo((a['averageRating'] ?? 0.0) as num));
+
+      // レビュー数で降順ソート
+      rankedSpotsByCount.sort((a, b) => ((b['reviewCount'] ?? 0) as num)
+          .compareTo((a['reviewCount'] ?? 0) as num));
 
       final usersSnapshot =
           await FirebaseFirestore.instance.collection('users').get();
@@ -363,53 +388,63 @@ class _RankingPageState extends ConsumerState<RankingPage>
       itemCount: _rankedUsers.length > 15 ? 15 : _rankedUsers.length,
       itemBuilder: (context, index) {
         final user = _rankedUsers[index];
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  _buildRankIcon(index),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: (user['profileImage'] != null &&
-                            user['profileImage'].toString().isNotEmpty)
-                        ? NetworkImage(user['profileImage'] as String)
-                        : null,
-                    child: (user['profileImage'] == null ||
-                            user['profileImage'].toString().isEmpty)
-                        ? const Icon(Icons.person)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    user['username'] ?? '名称不明',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${user['points']} Pt',
-                      style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserDetailPage(userId: user['id']),
               ),
-            ),
-            const SizedBox(height: 16)
-          ],
+            );
+          },
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    _buildRankIcon(index),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: (user['profileImage'] != null &&
+                              user['profileImage'].toString().isNotEmpty)
+                          ? NetworkImage(user['profileImage'] as String)
+                          : null,
+                      child: (user['profileImage'] == null ||
+                              user['profileImage'].toString().isEmpty)
+                          ? const Icon(Icons.person)
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      user['username'] ?? '名称不明',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${user['points']} Pt',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16)
+            ],
+          ),
         );
       },
     );

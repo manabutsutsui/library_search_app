@@ -54,7 +54,6 @@ class AnimeDetailPageState extends State<AnimeDetailPage> {
                         style: const TextStyle(
                           fontSize: 8,
                           color: Colors.blue,
-                          decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
