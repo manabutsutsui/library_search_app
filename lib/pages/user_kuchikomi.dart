@@ -12,10 +12,10 @@ class UserKuchikomiPage extends StatefulWidget {
   const UserKuchikomiPage({super.key, this.userId});
 
   @override
-  _UserKuchikomiPageState createState() => _UserKuchikomiPageState();
+  UserKuchikomiPageState createState() => UserKuchikomiPageState();
 }
 
-class _UserKuchikomiPageState extends State<UserKuchikomiPage> {
+class UserKuchikomiPageState extends State<UserKuchikomiPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

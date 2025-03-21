@@ -82,7 +82,7 @@ class _MapPageState extends State<MapPage> {
           "elementType": "labels",
           "stylers": [
             {
-              "visibility": "on"
+              "visibility": "off"
             }
           ]
         }
@@ -105,10 +105,13 @@ class _MapPageState extends State<MapPage> {
       newMarkers.add(Marker(
         markerId: MarkerId(spot.id),
         position: spot.location,
+        infoWindow: InfoWindow(
+          title: spot.name,
+          snippet: spot.work,
+        ),
         icon: BitmapDescriptor.defaultMarker,
         onTap: () => _showSpotDetailsFromSeichiSpot(spot.id),
-      ));
-    }
+      ));}
 
     setState(() {
       _markers = newMarkers;

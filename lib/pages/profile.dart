@@ -12,6 +12,7 @@ import 'bookmarks.dart';
 import 'user_kuchikomi.dart';
 import '../utils/login_calendar.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'explain_points.dart';
 
 final inAppReview = InAppReview.instance;
 
@@ -333,7 +334,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ExplainPointsPage(),
+                            fullscreenDialog: true),
+                      );
+                    },
+                    child: const Text("ポイントとは？",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            decoration: TextDecoration.underline)),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
