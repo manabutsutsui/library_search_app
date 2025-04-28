@@ -542,15 +542,6 @@ class SpotDetailPageState extends ConsumerState<SpotDetailPage> {
                               ),
                             ],
                           ),
-                          GestureDetector(
-                            onTap: () => _launchURL(
-                                'https://tr.affiliate-sp.docomo.ne.jp/cl/d0000002559/3326/215'),
-                            child: Image.network(
-                              'https://img.affiliate-sp.docomo.ne.jp/ad/d0000002559/215.png',
-                              width: double.infinity,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
                           const SizedBox(height: 32),
                           Center(
                               child: Text(

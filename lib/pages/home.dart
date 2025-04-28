@@ -47,7 +47,11 @@ class HomeState extends ConsumerState<Home> {
         slivers: [
           SliverAppBar(
             expandedHeight: 150,
+            stretch: true,
             flexibleSpace: FlexibleSpaceBar(
+              stretchModes: const [
+                StretchMode.zoomBackground,
+              ],
               background: Image.asset(
                 'assets/images/home_image.png',
                 fit: BoxFit.cover,
@@ -180,9 +184,9 @@ class HomeState extends ConsumerState<Home> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(
+                  right: 16, left: 16, top: 16, bottom: 24),
               child: Row(
-                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     l10n.recentlyAddedAnime,
@@ -453,18 +457,6 @@ class HomeState extends ConsumerState<Home> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
-                  Text('\\ アニメ見るなら、dアニメストア!! /',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.5),
-                              offset: const Offset(0, 2),
-                            ),
-                          ])),
-                  const SizedBox(height: 4),
                   GestureDetector(
                     onTap: () => _launchURL(
                         'https://tr.affiliate-sp.docomo.ne.jp/cl/d0000002559/3326/215'),

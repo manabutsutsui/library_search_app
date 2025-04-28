@@ -7,6 +7,7 @@ import '../utils/search_anime.dart';
 import '../utils/spot_data.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/seichi_spots.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -88,6 +89,8 @@ class _MapPageState extends State<MapPage> {
         }
       ]
     ''');
+
+    _updateVisibleMarkers();
   }
 
   Future<void> _fetchSpots() async {
@@ -105,17 +108,51 @@ class _MapPageState extends State<MapPage> {
       newMarkers.add(Marker(
         markerId: MarkerId(spot.id),
         position: spot.location,
-        infoWindow: InfoWindow(
-          title: spot.name,
-          snippet: spot.work,
-        ),
         icon: BitmapDescriptor.defaultMarker,
         onTap: () => _showSpotDetailsFromSeichiSpot(spot.id),
-      ));}
+      ));
+    }
 
     setState(() {
       _markers = newMarkers;
     });
+  }
+
+  Future<void> _updateVisibleMarkers() async {
+    if (mapController == null) return;
+
+    final visibleRegion = await mapController!.getVisibleRegion();
+    Set<Marker> newMarkers = {};
+
+    for (var spot in _allSpots) {
+      if (_isLocationVisible(
+        spot.location,
+        visibleRegion.southwest,
+        visibleRegion.northeast,
+      )) {
+        newMarkers.add(Marker(
+          markerId: MarkerId(spot.id),
+          position: spot.location,
+          icon: BitmapDescriptor.defaultMarker,
+          infoWindow: InfoWindow(
+            title: spot.name,
+            snippet: spot.work,
+          ),
+          onTap: () => _showSpotDetailsFromSeichiSpot(spot.id),
+        ));
+      }
+    }
+
+    setState(() {
+      _markers = newMarkers;
+    });
+  }
+
+  bool _isLocationVisible(LatLng point, LatLng southwest, LatLng northeast) {
+    return point.latitude >= southwest.latitude &&
+        point.latitude <= northeast.latitude &&
+        point.longitude >= southwest.longitude &&
+        point.longitude <= northeast.longitude;
   }
 
   void _showSpotDetailsFromSeichiSpot(String spotId) {
@@ -124,67 +161,111 @@ class _MapPageState extends State<MapPage> {
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        bottom: 30,
+        bottom: 20,
         left: 20,
         right: 20,
-        child: Material(
-          elevation: 4.0,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  seichiSpot.name,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Row(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        '${AppLocalizations.of(context)!.workName}: ${seichiSpot.workName}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          seichiSpot.name,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        FutureBuilder<QuerySnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('reviews')
+                              .where('spotId', isEqualTo: seichiSpot.id)
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              );
+                            }
+
+                            final reviewCount = snapshot.data?.docs.length ?? 0;
+
+                            return Row(
+                              children: [
+                                const Icon(Icons.comment, color: Colors.blue),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$reviewCount${AppLocalizations.of(context)!.reviews}',
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${AppLocalizations.of(context)!.workName}: ${seichiSpot.workName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    _removeOverlay();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SpotDetailPage(
-                          spot: seichiSpot,
-                        ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _removeOverlay();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SpotDetailPage(
+                        spot: seichiSpot,
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context)!.toHolyPlacePage,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
                     ),
                   ),
+                  minimumSize: const Size(double.infinity, 45),
                 ),
-              ],
-            ),
+                child: Text(
+                  AppLocalizations.of(context)!.toHolyPlacePage,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -216,6 +297,7 @@ class _MapPageState extends State<MapPage> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   onTap: (_) => _removeOverlay(),
+                  onCameraIdle: _updateVisibleMarkers,
                 ),
           Positioned(
             top: 50,

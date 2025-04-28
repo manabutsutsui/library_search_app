@@ -4,7 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../utils/seichi_spots.dart';
 import 'spot_detail.dart';
+import '../providers/points_provider.dart';
+import 'explain_points.dart';
 import 'user_detail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 class RankingPage extends ConsumerStatefulWidget {
   const RankingPage({super.key});
 
@@ -381,72 +385,181 @@ class _RankingPageState extends ConsumerState<RankingPage>
   }
 
   Widget _buildUserList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _rankedUsers.length > 15 ? 15 : _rankedUsers.length,
-      itemBuilder: (context, index) {
-        final user = _rankedUsers[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserDetailPage(userId: user['id']),
-              ),
-            );
-          },
-          child: Column(
+    final l10n = AppLocalizations.of(context)!;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Text(
+            l10n.yourPoints,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  children: [
-                    _buildRankIcon(index),
-                    const SizedBox(width: 8),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: (user['profileImage'] != null &&
-                              user['profileImage'].toString().isNotEmpty)
-                          ? NetworkImage(user['profileImage'] as String)
-                          : null,
-                      child: (user['profileImage'] == null ||
-                              user['profileImage'].toString().isEmpty)
-                          ? const Icon(Icons.person)
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      user['username'] ?? '名称不明',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${user['points']} Pt',
-                        style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 32.0),
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final points = ref.watch(pointsProvider);
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${points.totalPoints}",
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "Pt",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 16)
+              const SizedBox(width: 8),
+              Consumer(
+                builder: (context, ref, child) {
+                  // 現在のユーザーの順位を計算
+                  int userRank = 0;
+                  final currentUser = FirebaseAuth.instance.currentUser;
+                  if (currentUser != null) {
+                    userRank = _rankedUsers.indexWhere(
+                            (user) => user['id'] == currentUser.uid) +
+                        1;
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "$userRank位/${_rankedUsers.length}位中",
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
-        );
-      },
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ExplainPointsPage(),
+                    fullscreenDialog: true),
+              );
+            },
+            child: const Text("ポイントとは？",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    decoration: TextDecoration.underline)),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 16, right: 8, left: 8),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _rankedUsers.length > 15 ? 15 : _rankedUsers.length,
+              itemBuilder: (context, index) {
+                final user = _rankedUsers[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserDetailPage(userId: user['id']),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          children: [
+                            _buildRankIcon(index),
+                            const SizedBox(width: 8),
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: (user['profileImage'] != null &&
+                                      user['profileImage'].toString().isNotEmpty)
+                                  ? NetworkImage(user['profileImage'] as String)
+                                  : null,
+                              child: (user['profileImage'] == null ||
+                                      user['profileImage'].toString().isEmpty)
+                                  ? const Icon(Icons.person)
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              user['username'] ?? '名称不明',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${user['points']} Pt',
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16)
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -478,14 +591,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
           : TabBarView(
               controller: _tabController,
               children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      _buildUserList(),
-                    ],
-                  ),
-                ),
+                _buildUserList(),
                 SingleChildScrollView(
                   child: Column(
                     children: [

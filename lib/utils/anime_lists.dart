@@ -331,4 +331,10 @@ final List<AnimeList> animeList = [
     imageAsset: 'assets/images/kokoro.png',
     imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=21662',
   ),
+  AnimeList(
+    name: '彼女、お借りします',
+    genre: '恋愛/ラブコメ',
+    imageAsset: 'assets/images/kanojo.png',
+    imageUrl: 'https://animestore.docomo.ne.jp/animestore/ci_pc?workId=24025',
+  ),
 ];

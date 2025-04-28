@@ -7,12 +7,10 @@ import 'dart:io';
 import 'setting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../providers/points_provider.dart';
 import 'bookmarks.dart';
 import 'user_kuchikomi.dart';
 import '../utils/login_calendar.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'explain_points.dart';
 
 final inAppReview = InAppReview.instance;
 
@@ -288,68 +286,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    l10n.yourPoints,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 32.0),
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final points = ref.watch(pointsProvider);
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                "${points.totalPoints}",
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "Pt",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.calendar_today,
+                              size: 24, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.loginHistory,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const LoginCalendar(),
+                    ],
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ExplainPointsPage(),
-                            fullscreenDialog: true),
-                      );
-                    },
-                    child: const Text("ポイントとは？",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            decoration: TextDecoration.underline)),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -392,31 +349,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           );
                         }
                       },
-                      child: Text(l10n.writeReview,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold))),
-                  const SizedBox(height: 24),
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_today,
-                              size: 24, color: Colors.blue),
+                          const Icon(Icons.rate_review, color: Colors.white),
                           const SizedBox(width: 8),
-                          Text(
-                            l10n.loginHistory,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text(l10n.writeReview,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      const LoginCalendar(),
-                    ],
-                  ),
+                      )),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
